@@ -2878,7 +2878,7 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			Conductor.songPosition += FlxG.elapsed * 1000;
+			Conductor.songPosition += FlxG.elapsed * 1000 * (FlxG.sound.music != null ? FlxG.sound.music.pitch : 1);
 
 			if (!paused)
 			{
@@ -4790,6 +4790,7 @@ class PlayState extends MusicBeatState
 		#if LUA_ALLOWED
 		for (i in 0...luaArray.length) {
 			var ret:Dynamic = luaArray[i].call(event, args);
+			if (event == "onEndSong") trace(luaArray[i].scriptName + " onEndSong: " + ret);
 			if(ret != FunkinLua.Function_Continue) {
 				returnVal = ret;
 			}
