@@ -58,6 +58,10 @@ class ClientPrefs {
 	public static var goodWindow:Int = 90;
 	public static var badWindow:Int = 135;
 	public static var safeFrames:Float = 10;
+	
+	public static var hardwareCache:Bool = true; //not sure if this would work edit: IT WORKS -- ralt
+	public static var fakeHardC:Bool = true;
+	public static var isHardCInited:Bool = false;
 
 	//Every key has two binds, add your key bind down here and then add your control on options/ControlsSubState.hx and Controls.hx
 	public static var keyBinds:Map<String, Array<FlxKey>> = [
@@ -116,6 +120,8 @@ class ClientPrefs {
 		FlxG.save.data.comboOffset = comboOffset;
 		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
 		FlxG.save.data.henchmenDeath = Achievements.henchmenDeath;
+		
+		FlxG.save.data.hardwareCache = fakeHardC;
 
 		FlxG.save.data.ratingOffset = ratingOffset;
 		FlxG.save.data.sickWindow = sickWindow;
@@ -241,6 +247,16 @@ class ClientPrefs {
 			for (name => value in savedMap)
 			{
 				gameplaySettings.set(name, value);
+			}
+		}
+		
+		if(FlxG.save.data.hardwareCache != null) {
+			hardwareCache = FlxG.save.data.hardwareCache;
+			fakeHardC = FlxG.save.data.hardwareCache;
+			
+			if (!isHardCInited) {
+				Paths.hardwareCache = hardwareCache;
+				isHardCInited = true;
 			}
 		}
 		
