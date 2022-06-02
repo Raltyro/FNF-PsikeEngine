@@ -49,6 +49,10 @@ class FunkinLua {
 
 	#if LUA_ALLOWED
 	public var lua:State = null;
+	
+	// optimizations shit, IM TRYING MY BEST ALRIGHT
+	var lastFlxGroupObj:String = "NULLNULLLMAO";
+	var lastFlxGroup:Dynamic = null;
 	#end
 	public var camTarget:FlxCamera;
 	public var scriptName:String = '';
@@ -343,11 +347,17 @@ class FunkinLua {
 			return true;
 		});
 		Lua_helper.add_callback(lua, "getPropertyFromGroup", function(obj:String, index:Int, variable:Dynamic) {
-			if(Std.isOfType(Reflect.getProperty(getInstance(), obj), FlxTypedGroup)) {
-				return getGroupStuff(Reflect.getProperty(getInstance(), obj).members[index], variable);
+			var v:Dynamic = lastFlxGroupObj == obj ? lastFlxGroup : Reflect.getProperty(getInstance(), obj);
+			
+			if(lastFlxGroupObj == obj || Std.isOfType(v, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = v;
+				}
+				return getGroupStuff(v.members[index], variable);
 			}
 
-			var leArray:Dynamic = Reflect.getProperty(getInstance(), obj)[index];
+			var leArray:Dynamic = v[index];
 			if(leArray != null) {
 				if(Type.typeof(variable) == ValueType.TInt) {
 					return leArray[variable];
@@ -358,21 +368,25 @@ class FunkinLua {
 			return null;
 		});
 		Lua_helper.add_callback(lua, "setPropertyFromGroup", function(obj:String, index:Int, variable:Dynamic, value:Dynamic) {
-			if(Std.isOfType(Reflect.getProperty(getInstance(), obj), FlxTypedGroup)) {
-				setGroupStuff(Reflect.getProperty(getInstance(), obj).members[index], variable, value);
-				return true;
+			var v:Dynamic = lastFlxGroupObj == obj ? lastFlxGroup : Reflect.getProperty(getInstance(), obj);
+			
+			if(lastFlxGroupObj == obj || Std.isOfType(v, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = v;
+				}
+				setGroupStuff(v.members[index], variable, value);
+				return;
 			}
 
-			var leArray:Dynamic = Reflect.getProperty(getInstance(), obj)[index];
+			var leArray:Dynamic = v[index];
 			if(leArray != null) {
 				if(Type.typeof(variable) == ValueType.TInt) {
 					leArray[variable] = value;
-					return true;
+					return;
 				}
 				setGroupStuff(leArray, variable, value);
-				return true;
 			}
-			return false;
 		});
 		Lua_helper.add_callback(lua, "removeFromGroup", function(obj:String, index:Int, dontDestroy:Bool = false) {
 			if(Std.isOfType(Reflect.getProperty(getInstance(), obj), FlxTypedGroup)) {
@@ -1487,9 +1501,31 @@ class FunkinLua {
 				var theSound:FlxSound = PlayState.instance.modchartSounds.get(tag);
 				if(theSound != null) {
 					var wasResumed:Bool = theSound.playing;
-					theSound.pause();
+					//theSound.pause();
 					theSound.time = value;
 					if(wasResumed) theSound.play();
+				}
+			}
+		});
+		Lua_helper.add_callback(lua, "getSoundPitch", function(tag:String) {
+			if(tag == null || tag.length < 1) {
+				if(FlxG.sound.music != null)
+					return FlxG.sound.music.pitch;
+			}
+			else if (PlayState.instance.modchartSounds.exists(tag))
+				return PlayState.instance.modchartSounds.get(tag).pitch;
+			
+			return 1;
+		});
+		Lua_helper.add_callback(lua, "setSoundPitch", function(tag:String, value:Float = 1) {
+			if(tag == null || tag.length < 1) {
+				if(FlxG.sound.music != null)
+					FlxG.sound.music.pitch = value;
+			}
+			else if (PlayState.instance.modchartSounds.exists(tag)) {
+				var theSound:FlxSound = PlayState.instance.modchartSounds.get(tag);
+				if(theSound != null) {
+					theSound.pitch = value;
 				}
 			}
 		});
@@ -1812,6 +1848,50 @@ class FunkinLua {
 		});
 		Lua_helper.add_callback(lua, "stringEndsWith", function(str:String, end:String) {
 			return str.endsWith(end);
+		});
+		
+		// RALT COOL SHITS FUNCTIONS, hello guys
+		Lua_helper.add_callback(lua, "setSprPosFromGroup", function(obj:String, index:Int, x:Float = 0, y:Float = 0, angle:Float = 0) {
+			var v:Dynamic = lastFlxGroupObj == obj ? lastFlxGroup : Reflect.getProperty(getInstance(), obj);
+			
+			if(lastFlxGroupObj == obj || Std.isOfType(v, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = v;
+				}
+				
+				var obj = v.members[index];
+				if (Std.isOfType(obj, FlxSprite)) {
+					var spr:FlxSprite = cast obj;
+					
+					spr.x = x;
+					spr.y = y;
+					spr.angle = angle;
+				}
+			}
+			
+			return null;
+		});
+		
+		Lua_helper.add_callback(lua, "setSprScFromGroup", function(obj:String, index:Int, x:Float = 0, y:Float = 0) {
+			var v:Dynamic = lastFlxGroupObj == obj ? lastFlxGroup : Reflect.getProperty(getInstance(), obj);
+			
+			if(lastFlxGroupObj == obj || Std.isOfType(v, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = v;
+				}
+				
+				var obj = v.members[index];
+				if (Std.isOfType(obj, FlxSprite)) {
+					var spr:FlxSprite = cast obj;
+					
+					spr.scale.x = x;
+					spr.scale.y = y;
+				}
+			}
+			
+			return null;
 		});
 
 		call('onCreate', []);
