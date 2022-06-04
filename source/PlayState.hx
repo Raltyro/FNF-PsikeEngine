@@ -2155,14 +2155,15 @@ class PlayState extends MusicBeatState
 	{
 		if(time < 0) time = 0;
 
-		FlxG.sound.music.pause();
-		vocals.pause();
+		//FlxG.sound.music.pause();
+		//vocals.pause();
 
 		FlxG.sound.music.time = time;
-		FlxG.sound.music.play();
+		if (!FlxG.sound.music.playing) FlxG.sound.music.play();
 
 		vocals.time = time;
-		vocals.play();
+		if (!vocals.playing) vocals.play();
+		
 		Conductor.songPosition = time;
 		songTime = time;
 	}
@@ -2645,12 +2646,13 @@ class PlayState extends MusicBeatState
 	{
 		if(finishTimer != null) return;
 
-		vocals.pause();
+		//vocals.pause();
 
-		FlxG.sound.music.play();
 		Conductor.songPosition = FlxG.sound.music.time;
 		vocals.time = Conductor.songPosition;
-		vocals.play();
+		
+		if (!FlxG.sound.music.playing) FlxG.sound.music.play();
+		if (!vocals.playing) vocals.play();
 	}
 
 	public var paused:Bool = false;
@@ -2902,7 +2904,7 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			Conductor.songPosition += FlxG.elapsed * 1000;
+			Conductor.songPosition += FlxG.elapsed * 1000 * (FlxG.sound.music != null ? FlxG.sound.music.pitch : 1);
 
 			if (!paused)
 			{
