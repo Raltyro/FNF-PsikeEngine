@@ -51,6 +51,10 @@ class FunkinLua {
 	public var errorHandler:String->Void;
 	#if LUA_ALLOWED
 	public var lua:State = null;
+	
+	// optimizations shit, IM TRYING MY BEST ALRIGHT
+	var lastFlxGroupObj:String = "NULLNULLLMAO";
+	var lastFlxGroup:Dynamic = null;
 	#end
 	public var camTarget:FlxCamera;
 	public var scriptName:String = '';
@@ -681,14 +685,25 @@ class FunkinLua {
 			return true;
 		});
 		Lua_helper.add_callback(lua, "getPropertyFromGroup", function(obj:String, index:Int, variable:Dynamic) {
-			var shitMyPants:Array<String> = obj.split('.');
-			var realObject:Dynamic = Reflect.getProperty(getInstance(), obj);
-			if(shitMyPants.length>1)
-				realObject = getPropertyLoopThingWhatever(shitMyPants, true, false);
+			var realObject:Dynamic = null;
+			if (lastFlxGroupObj == obj)
+				realObject = lastFlxGroup;
+			else {
+				var shitMyPants:Array<String> = obj.split('.');
+				if(shitMyPants.length>1)
+					realObject = getPropertyLoopThingWhatever(shitMyPants, true, false);
+				else
+					realObject = Reflect.getProperty(getInstance(), obj);
+			}
 
-
-			if(Std.isOfType(realObject, FlxTypedGroup))
+			if(Std.isOfType(realObject, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = realObject;
+				}
+				
 				return getGroupStuff(realObject.members[index], variable);
+			}
 
 
 			var leArray:Dynamic = realObject[index];
@@ -702,12 +717,23 @@ class FunkinLua {
 			return null;
 		});
 		Lua_helper.add_callback(lua, "setPropertyFromGroup", function(obj:String, index:Int, variable:Dynamic, value:Dynamic) {
-			var shitMyPants:Array<String> = obj.split('.');
-			var realObject:Dynamic = Reflect.getProperty(getInstance(), obj);
-			if(shitMyPants.length>1)
-				realObject = getPropertyLoopThingWhatever(shitMyPants, true, false);
+			var realObject:Dynamic = null;
+			if (lastFlxGroupObj == obj)
+				realObject = lastFlxGroup;
+			else {
+				var shitMyPants:Array<String> = obj.split('.');
+				if(shitMyPants.length>1)
+					realObject = getPropertyLoopThingWhatever(shitMyPants, true, false);
+				else
+					realObject = Reflect.getProperty(getInstance(), obj);
+			}
 
 			if(Std.isOfType(realObject, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = realObject;
+				}
+				
 				setGroupStuff(realObject.members[index], variable, value);
 				return;
 			}
@@ -1868,10 +1894,32 @@ class FunkinLua {
 			if(tag != null && tag.length > 0 && PlayState.instance.modchartSounds.exists(tag)) {
 				var theSound:FlxSound = PlayState.instance.modchartSounds.get(tag);
 				if(theSound != null) {
-					var wasResumed:Bool = theSound.playing;
-					theSound.pause();
+					//var wasResumed:Bool = theSound.playing;
+					//theSound.pause();
 					theSound.time = value;
-					if(wasResumed) theSound.play();
+					//if(wasResumed) theSound.play();
+				}
+			}
+		});
+		Lua_helper.add_callback(lua, "getSoundPitch", function(tag:String) {
+			if(tag == null || tag.length < 1) {
+				if(FlxG.sound.music != null)
+					return FlxG.sound.music.pitch;
+			}
+			else if (PlayState.instance.modchartSounds.exists(tag))
+				return PlayState.instance.modchartSounds.get(tag).pitch;
+			
+			return 1;
+		});
+		Lua_helper.add_callback(lua, "setSoundPitch", function(tag:String, value:Float = 1) {
+			if(tag == null || tag.length < 1) {
+				if(FlxG.sound.music != null)
+					FlxG.sound.music.pitch = value;
+			}
+			else if (PlayState.instance.modchartSounds.exists(tag)) {
+				var theSound:FlxSound = PlayState.instance.modchartSounds.get(tag);
+				if(theSound != null) {
+					theSound.pitch = value;
 				}
 			}
 		});
@@ -2194,6 +2242,66 @@ class FunkinLua {
 		});
 		Lua_helper.add_callback(lua, "stringEndsWith", function(str:String, end:String) {
 			return str.endsWith(end);
+		});
+		
+		// RALT COOL SHITS FUNCTIONS, hello guys
+		Lua_helper.add_callback(lua, "setSprPosFromGroup", function(obj:String, index:Int, x:Float = 0, y:Float = 0, angle:Float = 0) {
+			var realObject:Dynamic = null;
+			if (lastFlxGroupObj == obj)
+				realObject = lastFlxGroup;
+			else {
+				var shitMyPants:Array<String> = obj.split('.');
+				if(shitMyPants.length>1)
+					realObject = getPropertyLoopThingWhatever(shitMyPants, true, false);
+				else
+					realObject = Reflect.getProperty(getInstance(), obj);
+			}
+			
+			if(lastFlxGroupObj == obj || Std.isOfType(realObject, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = realObject;
+				}
+				
+				var obj = realObject.members[index];
+				if (Std.isOfType(obj, FlxSprite)) {
+					var spr:FlxSprite = cast obj;
+					
+					spr.x = x;
+					spr.y = y;
+					spr.angle = angle;
+				}
+			}
+			
+			return null;
+		});
+		
+		Lua_helper.add_callback(lua, "setSprScFromGroup", function(obj:String, index:Int, x:Float = 0, y:Float = 0) {
+			var realObject:Dynamic = null;
+			if (lastFlxGroupObj == obj)
+				realObject = lastFlxGroup;
+			else {
+				var shitMyPants:Array<String> = obj.split('.');
+				if(shitMyPants.length>1)
+					realObject = getPropertyLoopThingWhatever(shitMyPants, true, false);
+				else
+					realObject = Reflect.getProperty(getInstance(), obj);
+			}
+			
+			if(lastFlxGroupObj == obj || Std.isOfType(realObject, FlxTypedGroup)) {
+				if (!(lastFlxGroupObj == obj)) {
+					lastFlxGroupObj = obj;
+					lastFlxGroup = realObject;
+				}
+				
+				var obj = realObject.members[index];
+				if (Std.isOfType(obj, FlxSprite)) {
+					var spr:FlxSprite = cast obj;
+					
+					spr.scale.x = x;
+					spr.scale.y = y;
+				}
+			}
 		});
 
 		call('onCreate', []);
