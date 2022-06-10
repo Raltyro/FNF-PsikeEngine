@@ -5,7 +5,6 @@ import sys.io.File;
 import sys.FileSystem;
 #end
 import lime.utils.Assets;
-import openfl.utils.AssetType;
 import openfl.utils.Assets as OpenFlAssets;
 import haxe.Json;
 import haxe.format.JsonParser;
@@ -133,8 +132,29 @@ class WeekData {
 		var originalLength:Int = directories.length;
 		#end
 
-		readWeekList('weeks/weekListFNF.txt', directories, originalLength, isStoryMode);
-		readWeekList('weeks/weekList.txt', directories, originalLength, isStoryMode);
+		var sexList:Array<String> = CoolUtil.coolTextFile(Paths.getPreloadPath('weeks/weekList.txt'));
+		for (i in 0...sexList.length) {
+			for (j in 0...directories.length) {
+				var fileToCheck:String = directories[j] + 'weeks/' + sexList[i] + '.json';
+				if(!weeksLoaded.exists(sexList[i])) {
+					var week:WeekFile = getWeekFile(fileToCheck);
+					if(week != null) {
+						var weekFile:WeekData = new WeekData(week, sexList[i]);
+
+						#if MODS_ALLOWED
+						if(j >= originalLength) {
+							weekFile.folder = directories[j].substring(Paths.mods().length, directories[j].length-1);
+						}
+						#end
+
+						if(weekFile != null && (isStoryMode == null || (isStoryMode && !weekFile.hideStoryMode) || (!isStoryMode && !weekFile.hideFreeplay))) {
+							weeksLoaded.set(sexList[i], weekFile);
+							weeksList.push(sexList[i]);
+						}
+					}
+				}
+			}
+		}
 
 		#if MODS_ALLOWED
 		for (i in 0...directories.length) {
@@ -161,35 +181,6 @@ class WeekData {
 			}
 		}
 		#end
-	}
-	
-	private static function readWeekList(path:String, directories:Array<String>, originalLength:Int, isStoryMode:Null<Bool> = false)
-	{
-		if (!Paths.fileExists(path, TEXT, true)) return;
-		
-		var sexList:Array<String> = CoolUtil.coolTextFile(Paths.getPreloadPath(path));
-		for (i in 0...sexList.length) {
-			for (j in 0...directories.length) {
-				var fileToCheck:String = directories[j] + 'weeks/' + sexList[i] + '.json';
-				if(!weeksLoaded.exists(sexList[i])) {
-					var week:WeekFile = getWeekFile(fileToCheck);
-					if(week != null) {
-						var weekFile:WeekData = new WeekData(week, sexList[i]);
-
-						#if MODS_ALLOWED
-						if(j >= originalLength) {
-							weekFile.folder = directories[j].substring(Paths.mods().length, directories[j].length-1);
-						}
-						#end
-
-						if(weekFile != null && (isStoryMode == null || (isStoryMode && !weekFile.hideStoryMode) || (!isStoryMode && !weekFile.hideFreeplay))) {
-							weeksLoaded.set(sexList[i], weekFile);
-							weeksList.push(sexList[i]);
-						}
-					}
-				}
-			}
-		}
 	}
 
 	private static function addWeek(weekToCheck:String, path:String, directory:String, i:Int, originalLength:Int)
