@@ -40,6 +40,7 @@ import openfl.events.IOErrorEvent;
 import openfl.media.Sound;
 import openfl.net.FileReference;
 import openfl.utils.ByteArray;
+import openfl.utils.AssetType;
 import openfl.utils.Assets as OpenFlAssets;
 import lime.media.AudioBuffer;
 import haxe.io.Bytes;
@@ -491,6 +492,13 @@ class ChartingState extends MusicBeatState
 		#end
 
 		var tempMap:Map<String, Bool> = new Map<String, Bool>();
+		// FNF
+		if (Paths.fileExists('characterListFNF', TEXT)) {
+			var characters:Array<String> = CoolUtil.coolTextFile(Paths.txt('characterListFNF'));
+			for (i in 0...characters.length) {
+				tempMap.set(characters[i], true);
+			}
+		}
 		var characters:Array<String> = CoolUtil.coolTextFile(Paths.txt('characterList'));
 		for (i in 0...characters.length) {
 			tempMap.set(characters[i], true);
@@ -547,8 +555,20 @@ class ChartingState extends MusicBeatState
 		#end
 
 		tempMap.clear();
-		var stageFile:Array<String> = CoolUtil.coolTextFile(Paths.txt('stageList'));
 		var stages:Array<String> = [];
+		// FNF
+		if (Paths.fileExists('stageListFNF', TEXT)) {
+			var stageFile:Array<String> = CoolUtil.coolTextFile(Paths.txt('stageListFNF'));
+			for (i in 0...stageFile.length) { //Prevent duplicates
+				var stageToCheck:String = stageFile[i];
+				if(!tempMap.exists(stageToCheck)) {
+					stages.push(stageToCheck);
+				}
+				tempMap.set(stageToCheck, true);
+			}
+		}
+		// Psych
+		var stageFile:Array<String> = CoolUtil.coolTextFile(Paths.txt('stageList'));
 		for (i in 0...stageFile.length) { //Prevent duplicates
 			var stageToCheck:String = stageFile[i];
 			if(!tempMap.exists(stageToCheck)) {
