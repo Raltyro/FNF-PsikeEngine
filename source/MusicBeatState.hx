@@ -37,6 +37,11 @@ class MusicBeatState extends FlxUIState
 		FlxTransitionableState.skipNextTransOut = false;
 	}
 	
+	override function destroy() {
+		Paths.compress(2);
+		super.destroy();
+	}
+	
 	#if (VIDEOS_ALLOWED && windows)
 	override public function onFocus():Void
 	{

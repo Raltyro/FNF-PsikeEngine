@@ -1335,8 +1335,6 @@ class PlayState extends MusicBeatState
 
 		super.create();
 
-		Paths.clearUnusedMemory();
-
 		cacheCountdown();
 		cachePopUpScore();
 		for (key => type in precacheList)
@@ -1352,6 +1350,8 @@ class PlayState extends MusicBeatState
 					Paths.music(key);
 			}
 		}
+		Paths.clearUnusedMemory();
+		
 		CustomFadeTransition.nextCamera = camOther;
 	}
 
@@ -1966,7 +1966,7 @@ class PlayState extends MusicBeatState
 		if (isPixelStage) introAlts = introAssets.get('pixel');
 		
 		for (asset in introAlts)
-			Paths.image(asset);
+			Paths.image(asset, 'shared');
 		
 		Paths.sound('intro3' + introSoundsSuffix);
 		Paths.sound('intro2' + introSoundsSuffix);
@@ -2019,6 +2019,10 @@ class PlayState extends MusicBeatState
 				setSongTime(0);
 				return;
 			}
+			
+			var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
+			introAssets.set('default', ['ready', 'set', 'go']);
+			introAssets.set('pixel', ['pixelUI/ready-pixel', 'pixelUI/set-pixel', 'pixelUI/date-pixel']);
 
 			startTimer = new FlxTimer().start(Conductor.crochet / 1000, function(tmr:FlxTimer)
 			{
@@ -2034,10 +2038,6 @@ class PlayState extends MusicBeatState
 				{
 					dad.dance();
 				}
-
-				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
-				introAssets.set('default', ['ready', 'set', 'go']);
-				introAssets.set('pixel', ['pixelUI/ready-pixel', 'pixelUI/set-pixel', 'pixelUI/date-pixel']);
 
 				var introAlts:Array<String> = introAssets.get('default');
 				var antialias:Bool = ClientPrefs.globalAntialiasing;
@@ -3932,11 +3932,11 @@ class PlayState extends MusicBeatState
 			pixelShitPart2 = '-pixel';
 		}
 
-		Paths.image(pixelShitPart1 + "sick" + pixelShitPart2);
-		Paths.image(pixelShitPart1 + "good" + pixelShitPart2);
-		Paths.image(pixelShitPart1 + "bad" + pixelShitPart2);
-		Paths.image(pixelShitPart1 + "shit" + pixelShitPart2);
-		Paths.image(pixelShitPart1 + "combo" + pixelShitPart2);
+		Paths.image(pixelShitPart1 + "sick" + pixelShitPart2, 'shared');
+		Paths.image(pixelShitPart1 + "good" + pixelShitPart2, 'shared');
+		Paths.image(pixelShitPart1 + "bad" + pixelShitPart2, 'shared');
+		Paths.image(pixelShitPart1 + "shit" + pixelShitPart2, 'shared');
+		Paths.image(pixelShitPart1 + "combo" + pixelShitPart2, 'shared');
 		
 		for (i in 0...10) {
 			Paths.image(pixelShitPart1 + 'num' + i + pixelShitPart2);
@@ -4779,6 +4779,10 @@ class PlayState extends MusicBeatState
 
 	private var preventLuaRemove:Bool = false;
 	override function destroy() {
+		@:privateAccess
+		if (!Std.isOfType(FlxG.game._requestedState, PlayState))
+			Paths.clearStoredMemory();
+		
 		preventLuaRemove = true;
 		for (i in 0...luaArray.length) {
 			luaArray[i].call('onDestroy', []);

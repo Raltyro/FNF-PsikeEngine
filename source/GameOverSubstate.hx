@@ -38,6 +38,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		instance = this;
 		PlayState.instance.callOnLuas('onGameOverStart', []);
+		Paths.compress(16);
 
 		super.create();
 	}

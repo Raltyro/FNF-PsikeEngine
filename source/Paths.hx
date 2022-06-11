@@ -73,7 +73,7 @@ class Paths
 		'assets/shared/music/tea-time.$SOUND_EXT',
 	];
 	
-	public static function compress() {
+	private inline static function _compress() {
 		#if cpp
 		Gc.compact();
 		Gc.run(true);
@@ -83,6 +83,15 @@ class Paths
 		#elseif (java || neko)
 		Gc.run(true);
 		#end
+	}
+	
+	public static function compress(repeat:Int = 1) {
+		if (repeat > 1) {
+			if (repeat > 32) repeat = 32;
+			for (i in 0...repeat) _compress();
+		}
+		else
+			_compress();
 	}
 	
 	/// haya I love you for the base cache dump I took to the max
@@ -100,6 +109,7 @@ class Paths
 					FlxG.bitmap._cache.remove(key);
 					obj.destroy();
 					currentTrackedAssets.remove(key);
+					compress();
 				}
 			}
 		}
@@ -113,6 +123,8 @@ class Paths
 	// define the locally tracked assets
 	public static var localTrackedAssets:Array<String> = [];
 	public static function clearStoredMemory(?cleanUnused:Bool = false) {
+		//trace(currentTrackedAssets, currentTrackedSounds);
+		
 		// clear anything not in the tracked assets list
 		@:privateAccess
 		for (key in FlxG.bitmap._cache.keys())
@@ -122,21 +134,26 @@ class Paths
 				openfl.Assets.cache.removeBitmapData(key);
 				FlxG.bitmap._cache.remove(key);
 				obj.destroy();
+				compress();
 			}
 		}
+		compress();
 
 		// clear all sounds that are cached
 		for (key in currentTrackedSounds.keys()) {
 			if (!localTrackedAssets.contains(key)
 			&& !dumpExclusions.contains(key) && key != null) {
-				//trace('test: ' + dumpExclusions, key);
 				Assets.cache.clear(key);
 				currentTrackedSounds.remove(key);
+				compress();
 			}
 		}
+		compress();
+		
 		// flags everything to be cleared out next unused memory clear
 		localTrackedAssets = [];
 		openfl.Assets.cache.clear("songs");
+		compress();
 	}
 
 	static public var currentModDirectory:String = '';
@@ -354,7 +371,7 @@ class Paths
 		return path.toLowerCase().replace(' ', '-');
 	}
 
-	private static function regBitmap(key:String, ?hardware:Bool):BitmapData {
+	private static function regBitmap(key:String, ?hardware:Null<Bool>):BitmapData {
 		hardware = hardware == null ? hardwareCache : hardware;
 		
 		if (OpenFlAssets.exists(key, IMAGE))

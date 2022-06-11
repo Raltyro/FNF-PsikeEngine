@@ -23,6 +23,7 @@ class Main extends Sprite
 	public static var fpsVar:FPS;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
+	public static var focused:Bool = true;
 
 	public static function main():Void
 	{
@@ -66,6 +67,8 @@ class Main extends Sprite
 			gameWidth = Math.ceil(stageWidth / zoom);
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
+		
+		Lib.current.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 
 		#if !debug
 		initialState = TitleState;
@@ -84,9 +87,30 @@ class Main extends Sprite
 		}
 		#end
 
+		FlxG.signals.focusGained.add(onFocus);
+		FlxG.signals.focusLost.add(onFocusLost);
+		
 		#if html5
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
 		#end
+	}
+	
+	private function onFocus() {
+		focused = true;
+	}
+	
+	var woah:Int = 0;
+	private function onFocusLost() {
+		woah = 8;
+		focused = false;
+	}
+	
+	private function onEnterFrame(_) {
+		// CLEVER WAY TO SECRETLY GC LMAO
+		if (!focused && woah > 0) {
+			Paths.compress(8);
+			woah--;
+		}
 	}
 }
