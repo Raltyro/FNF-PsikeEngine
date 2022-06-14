@@ -94,6 +94,45 @@ class Paths
 			_compress();
 	}
 	
+	public static function decacheGraphic(key:String) {
+		var obj = currentTrackedAssets.get(key);
+		@:privateAccess{
+			if (obj == null) obj = FlxG.bitmap._cache.get(key);
+			if (obj != null) {
+				OpenFlAssets.cache.removeBitmapData(key);
+				FlxG.bitmap._cache.remove(key);
+				
+				if (obj.bitmap != null && obj.bitmap.__texture != null) obj.bitmap.__texture.dispose();
+				obj.bitmap.disposeImage();
+				
+				obj.destroy();
+				currentTrackedAssets.remove(key);
+				compress();
+			}
+		}
+	}
+	
+	public static function decacheSound(key:String) {
+		var obj = currentTrackedSounds.get(key);
+		if (obj == null && OpenFlAssets.cache.hasSound(key)) obj = OpenFlAssets.cache.getSound(key);
+		
+		OpenFlAssets.cache.removeSound(key);
+		Assets.cache.clear(key);
+		currentTrackedSounds.remove(key);
+		
+		if (obj != null) {
+			@:privateAccess{
+				obj.__buffer.src = null;
+				obj.__buffer.data = null;
+				obj.__buffer.dispose();
+				obj.__buffer = null;
+				obj = null;
+			}
+			
+			compress();
+		}
+	}
+	
 	/// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory() {
 		// clear non local assets in the tracked assets list
@@ -102,15 +141,7 @@ class Paths
 			if (!localTrackedAssets.contains(key)
 				&& !dumpExclusions.contains(key)) {
 				// get rid of it
-				var obj = currentTrackedAssets.get(key);
-				@:privateAccess
-				if (obj != null) {
-					openfl.Assets.cache.removeBitmapData(key);
-					FlxG.bitmap._cache.remove(key);
-					obj.destroy();
-					currentTrackedAssets.remove(key);
-					compress();
-				}
+				decacheGraphic(key);
 			}
 		}
 		
@@ -123,30 +154,20 @@ class Paths
 	// define the locally tracked assets
 	public static var localTrackedAssets:Array<String> = [];
 	public static function clearStoredMemory(?cleanUnused:Bool = false) {
-		//trace(currentTrackedAssets, currentTrackedSounds);
-		
 		// clear anything not in the tracked assets list
 		@:privateAccess
 		for (key in FlxG.bitmap._cache.keys())
 		{
-			var obj = FlxG.bitmap._cache.get(key);
-			if (obj != null && !currentTrackedAssets.exists(key)) {
-				openfl.Assets.cache.removeBitmapData(key);
-				FlxG.bitmap._cache.remove(key);
-				obj.destroy();
-				compress();
-			}
+			if (!currentTrackedAssets.exists(key))
+				decacheGraphic(key);
 		}
 		compress();
 
 		// clear all sounds that are cached
 		for (key in currentTrackedSounds.keys()) {
-			if (!localTrackedAssets.contains(key)
-			&& !dumpExclusions.contains(key) && key != null) {
-				Assets.cache.clear(key);
-				currentTrackedSounds.remove(key);
-				compress();
-			}
+			if (!localTrackedAssets.contains(key) 
+			&& !dumpExclusions.contains(key) && key != null)
+				decacheSound(key);
 		}
 		compress();
 		
@@ -322,17 +343,15 @@ class Paths
 		return 'assets/fonts/$key';
 	}
 
-	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String)
+	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String):Bool
 	{
 		#if MODS_ALLOWED
-		if(FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key))) {
+		if(FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key)))
 			return true;
-		}
 		#end
-
-		if(OpenFlAssets.exists(getPath(key, type))) {
+		if(OpenFlAssets.exists(getPath(key, type)))
 			return true;
-		}
+		
 		return false;
 	}
 

@@ -1,5 +1,6 @@
 package;
 
+import flixel.input.keyboard.FlxKey;
 import flixel.graphics.FlxGraphic;
 import flixel.FlxG;
 import flixel.FlxGame;
@@ -9,6 +10,7 @@ import openfl.Lib;
 import openfl.display.FPS;
 import openfl.display.Sprite;
 import openfl.events.Event;
+import openfl.events.KeyboardEvent;
 import openfl.display.StageScaleMode;
 
 class Main extends Sprite
@@ -23,6 +25,8 @@ class Main extends Sprite
 	public static var fpsVar:FPS;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
+	
+	public static var fullscreenKeys:Array<FlxKey> = [FlxKey.F11];
 	public static var focused:Bool = true;
 
 	public static function main():Void
@@ -69,6 +73,7 @@ class Main extends Sprite
 		}
 		
 		Lib.current.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		Lib.current.stage.addEventListener(KeyboardEvent.KEY_DOWN, handleInput);
 
 		#if !debug
 		initialState = TitleState;
@@ -94,6 +99,10 @@ class Main extends Sprite
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
 		#end
+	}
+	
+	private function handleInput(evt:KeyboardEvent) {
+		if (fullscreenKeys.contains(CoolUtil.flKeyToFlx(evt.keyCode))) FlxG.fullscreen = !FlxG.fullscreen;
 	}
 	
 	private function onFocus() {

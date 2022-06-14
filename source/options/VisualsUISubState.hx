@@ -99,14 +99,6 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.onChange = onChangeFPSCounter;
 		#end
 		
-		var option:Option = new Option('Hardware Caching',
-			'If checked, the game will uploads images to GPU \nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
-			'fakeHardC',
-			'bool',
-			false);
-		addOption(option);
-		option.onChange = onChangeHardC;
-		
 		var option:Option = new Option('Pause Screen Song:',
 			"What song do you prefer for the Pause Screen?",
 			'pauseMusic',
@@ -143,9 +135,4 @@ class VisualsUISubState extends BaseOptionsMenu
 			Main.fpsVar.visible = ClientPrefs.showFPS;
 	}
 	#end
-	
-	function onChangeHardC()
-	{
-		Paths.hardwareCache = ClientPrefs.hardwareCache;
-	}
 }

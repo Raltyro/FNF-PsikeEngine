@@ -13,6 +13,8 @@ import flixel.tweens.FlxTween;
 class GameOverSubstate extends MusicBeatSubstate
 {
 	public var boyfriend:Boyfriend;
+	
+	var bfMidPoint:FlxPoint;
 	var camFollow:FlxPoint;
 	var camFollowPos:FlxObject;
 	var updateCamera:Bool = false;
@@ -39,8 +41,13 @@ class GameOverSubstate extends MusicBeatSubstate
 		instance = this;
 		PlayState.instance.callOnLuas('onGameOverStart', []);
 		Paths.compress(16);
+		
+		FlxG.sound.play(Paths.sound(deathSoundName));
 
 		super.create();
+		
+		boyfriend.playAnim('firstDeath');
+		boyfriend.animation.frameIndex = 0;
 	}
 
 	public function new(x:Float, y:Float, camX:Float, camY:Float)
@@ -55,18 +62,17 @@ class GameOverSubstate extends MusicBeatSubstate
 		boyfriend.x += boyfriend.positionArray[0];
 		boyfriend.y += boyfriend.positionArray[1];
 		add(boyfriend);
+		
+		bfMidPoint = boyfriend.getGraphicMidpoint();
 
-		camFollow = new FlxPoint(boyfriend.getGraphicMidpoint().x, boyfriend.getGraphicMidpoint().y);
+		camFollow = new FlxPoint(bfMidPoint.x, bfMidPoint.y);
 
-		FlxG.sound.play(Paths.sound(deathSoundName));
 		Conductor.changeBPM(100);
 		// FlxG.camera.followLerp = 1;
 		// FlxG.camera.focusOn(FlxPoint.get(FlxG.width / 2, FlxG.height / 2));
 		FlxG.camera.scroll.set();
 		FlxG.camera.target = null;
-
-		boyfriend.playAnim('firstDeath');
-
+		
 		camFollowPos = new FlxObject(0, 0, 1, 1);
 		camFollowPos.setPosition(FlxG.camera.scroll.x + (FlxG.camera.width / 2), FlxG.camera.scroll.y + (FlxG.camera.height / 2));
 		add(camFollowPos);
@@ -175,5 +181,13 @@ class GameOverSubstate extends MusicBeatSubstate
 			});
 			PlayState.instance.callOnLuas('onGameOverConfirm', [true]);
 		}
+	}
+	
+	public static function cache() {
+		Paths.sound(deathSoundName);
+		Paths.music(loopSoundName);
+		Paths.music(endSoundName);
+		
+		Character.cacheCharacter(characterName);
 	}
 }

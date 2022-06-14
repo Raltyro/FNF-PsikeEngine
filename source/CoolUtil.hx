@@ -1,5 +1,6 @@
 package;
 
+import flixel.input.keyboard.FlxKey;
 import flixel.FlxG;
 import openfl.utils.Assets;
 import lime.utils.Assets as LimeAssets;
@@ -123,6 +124,9 @@ class CoolUtil
 	public static function precacheMusic(sound:String, ?library:String = null):Void {
 		Paths.music(sound, library);
 	}
+	
+	inline public static function flKeyToFlx(keyCode:Int):FlxKey
+		@:privateAccess return FlxKey.toStringMap.get(keyCode);
 
 	public static function browserLoad(site:String) {
 		#if linux

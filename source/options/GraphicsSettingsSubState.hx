@@ -52,6 +52,13 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		option.showBoyfriend = true;
 		option.onChange = onChangeAntiAliasing; //Changing onChange is only needed if you want to make a special interaction after it changes the value
 		addOption(option);
+		
+		var option:Option = new Option('Hardware Caching',
+			'If checked, the game will uploads images to GPU \nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
+			'fakeHardC',
+			'bool',
+			false);
+		addOption(option);
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		var option:Option = new Option('Framerate',

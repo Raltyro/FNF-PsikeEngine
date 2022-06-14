@@ -1337,6 +1337,7 @@ class PlayState extends MusicBeatState
 
 		cacheCountdown();
 		cachePopUpScore();
+		GameOverSubstate.cache();
 		for (key => type in precacheList)
 		{
 			//trace('Key $key is type $type');
