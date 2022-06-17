@@ -63,6 +63,10 @@ import Conductor.Rating;
 import sys.FileSystem;
 #end
 
+#if VIDEOS_ALLOWED
+import vlc.MP4Handler;
+#end
+
 using StringTools;
 
 class PlayState extends MusicBeatState
@@ -1476,7 +1480,8 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	public function startVideo(name:String) {
+	public function startVideo(name:String)
+	{
 		#if VIDEOS_ALLOWED
 		inCutscene = true;
 		
@@ -1491,11 +1496,11 @@ class PlayState extends MusicBeatState
 			startAndEnd();
 			return;
 		}
-		
+
 		FlxG.sound.music.stop();
 		var video:MP4Handler = new MP4Handler();
 		video.playVideo(filepath);
-
+		
 		video.finishCallback = function()
 		{
 			startAndEnd();

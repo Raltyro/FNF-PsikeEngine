@@ -36,7 +36,7 @@ class MusicBeatState extends FlxUIState
 		}
 		FlxTransitionableState.skipNextTransOut = false;
 	}
-	
+
 	override function destroy() {
 		Paths.compress(2);
 		super.destroy();
