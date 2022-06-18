@@ -2074,7 +2074,7 @@ class PlayState extends MusicBeatState
 
 						countdownReady.screenCenter();
 						countdownReady.antialiasing = antialias;
-						insert(0, countdownReady);
+						insert(members.indexOf(notes), countdownReady);
 						FlxTween.tween(countdownReady, {/*y: countdownReady.y + 100,*/ alpha: 0}, Conductor.crochet / 1000, {
 							ease: FlxEase.cubeInOut,
 							onComplete: function(twn:FlxTween)
@@ -2094,7 +2094,7 @@ class PlayState extends MusicBeatState
 
 						countdownSet.screenCenter();
 						countdownSet.antialiasing = antialias;
-						insert(0, countdownSet);
+						insert(members.indexOf(notes), countdownSet);
 						FlxTween.tween(countdownSet, {/*y: countdownSet.y + 100,*/ alpha: 0}, Conductor.crochet / 1000, {
 							ease: FlxEase.cubeInOut,
 							onComplete: function(twn:FlxTween)
@@ -2116,7 +2116,7 @@ class PlayState extends MusicBeatState
 
 						countdownGo.screenCenter();
 						countdownGo.antialiasing = antialias;
-						insert(0, countdownGo);
+						insert(members.indexOf(notes), countdownGo);
 						FlxTween.tween(countdownGo, {/*y: countdownGo.y + 100,*/ alpha: 0}, Conductor.crochet / 1000, {
 							ease: FlxEase.cubeInOut,
 							onComplete: function(twn:FlxTween)
@@ -3040,6 +3040,7 @@ class PlayState extends MusicBeatState
 		{
 			var time:Float = spawnTime;//shit be werid on 4:3
 			if(songSpeed < 1) time /= songSpeed;
+			if(unspawnNotes[0].multSpeed < 1) time /= unspawnNotes[0].multSpeed;
 
 			while (unspawnNotes.length > 0 && unspawnNotes[0].strumTime - Conductor.songPosition < time)
 			{
@@ -4165,7 +4166,7 @@ class PlayState extends MusicBeatState
 						canMiss = true;
 					}
 				});
-				sortedNotesList.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
+				sortedNotesList.sort(sortHitNotes);
 
 				if (sortedNotesList.length > 0) {
 					for (epicNote in sortedNotesList)
@@ -4216,6 +4217,16 @@ class PlayState extends MusicBeatState
 			callOnLuas('onKeyPress', [key]);
 		}
 		//trace('pressed: ' + controlArray);
+	}
+
+	function sortHitNotes(a:Note, b:Note):Int
+	{
+		if (a.lowPriority && !b.lowPriority)
+			return 1;
+		else if (!a.lowPriority && b.lowPriority)
+			return -1;
+
+		return FlxSort.byValues(FlxSort.ASCENDING, a.strumTime, b.strumTime);
 	}
 
 	private function onKeyRelease(event:KeyboardEvent):Void
@@ -4355,10 +4366,7 @@ class PlayState extends MusicBeatState
 
 		if(char != null && !daNote.noMissAnimation && char.hasMissAnimations)
 		{
-			var daAlt = '';
-			if(daNote.noteType == 'Alt Animation') daAlt = '-alt';
-
-			var animToPlay:String = singAnimations[Std.int(Math.abs(daNote.noteData))] + 'miss' + daAlt;
+			var animToPlay:String = singAnimations[Std.int(Math.abs(daNote.noteData))] + 'miss' + daNote.animSuffix;
 			char.playAnim(animToPlay, true);
 		}
 
@@ -4421,12 +4429,12 @@ class PlayState extends MusicBeatState
 			dad.specialAnim = true;
 			dad.heyTimer = 0.6;
 		} else if(!note.noAnimation) {
-			var altAnim:String = "";
+			var altAnim:String = note.animSuffix;
 
 			var curSection:Int = Math.floor(curStep / 16);
 			if (SONG.notes[curSection] != null)
 			{
-				if (SONG.notes[curSection].altAnim || note.noteType == 'Alt Animation') {
+				if (SONG.notes[curSection].altAnim) {
 					altAnim = '-alt';
 				}
 			}
@@ -4513,22 +4521,19 @@ class PlayState extends MusicBeatState
 			health += note.hitHealth * healthGain;
 
 			if(!note.noAnimation) {
-				var daAlt = '';
-				if(note.noteType == 'Alt Animation') daAlt = '-alt';
-
 				var animToPlay:String = singAnimations[Std.int(Math.abs(note.noteData))];
 
 				if(note.gfNote)
 				{
 					if(gf != null)
 					{
-						gf.playAnim(animToPlay + daAlt, true);
+						gf.playAnim(animToPlay + note.animSuffix, true);
 						gf.holdTimer = 0;
 					}
 				}
 				else
 				{
-					boyfriend.playAnim(animToPlay + daAlt, true);
+					boyfriend.playAnim(animToPlay + note.animSuffix, true);
 					boyfriend.holdTimer = 0;
 				}
 
