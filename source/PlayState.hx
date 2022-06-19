@@ -1516,7 +1516,7 @@ class PlayState extends MusicBeatState
 		startAndEnd();
 		return;
 		#end
-    	}
+    }
 
 	function startAndEnd()
 	{

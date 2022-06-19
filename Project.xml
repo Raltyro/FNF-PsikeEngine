@@ -55,20 +55,6 @@
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE WATERMARKS/DEV NAMES ON TITLE SCREEN -->
 	<define name="TITLE_SCREEN_EASTER_EGG" if="officialBuild"/> <!-- DELETE THE if="officialBuild" for enabling this on an unofficial build -->
 
-	<section unless="NO_ASSETSFNF">
-		<assets path="assetsFNF" rename="assets" exclude="*.ogg|preload|exclude" if="web"/>
-		<assets path="assetsFNF" rename="assets" exclude="*.mp3|preload|exclude" unless="web"/>
-		<assets path="assetsFNF/preload" rename="assets" exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/preload" rename="assets" exclude="*.mp3" unless="web"/>
-	</section>
-	
-	<assets path="assets/preload" rename="assets" exclude="*.ogg" if="web"/>
-	<assets path="assets/preload" rename="assets" exclude="*.mp3" unless="web"/>
-	<section if="TITLE_SCREEN_EASTER_EGG">
-		<assets path="assets/secrets" rename="assets" exclude="*.ogg" if="web"/>
-		<assets path="assets/secrets" rename="assets" exclude="*.mp3" unless="web"/>
-	</section>
-
 	<!-- DONT ENABLE THIS -->
 	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
 
@@ -102,24 +88,39 @@
 		</section>
 	</section>
 	
-	<assets path="assets/videos"								library="videos"				if="VIDEOS_ALLOWED"/>
-	<assets path="assets/songs"									library="songs"					exclude="*.ogg" if="web"/>
-	<assets path="assets/songs"									library="songs"					exclude="*.mp3" unless="web"/>
-	<assets path="assets/shared"								library="shared"				exclude="*.ogg" if="web"/>
-	<assets path="assets/shared"								library="shared"				exclude="*.mp3" unless="web"/>
+	<assets path="assets/preload"			rename="assets"											exclude="*.ogg" if="web"/>
+	<assets path="assets/preload"			rename="assets"											exclude="*.mp3" unless="web"/>
+	<section if="TITLE_SCREEN_EASTER_EGG">
+		<assets path="assets/secrets"		rename="assets"											exclude="*.ogg" if="web"/>
+		<assets path="assets/secrets"		rename="assets"											exclude="*.mp3" unless="web"/>
+	</section>
+	
+	<assets path="assets/shared"									library="shared"				exclude="*.ogg" if="web"/>
+	<assets path="assets/shared"									library="shared"				exclude="*.mp3" unless="web"/>
+	<assets path="assets/songs"										library="songs"					exclude="*.ogg" if="web"/>
+	<assets path="assets/songs"										library="songs"					exclude="*.mp3" unless="web"/>
+	<assets path="assets/videos"									library="videos"				if="VIDEOS_ALLOWED"/>
 	<section unless="NO_ASSETSFNF">
-		<assets path="assetsFNF/week2"	rename="assets/week2"	library="week2"					exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/week2"	rename="assets/week2"	library="week2"					exclude="*.mp3" unless="web"/>
-		<assets path="assetsFNF/week3"	rename="assets/week2"	library="week3"					exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/week3"	rename="assets/week2"	library="week3"					exclude="*.mp3" unless="web"/>
-		<assets path="assetsFNF/week4"	rename="assets/week2"	library="week4"					exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/week4"	rename="assets/week2"	library="week4"					exclude="*.mp3" unless="web"/>
-		<assets path="assetsFNF/week5"	rename="assets/week2"	library="week5"					exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/week5"	rename="assets/week2"	library="week5"					exclude="*.mp3" unless="web"/>
-		<assets path="assetsFNF/week6"	rename="assets/week2"	library="week6"					exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/week6"	rename="assets/week2"	library="week6"					exclude="*.mp3" unless="web"/>
-		<assets path="assetsFNF/week7"	rename="assets/week2"	library="week7"					exclude="*.ogg" if="web"/>
-		<assets path="assetsFNF/week7"	rename="assets/week2"	library="week7"					exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/preload"	rename="assets"											exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/preload"	rename="assets" 										exclude="*.mp3" unless="web"/>
+		
+		<assets path="assetsFNF/shared"		rename="assets/shared"	library="shared"				exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/shared"		rename="assets/shared"	library="shared"				exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/songs"		rename="assets/songs"	library="songs"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/songs"		rename="assets/songs"	library="songs"					exclude="*.mp3" unless="web"/>
+		
+		<assets path="assetsFNF/week2"		rename="assets/week2"	library="week2"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/week2"		rename="assets/week2"	library="week2"					exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/week3"		rename="assets/week3"	library="week3"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/week3"		rename="assets/week3"	library="week3"					exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/week4"		rename="assets/week4"	library="week4"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/week4"		rename="assets/week4"	library="week4"					exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/week5"		rename="assets/week5"	library="week5"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/week5"		rename="assets/week5"	library="week5"					exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/week6"		rename="assets/week6"	library="week6"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/week6"		rename="assets/week6"	library="week6"					exclude="*.mp3" unless="web"/>
+		<assets path="assetsFNF/week7"		rename="assets/week7"	library="week7"					exclude="*.ogg" if="web"/>
+		<assets path="assetsFNF/week7"		rename="assets/week7"	library="week7"					exclude="*.mp3" unless="web"/>
 	</section>
 	
 	<section if="MODS_ALLOWED">
@@ -135,7 +136,7 @@
 		THEN UHHH I USED THE NAME OF THE FONT WITH SETFORMAT() ON THE TEXT!!!
 		NOT USING A DIRECT THING TO THE ASSET!!!
 	-->
-	<assets path="assets/fonts" embed='false'/>
+	<assets path="assets/fonts"/>
 	<!-- _______________________________ Libraries ______________________________ -->
 
 	<haxelib name="flixel" />
