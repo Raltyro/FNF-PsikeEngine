@@ -64,7 +64,7 @@ import sys.FileSystem;
 #end
 
 #if VIDEOS_ALLOWED
-import vlc.MP4Handler;
+import VideoHandler;
 #end
 
 using StringTools;
@@ -1480,7 +1480,7 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	public function startVideo(name:String)
+	public function startVideo(name:String, loop:Bool = false, haccelerated:Bool = true, pauseMusic:Bool = false)
 	{
 		#if VIDEOS_ALLOWED
 		inCutscene = true;
@@ -1492,24 +1492,31 @@ class PlayState extends MusicBeatState
 		if(!OpenFlAssets.exists(filepath))
 		#end
 		{
-			FlxG.log.warn('Couldnt find video file: ' + name);
-			startAndEnd();
-			return;
+		    FlxG.log.warn('Couldnt find video file: ' + name);
+		    startAndEnd();
+		    return;
 		}
 
-		FlxG.sound.music.stop();
-		var video:MP4Handler = new MP4Handler();
-		video.playVideo(filepath);
-		
+		var bg = new FlxSprite(-FlxG.width, -FlxG.height).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
+		bg.scrollFactor.set();
+		bg.cameras = [camHUD];
+		add(bg);
+
+		var video:VideoHandler = new VideoHandler();
+		video.playVideo(filepath, loop, haccelerated, pauseMusic);
 		video.finishCallback = function()
 		{
-			startAndEnd();
+		    remove(bg);
+		    startAndEnd();
+		    Paths.clearUnusedMemory();
 		}
+		return;
 		#else
 		FlxG.log.warn('Platform not supported!');
 		startAndEnd();
+		return;
 		#end
-	}
+    	}
 
 	function startAndEnd()
 	{
@@ -2209,6 +2216,7 @@ class PlayState extends MusicBeatState
 
 		if (Conductor.songPosition <= vocals.length) vocals.time = time;
 		if (!vocals.playing) vocals.play();
+		
 		Conductor.songPosition = time;
 		songTime = time;
 	}
@@ -3809,7 +3817,6 @@ class PlayState extends MusicBeatState
 				return;
 			}
 
-			WeekData.loadTheFirstEnabledMod();
 			if (isStoryMode)
 			{
 				campaignScore += songScore;
