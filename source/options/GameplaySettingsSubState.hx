@@ -144,6 +144,14 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.maxValue = 10;
 		option.changeValue = 0.1;
 		addOption(option);
+		
+		var option:Option = new Option('Auto Pause',
+			"If checked, game will pause if it's unfocused",
+			'autoPause',
+			'bool',
+			true);
+		option.onChange = onChangeAutoPause;
+		addOption(option);
 
 		super();
 	}
@@ -151,5 +159,10 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 	function onChangeHitsoundVolume()
 	{
 		FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.hitsoundVolume);
+	}
+	
+	function onChangeAutoPause()
+	{
+		FlxG.autoPause = ClientPrefs.autoPause;
 	}
 }

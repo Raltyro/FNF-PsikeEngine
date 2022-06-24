@@ -10,6 +10,7 @@ class ClientPrefs {
 	public static var downScroll:Bool = false;
 	public static var middleScroll:Bool = false;
 	public static var opponentStrums:Bool = true;
+	public static var autoPause:Bool = true;
 	public static var showFPS:Bool = true;
 	public static var flashing:Bool = true;
 	public static var globalAntialiasing:Bool = true;
@@ -99,6 +100,7 @@ class ClientPrefs {
 		FlxG.save.data.downScroll = downScroll;
 		FlxG.save.data.middleScroll = middleScroll;
 		FlxG.save.data.opponentStrums = opponentStrums;
+		FlxG.save.data.autoPause = autoPause;
 		FlxG.save.data.showFPS = showFPS;
 		FlxG.save.data.flashing = flashing;
 		FlxG.save.data.globalAntialiasing = globalAntialiasing;
@@ -152,6 +154,9 @@ class ClientPrefs {
 		if(FlxG.save.data.opponentStrums != null) {
 			opponentStrums = FlxG.save.data.opponentStrums;
 		}
+		if(FlxG.save.data.autoPause != null) {
+			FlxG.autoPause = autoPause = FlxG.save.data.autoPause;
+		}
 		if(FlxG.save.data.showFPS != null) {
 			showFPS = FlxG.save.data.showFPS;
 			if(Main.fpsVar != null) {
@@ -180,6 +185,20 @@ class ClientPrefs {
 				FlxG.updateFramerate = framerate;
 			}
 		}
+		#if !html5
+		else {
+			var refreshRate:Int = Application.current.window.displayMode.refreshRate;
+			if(framerate != refreshRate) {
+				framerate = refreshRate;
+				if(framerate < 60) {
+					framerate = 60;
+				} else if(framerate > 240) {
+					framerate = 240;
+				}
+			}
+		}
+		#end
+		
 		/*if(FlxG.save.data.cursing != null) {
 			cursing = FlxG.save.data.cursing;
 		}
