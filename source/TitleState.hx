@@ -221,7 +221,8 @@ class TitleState extends MusicBeatState
 
 			if (initialized)
 				startIntro();
-			else {
+			else
+			{
 				new FlxTimer().start(1, function(tmr:FlxTimer)
 				{
 					startIntro();
@@ -490,7 +491,7 @@ class TitleState extends MusicBeatState
 				titleText.alpha = FlxMath.lerp(titleTextAlphas[0], titleTextAlphas[1], timer);
 			}
 			
-			if (pressedEnter)
+			if(pressedEnter)
 			{
 				titleText.color = FlxColor.WHITE;
 				titleText.alpha = 1;
