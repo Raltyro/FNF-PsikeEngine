@@ -122,10 +122,12 @@ class Paths
 		
 		if (obj != null) {
 			@:privateAccess{
-				obj.__buffer.src = null;
-				obj.__buffer.data = null;
-				obj.__buffer.dispose();
-				obj.__buffer = null;
+				if (obj.__buffer != null) {
+					obj.__buffer.src = null;
+					obj.__buffer.data = null;
+					obj.__buffer.dispose();
+					obj.__buffer = null;
+				}
 				obj = null;
 			}
 			
