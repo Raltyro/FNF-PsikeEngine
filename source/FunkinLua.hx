@@ -2762,6 +2762,7 @@ class FunkinLua {
 		#if LUA_ALLOWED
 		var v:String = Lua.tostring(lua, -1);
 		if(!isErrorAllowed(v)) v = null;
+		Lua.pop(lua, 1);
 		return v;
 		#end
 	}
@@ -2775,7 +2776,7 @@ class FunkinLua {
 
 			Lua.getglobal(lua, func);
 			
-			#if (linc_luajit >= "0.0.6")
+			#if (linc_luajit >= "0.0.5")
 			if(Lua.isfunction(lua, -1) == true)
 			#else
 			if(Lua.isfunction(lua, -1) == 1)
@@ -2785,7 +2786,7 @@ class FunkinLua {
 				var result: Dynamic = Lua.pcall(lua, args.length, 1, 0);
 				if(result != 0)
 				{
-					//var err = getErrorMessage();
+					var err = getErrorMessage();
 					//if(errorHandler != null)
 					//	errorHandler(err);
 					//else
@@ -2891,11 +2892,24 @@ class FunkinLua {
 	}
 
 	static inline var CLENSE:String = "
+	debug.debug, debug.gethook, debug.getlocal, debug.getregistry = nil, nil, nil, nil
+	debug.getupvalue, debug.setfenv, debug.sethook, debug.setlocal = nil, nil, nil, nil
+	debug.setupvalue = nil
+	package.loaders, package.loadlib, package.seeall = nil, nil, nil, nil
+	package.searchpath = nil
+	package.config = nil
+	package.preload.ffi = nil
+	package.loaded.jit = nil
+	package.loaded['jit.opt'] = nil
+	package.preload['jit.util'] = nil
+	package.preload['jit.profile'] = nil
+	package.loaded.os = nil
+	package.loaded.debug = nil
+	package.loaded.io = nil
 	os.execute, os.getenv, os.rename, os.remove, os.tmpname = nil, nil, nil, nil, nil
 	io, load, loadfile, loadstring, dofile = nil, nil, nil, nil, nil
-	require, module, package = nil, nil, nil
+	require, module = nil, nil, nil
 	newproxy = nil
-	gcinfo = nil
 	jit = nil
 	"; // superpowers04/cyn-8/DragShot
 }
