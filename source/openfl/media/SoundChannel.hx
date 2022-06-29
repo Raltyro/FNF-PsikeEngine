@@ -231,6 +231,50 @@ import lime.media.AudioSource;
 		if (!__isValid) return 1;
 		
 		#if lime
+		#if (lime_cffi && !macro)
+		// MS, NOT SECOND
+		var time:Float = position - 10;
+		var endTime:Float = time + 10 + Math.min(pitch * 200, 500);
+		
+		var buffer = __source.buffer;
+		if (buffer == null || buffer.data == null) return 1;
+		var bytes = buffer.data.buffer;
+		
+		var khz:Float = (buffer.sampleRate / 1000);
+		var channels:Int = buffer.channels;
+		
+		var index:Int = Std.int(time * khz);
+		
+		var samples:Float = ((endTime - time) * khz);
+		samples = samples < 1 ? 1 : samples;
+		
+		var lmin:Float = 0;
+		var lmax:Float = 0;
+		
+		var rows:Float = 0;
+		
+		while (index < (bytes.length - 1)) {
+			if (index >= 0) {
+				var byte:Int = bytes.getUInt16(index * channels * 2);
+				
+				if (byte > 65535 / 2) byte -= 65535;
+				
+				var sample:Float = (byte / 65535);
+				
+				if (sample > 0) {
+					if (sample > lmax) lmax = sample;
+				} else if (sample < 0) {
+					if (sample < lmin) lmin = sample;
+				}
+			}
+			
+			if (rows >= samples) break;
+			rows++;
+		}
+		
+		return (Math.abs(lmin) + lmax) * 2 * (soundTransform == null ? 1 : soundTransform.volume);
+		#end
+		
 		return 1;
 		#else
 		return 0;
@@ -242,6 +286,51 @@ import lime.media.AudioSource;
 		if (!__isValid) return 1;
 		
 		#if lime
+		#if (lime_cffi && !macro)
+		// MS, NOT SECOND
+		var time:Float = position - 10;
+		var endTime:Float = time + 10 + Math.min(pitch * 125, 325);
+		
+		var buffer = __source.buffer;
+		if (buffer == null || buffer.data == null) return 1;
+		var bytes = buffer.data.buffer;
+		
+		var khz:Float = (buffer.sampleRate / 1000);
+		var channels:Int = buffer.channels;
+		if (channels < 2) return 1;
+		
+		var index:Int = Std.int(time * khz);
+		
+		var samples:Float = ((endTime - time) * khz);
+		samples = samples < 1 ? 1 : samples;
+		
+		var rmin:Float = 0;
+		var rmax:Float = 0;
+		
+		var rows:Float = 0;
+		
+		while (index < (bytes.length - 1)) {
+			if (index >= 0) {
+				var byte:Int = bytes.getUInt16((index * channels * 2) + 2);
+				
+				if (byte > 65535 / 2) byte -= 65535;
+				
+				var sample:Float = (byte / 65535);
+				
+				if (sample > 0) {
+					if (sample > rmax) rmax = sample;
+				} else if (sample < 0) {
+					if (sample < rmin) rmin = sample;
+				}
+			}
+			
+			if (rows >= samples) break;
+			rows++;
+		}
+		
+		return (Math.abs(rmin) + rmax) * 2 * (soundTransform == null ? 1 : soundTransform.volume);
+		#end
+		
 		return 1;
 		#else
 		return 0;

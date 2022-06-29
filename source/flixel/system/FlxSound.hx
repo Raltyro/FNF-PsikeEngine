@@ -56,17 +56,17 @@ class FlxSound extends FlxBasic
 	/**
 	 * Stores the average wave amplitude of both stereo channels
 	 */
-	public var amplitude(default, null):Float;
+	public var amplitude(get, null):Float;
 
 	/**
 	 * Just the amplitude of the left stereo channel
 	 */
-	public var amplitudeLeft(default, null):Float;
+	public var amplitudeLeft(get, null):Float;
 
 	/**
 	 * Just the amplitude of the left stereo channel
 	 */
-	public var amplitudeRight(default, null):Float;
+	public var amplitudeRight(get, null):Float;
 
 	/**
 	 * Whether to call `destroy()` when the sound has finished playing.
@@ -165,6 +165,21 @@ class FlxSound extends FlxBasic
 	 * Internal tracker for volume.
 	 */
 	var _volume:Float;
+	
+	/**
+	 * Internal tracker for amplitudeLeft.
+	 */
+	var _amplitudeLeft:Float;
+	
+	/**
+	 * Internal tracker for amplitudeRight.
+	 */
+	var _amplitudeRight:Float;
+	
+	/**
+	 * Internal tracker for sound last position on when amplitude was used.
+	 */
+	var _amplitudeTime:Float;
 
 	/**
 	 * Internal tracker for sound channel position.
@@ -236,9 +251,6 @@ class FlxSound extends FlxBasic
 		_radius = 0;
 		_proximityPan = false;
 		visible = false;
-		amplitude = 0;
-		amplitudeLeft = 0;
-		amplitudeRight = 0;
 		autoDestroy = false;
 
 		if (_transform == null)
@@ -302,19 +314,6 @@ class FlxSound extends FlxBasic
 
 		_volumeAdjust = radialMultiplier;
 		updateTransform();
-
-		if (_transform.volume > 0)
-		{
-			amplitudeLeft = _channel.leftPeak / _transform.volume;
-			amplitudeRight = _channel.rightPeak / _transform.volume;
-			amplitude = (amplitudeLeft + amplitudeRight) * 0.5;
-		}
-		else
-		{
-			amplitudeLeft = 0;
-			amplitudeRight = 0;
-			amplitude = 0;
-		}
 
 		if (endTime != null && _time >= endTime)
 			stopped();
@@ -607,6 +606,7 @@ class FlxSound extends FlxBasic
 		_channel = _sound.play(_time, 0, _transform);
 		if (_channel != null)
 		{
+			_amplitudeTime = -1;
 			pitch = _pitch;
 			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
 			active = true;
@@ -730,6 +730,39 @@ class FlxSound extends FlxBasic
 		_volume = FlxMath.bound(Volume, 0, 4);
 		updateTransform();
 		return Volume;
+	}
+	
+	function update_amplitude()
+	{
+		if (_channel == null || _time == _amplitudeTime) return;
+		
+		if (_transform.volume > 0)
+		{
+			_amplitudeLeft = _channel.leftPeak / _transform.volume;
+			_amplitudeRight = _channel.rightPeak / _transform.volume;
+		}
+		else
+		{
+			_amplitudeLeft = 0;
+			_amplitudeRight = 0;
+		}
+		
+		_amplitudeTime = _time;
+	}
+	
+	function get_amplitudeLeft():Float {
+		update_amplitude();
+		return _amplitudeLeft;
+	}
+	
+	function get_amplitudeRight():Float {
+		update_amplitude();
+		return _amplitudeRight;
+	}
+	
+	function get_amplitude():Float {
+		update_amplitude();
+		return (_amplitudeLeft + _amplitudeRight) * 0.5;
 	}
 
 	inline function get_pitch():Float
