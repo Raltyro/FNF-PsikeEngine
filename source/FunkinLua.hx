@@ -2960,28 +2960,6 @@ class FunkinLua {
 	{
 		return PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance;
 	}
-
-	static inline var CLENSE:String = "
-	debug.debug, debug.gethook, debug.getlocal, debug.getregistry = nil, nil, nil, nil
-	debug.getupvalue, debug.setfenv, debug.sethook, debug.setlocal = nil, nil, nil, nil
-	debug.setupvalue = nil
-	package.loaders, package.loadlib, package.seeall = nil, nil, nil, nil
-	package.searchpath = nil
-	package.config = nil
-	package.preload.ffi = nil
-	package.loaded.jit = nil
-	package.loaded['jit.opt'] = nil
-	package.preload['jit.util'] = nil
-	package.preload['jit.profile'] = nil
-	package.loaded.os = nil
-	package.loaded.debug = nil
-	package.loaded.io = nil
-	os.execute, os.getenv, os.rename, os.remove, os.tmpname = nil, nil, nil, nil, nil
-	io, load, loadfile, loadstring, dofile = nil, nil, nil, nil, nil
-	require, module = nil, nil, nil
-	newproxy = nil
-	jit = nil
-	"; // superpowers04/cyn-8/DragShot
 }
 
 class ModchartSprite extends FlxSprite
