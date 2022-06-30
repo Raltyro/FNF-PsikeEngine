@@ -2830,7 +2830,6 @@ class FunkinLua {
 		#if LUA_ALLOWED
 		var v:String = Lua.tostring(lua, -1);
 		if(!isErrorAllowed(v)) v = null;
-		Lua.pop(lua, 1);
 		return v;
 		#end
 	}
@@ -2845,36 +2844,31 @@ class FunkinLua {
 			if(lua == null) return Function_Continue;
 
 			Lua.getglobal(lua, func);
-			
-			#if (linc_luajit >= "0.0.5")
-			if(Lua.isfunction(lua, -1) == true)
-			#else
-			if(Lua.isfunction(lua, -1) == 1)
-			#end
-			{
-				for(arg in args) Convert.toLua(lua, arg);
-				var result: Dynamic = Lua.pcall(lua, args.length, 1, 0);
-				if(result != 0)
-				{
-					var err = getErrorMessage();
-					//if(errorHandler != null)
-					//	errorHandler(err);
-					//else
-					luaTrace("ERROR (" + func + "): " + err, false, false, FlxColor.RED);
-					//LuaL.error(state,err);
-
-					//Lua.pop(lua, 1);
-					return Function_Continue;
-				}
-				else
-				{
-					var conv:Dynamic = Convert.fromLua(lua, -1);
-					Lua.pop(lua, 1);
-					if(conv == null) conv = Function_Continue;
-					return conv;
-				}
+			var type:Int = Lua.type(lua, -1);
+			if (type != Lua.LUA_TFUNCTION) {
+				return Function_Continue;
 			}
-			Lua.pop(lua, 1);
+			
+			for(arg in args) {
+				Convert.toLua(lua, arg);
+			}
+
+			var result:Null<Int> = Lua.pcall(lua, args.length, 1, 0);
+			trace(result);
+			var error:Dynamic = getErrorMessage();
+			if(!resultIsAllowed(lua, result))
+			{
+				Lua.pop(lua, 1);
+				if(error != null) luaTrace("ERROR (" + func + "): " + error, false, false, FlxColor.RED);
+			}
+			else
+			{
+				var conv:Dynamic = Convert.fromLua(lua, -1);
+				Lua.pop(lua, 1);
+				if(conv == null) conv = Function_Continue;
+				return conv;
+			}
+			return Function_Continue;
 		}
 		catch (e:Dynamic) {
 			trace(e);
@@ -2907,7 +2901,8 @@ class FunkinLua {
 
 	#if LUA_ALLOWED
 	function resultIsAllowed(leLua:State, leResult:Null<Int>) { //Makes it ignore warnings
-		return Lua.type(leLua, leResult) >= Lua.LUA_TNIL;
+		var type:Int = Lua.type(leLua, leResult);
+		return type >= Lua.LUA_TNIL && type < LUA_TFUNCTION && type != LUA_TLIGHTUSERDATA;
 	}
 
 	function isErrorAllowed(error:String) {
