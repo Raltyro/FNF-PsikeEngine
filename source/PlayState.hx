@@ -5009,11 +5009,11 @@ class PlayState extends MusicBeatState
 			var ret:Dynamic = script.call(event, args);
 			if(ret == FunkinLua.Function_StopLua && !ignoreStops)
 				break;
-
+			
 			// had to do this because there is a bug in haxe where Stop != Continue doesnt work
 			var bool:Bool = ret == FunkinLua.Function_Continue;
 			if(!bool) {
-				returnVal = ret;
+				returnVal = cast ret;
 			}
 		}
 		#end
