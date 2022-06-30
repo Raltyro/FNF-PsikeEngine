@@ -2854,7 +2854,6 @@ class FunkinLua {
 			}
 
 			var result:Null<Int> = Lua.pcall(lua, args.length, 1, 0);
-			trace(result);
 			var error:Dynamic = getErrorMessage();
 			if(!resultIsAllowed(lua, result))
 			{
@@ -2863,7 +2862,7 @@ class FunkinLua {
 			}
 			else
 			{
-				var conv:Dynamic = Convert.fromLua(lua, -1);
+				var conv:Dynamic = Convert.fromLua(lua, result);
 				Lua.pop(lua, 1);
 				if(conv == null) conv = Function_Continue;
 				return conv;
@@ -2902,7 +2901,7 @@ class FunkinLua {
 	#if LUA_ALLOWED
 	function resultIsAllowed(leLua:State, leResult:Null<Int>) { //Makes it ignore warnings
 		var type:Int = Lua.type(leLua, leResult);
-		return type >= Lua.LUA_TNIL && type < LUA_TFUNCTION && type != LUA_TLIGHTUSERDATA;
+		return type >= Lua.LUA_TNIL && type < Lua.LUA_TFUNCTION && type != Lua.LUA_TLIGHTUSERDATA;
 	}
 
 	function isErrorAllowed(error:String) {
