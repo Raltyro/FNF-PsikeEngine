@@ -13,6 +13,8 @@ class ClientPrefs {
 	public static var opponentStrums:Bool = true;
 	public static var autoPause:Bool = true;
 	public static var showFPS:Bool = true;
+	public static var showMem:Bool = true;
+	public static var showMemPeak:Bool = true;
 	public static var flashing:Bool = true;
 	public static var globalAntialiasing:Bool = true;
 	public static var noteSplashes:Bool = true;
@@ -104,6 +106,7 @@ class ClientPrefs {
 		FlxG.save.data.opponentStrums = opponentStrums;
 		FlxG.save.data.autoPause = autoPause;
 		FlxG.save.data.showFPS = showFPS;
+		FlxG.save.data.showMem = showMem;
 		FlxG.save.data.flashing = flashing;
 		FlxG.save.data.globalAntialiasing = globalAntialiasing;
 		FlxG.save.data.noteSplashes = noteSplashes;
@@ -160,12 +163,22 @@ class ClientPrefs {
 		if(FlxG.save.data.autoPause != null) {
 			FlxG.autoPause = autoPause = FlxG.save.data.autoPause;
 		}
+		
 		if(FlxG.save.data.showFPS != null) {
 			showFPS = FlxG.save.data.showFPS;
-			if(Main.fpsVar != null) {
-				Main.fpsVar.visible = showFPS;
-			}
 		}
+		if(FlxG.save.data.showMem != null) {
+			showMem = FlxG.save.data.showMem;
+		}
+		if(FlxG.save.data.showMemPeak != null) {
+			showMemPeak = FlxG.save.data.showMemPeak;
+		}
+		if(Main.fpsVar != null) {
+			Main.fpsVar.showFPS = showFPS;
+			Main.fpsVar.showMem = showMem;
+			Main.fpsVar.showMemPeak = showMemPeak;
+		}
+		
 		if(FlxG.save.data.flashing != null) {
 			flashing = FlxG.save.data.flashing;
 		}

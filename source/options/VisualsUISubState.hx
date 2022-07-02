@@ -96,7 +96,23 @@ class VisualsUISubState extends BaseOptionsMenu
 			'bool',
 			true);
 		addOption(option);
-		option.onChange = onChangeFPSCounter;
+		option.onChange = onChangeCounter;
+		
+		var option:Option = new Option('Memory Counter',
+			'If unchecked, hides Memory Counter.',
+			'showMem',
+			'bool',
+			true);
+		addOption(option);
+		option.onChange = onChangeCounter;
+		
+		var option:Option = new Option('Memory Peak Counter',
+			'If unchecked, hides Memory Peak Counter.',
+			'showMemPeak',
+			'bool',
+			true);
+		addOption(option);
+		option.onChange = onChangeCounter;
 		#end
 		
 		var option:Option = new Option('Pause Screen Song:',
@@ -138,10 +154,13 @@ class VisualsUISubState extends BaseOptionsMenu
 	}
 
 	#if !mobile
-	function onChangeFPSCounter()
+	function onChangeCounter()
 	{
-		if(Main.fpsVar != null)
-			Main.fpsVar.visible = ClientPrefs.showFPS;
+		if(Main.fpsVar != null) {
+			Main.fpsVar.showFPS = ClientPrefs.showFPS;
+			Main.fpsVar.showMem = ClientPrefs.showMem;
+			Main.fpsVar.showMemPeak = ClientPrefs.showMemPeak;
+		}
 	}
 	#end
 }

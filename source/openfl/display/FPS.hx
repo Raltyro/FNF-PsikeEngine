@@ -17,6 +17,16 @@ import openfl.Lib;
 import openfl.system.System;
 #end
 
+#if cpp
+import cpp.vm.Gc;
+#elseif hl
+import hl.Gc;
+#elseif java
+import java.vm.Gc;
+#elseif neko
+import neko.vm.Gc;
+#end
+
 /**
 	The FPS class provides an easy-to-use monitor to display
 	the current frame rate of an OpenFL project
@@ -31,25 +41,36 @@ class FPS extends TextField
 		The current frame rate, expressed using frames-per-second
 	**/
 	public var currentFPS(default, null):Int;
+	public var currentMem(default, null):Float;
+	public var currentMemPeak(default, null):Float;
+	
+	public var showFPS:Bool = true;
+	public var showMem:Bool = false;
+	public var showMemPeak:Bool = false;
 
 	@:noCompletion private var cacheCount:Int;
 	@:noCompletion private var currentTime:Float;
 	@:noCompletion private var times:Array<Float>;
 
-	public function new(x:Float = 10, y:Float = 10, color:Int = 0x000000)
+	public function new(x:Float = 10, y:Float = 10, color:Int = 0x000000, showFPS:Bool = true, showMem:Bool = false)
 	{
 		super();
 
+		currentFPS = 0;
+		currentMem = 0;
+		currentMemPeak = 0;
+		
 		this.x = x;
 		this.y = y;
-
-		currentFPS = 0;
 		selectable = false;
 		mouseEnabled = false;
-		defaultTextFormat = new TextFormat("_sans", 14, color);
+		defaultTextFormat = new TextFormat(Paths.font("vcr.ttf"), 16, color);
+
+		width = 400;
+		height = 70;
+		
 		autoSize = LEFT;
 		multiline = true;
-		text = "FPS: ";
 
 		cacheCount = 0;
 		currentTime = 0;
@@ -68,6 +89,8 @@ class FPS extends TextField
 	@:noCompletion
 	private #if !flash override #end function __enterFrame(deltaTime:Float):Void
 	{
+		var canRender:Bool = visible && (showFPS || showMem || showMemPeak);
+		
 		currentTime += deltaTime;
 		times.push(currentTime);
 
@@ -79,32 +102,45 @@ class FPS extends TextField
 		var currentCount = times.length;
 		currentFPS = Math.round((currentCount + cacheCount) / 2);
 		if (currentFPS > ClientPrefs.framerate) currentFPS = ClientPrefs.framerate;
+		
+		currentMem = (get_totalMemory() / 1024) / 1000;
+		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
 
-		if (currentCount != cacheCount /*&& visible*/)
-		{
-			text = "FPS: " + currentFPS;
-			var memoryMegas:Float = 0;
-			
-			#if openfl
-			memoryMegas = Math.abs(FlxMath.roundDecimal(System.totalMemory / 1000000, 1));
-			text += "\nMemory: " + memoryMegas + " MB";
-			#end
+		if (canRender) {
+			if (currentCount != cacheCount) {
+				if (currentMem > 3000 || currentFPS <= ClientPrefs.framerate / 2)
+					textColor = 0xFFFF0000;
+				else
+					textColor = 0xFFFFFFFF;
+				
+				text = (
+					(showFPS ? ("FPS: " + Math.floor(currentFPS) + "\n") : "") +
+					(
+						showMem && showMemPeak ? ("MEM / PEAK: " + CoolUtil.truncateFloat(currentMem) + " MB / " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+						showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
+						showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+						""
+					)
+				);
 
-			textColor = 0xFFFFFFFF;
-			if (memoryMegas > 3000 || currentFPS <= ClientPrefs.framerate / 2)
-			{
-				textColor = 0xFFFF0000;
+				text += "\n";
 			}
-
-			#if (gl_stats && !disable_cffi && (!html5 || !canvas))
-			text += "\ntotalDC: " + Context3DStats.totalDrawCalls();
-			text += "\nstageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE);
-			text += "\nstage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D);
-			#end
-
-			text += "\n";
 		}
+		else
+			text = "\n";
 
 		cacheCount = currentCount;
+	}
+	
+	public static function get_totalMemory():Int {
+		return
+			#if cpp
+			Gc.memUsage()
+			#elseif hl
+			Gc.stats().totalAllocated
+			#elseif (java || neko)
+			Gc.stats().heap
+			#end
+		;
 	}
 }

@@ -30,8 +30,9 @@ class Highscore
 		setWeekScore(daWeek, 0);
 	}
 
-	public static function floorDecimal(value:Float, decimals:Int):Float
-	{
+	inline public static function floorDecimal(value:Float, decimals:Int):Float
+		return CoolUtil.truncateFloat(value, decimals);
+	/*{
 		if(decimals < 1)
 		{
 			return Math.floor(value);
@@ -44,7 +45,7 @@ class Highscore
 		}
 		var newValue:Float = Math.floor(value * tempMult);
 		return newValue / tempMult;
-	}
+	}*/
 
 	public static function saveScore(song:String, score:Int = 0, ?diff:Int = 0, ?rating:Float = -1):Void
 	{

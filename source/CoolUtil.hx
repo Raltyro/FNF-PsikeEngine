@@ -57,6 +57,13 @@ class CoolUtil
 	inline public static function boundTo(value:Float, min:Float, max:Float):Float {
 		return Math.max(min, Math.min(max, value));
 	}
+	
+	public static function truncateFloat(x:Float,precision:Int = 2,round:Bool = false):Float {
+		if (precision == 0) return Math.floor(x);
+		
+		x = x * Math.pow(10, precision);
+		return (round ? Math.round(x) : Math.floor(x)) / Math.pow(10, precision);
+	}
 
 	public static function coolTextFile(path:String):Array<String>
 	{
