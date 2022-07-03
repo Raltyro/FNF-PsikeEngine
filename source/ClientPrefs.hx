@@ -161,9 +161,8 @@ class ClientPrefs {
 			opponentStrums = FlxG.save.data.opponentStrums;
 		}
 		if(FlxG.save.data.autoPause != null) {
-			FlxG.autoPause = autoPause = FlxG.save.data.autoPause;
+			#if !html5 FlxG.autoPause = #end autoPause = FlxG.save.data.autoPause;
 		}
-		
 		if(FlxG.save.data.showFPS != null) {
 			showFPS = FlxG.save.data.showFPS;
 		}

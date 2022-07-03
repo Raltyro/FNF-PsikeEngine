@@ -76,6 +76,16 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			'bool',
 			false);
 		addOption(option);
+		
+		#if !html5
+		var option:Option = new Option('Auto Pause',
+			"If checked, game will pause if it's unfocused",
+			'autoPause',
+			'bool',
+			true);
+		option.onChange = onChangeAutoPause;
+		addOption(option);
+		#end
 
 		var option:Option = new Option('Hitsound Volume',
 			'Funny notes does \"Tick!\" when you hit them."',
@@ -144,14 +154,6 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.maxValue = 10;
 		option.changeValue = 0.1;
 		addOption(option);
-		
-		var option:Option = new Option('Auto Pause',
-			"If checked, game will pause if it's unfocused",
-			'autoPause',
-			'bool',
-			true);
-		option.onChange = onChangeAutoPause;
-		addOption(option);
 
 		super();
 	}
@@ -161,8 +163,10 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.hitsoundVolume);
 	}
 	
+	#if !html5
 	function onChangeAutoPause()
 	{
 		FlxG.autoPause = ClientPrefs.autoPause;
 	}
+	#end
 }
