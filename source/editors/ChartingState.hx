@@ -2931,29 +2931,42 @@ class ChartingState extends MusicBeatState
 		//shitty null fix, i fucking hate it when this happens
 		//make it look sexier if possible
 		try {
+			var defaultDiff:String = CoolUtil.defaultDifficulty.toLowerCase();
+			var songLower:String = song.toLowerCase();
+			
 			var ind:Int = song.lastIndexOf("-");
 			var success:Bool = false;
 			if (ind != -1) {
 				try {
-					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.substring(0, ind).toLowerCase());
+					PlayState.SONG = Song.loadFromJson(songLower, songLower.substring(0, ind));
 					success = true;
+					
+					// after loaded
+					var diff:String = songLower.substring(ind + 1);
+					var ind:Int = CoolUtil.lowerDifficulties.indexOf(diff);
+					if (ind != -1) PlayState.storyDifficulty = ind;
 				}
 				catch(e) {}
 			}
 			if (!success) {
-				if (CoolUtil.difficulties[PlayState.storyDifficulty] != CoolUtil.defaultDifficulty) {
-					if(CoolUtil.difficulties[PlayState.storyDifficulty] == null){
-						PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
-					}else{
-						PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + CoolUtil.difficulties[PlayState.storyDifficulty], song.toLowerCase());
+				var diff:String = CoolUtil.difficulties[PlayState.storyDifficulty];
+				if (diff != null) diff = diff.toLowerCase();
+				
+				if (diff != null && diff != defaultDiff) {
+					try {
+						PlayState.SONG = Song.loadFromJson(songLower + "-" + diff, songLower);
 					}
-				}else{
-					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+					catch(e) {}
 				}
+				PlayState.SONG = Song.loadFromJson(songLower, songLower);
+				
+				// after loaded
+				var ind:Int = CoolUtil.lowerDifficulties.indexOf(defaultDiff);
+				if (ind != -1) PlayState.storyDifficulty = ind;
 			}
 		}
 		catch(e) {
-			addTextToDebug("Problem with Loading Song Data \"" + song.toLowerCase() + "\"", 0xFFFF0000);
+			addTextToDebug("Problem with Loading Song data \"" + song.toLowerCase() + "\"", 0xFFFF0000);
 			return;
 		}
 		MusicBeatState.resetState();
@@ -3047,7 +3060,7 @@ class ChartingState extends MusicBeatState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		addTextToDebug("Problem saving Song Data", 0xFFFF0000);
+		addTextToDebug("Problem saving Song data", 0xFFFF0000);
 	}
 
 	function getSectionBeats(?section:Null<Int> = null)
