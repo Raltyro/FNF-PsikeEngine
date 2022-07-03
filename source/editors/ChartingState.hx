@@ -1676,6 +1676,7 @@ class ChartingState extends MusicBeatState
 			{
 				autosaveSong();
 				FlxG.mouse.visible = false;
+				Main.fpsVar.inEditor = false;
 				PlayState.SONG = _song;
 				FlxG.sound.music.stop();
 				if(vocals != null) vocals.stop();
@@ -2931,21 +2932,28 @@ class ChartingState extends MusicBeatState
 		//make it look sexier if possible
 		try {
 			var ind:Int = song.lastIndexOf("-");
-			if (ind != -1)
-				PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.substring(0, ind).toLowerCase());
-			
-			if (CoolUtil.difficulties[PlayState.storyDifficulty] != CoolUtil.defaultDifficulty) {
-				if(CoolUtil.difficulties[PlayState.storyDifficulty] == null){
-					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
-				}else{
-					PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + CoolUtil.difficulties[PlayState.storyDifficulty], song.toLowerCase());
+			var success:Bool = false;
+			if (ind != -1) {
+				try {
+					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.substring(0, ind).toLowerCase());
+					success = true;
 				}
-			}else{
-				PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+				catch(e) {}
+			}
+			if (!success) {
+				if (CoolUtil.difficulties[PlayState.storyDifficulty] != CoolUtil.defaultDifficulty) {
+					if(CoolUtil.difficulties[PlayState.storyDifficulty] == null){
+						PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+					}else{
+						PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + CoolUtil.difficulties[PlayState.storyDifficulty], song.toLowerCase());
+					}
+				}else{
+					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+				}
 			}
 		}
 		catch(e) {
-			addTextToDebug("Problem with Loading Song \"" + song.toLowerCase() + "\"", FlxColor.RED);
+			addTextToDebug("Problem with Loading Song Data \"" + song.toLowerCase() + "\"", 0xFFFF0000);
 			return;
 		}
 		MusicBeatState.resetState();
@@ -3016,7 +3024,7 @@ class ChartingState extends MusicBeatState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		FlxG.log.notice("Successfully saved LEVEL DATA.");
+		addTextToDebug("Successfully saved Song data");
 	}
 
 	/**
@@ -3039,7 +3047,7 @@ class ChartingState extends MusicBeatState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		FlxG.log.error("Problem saving Level data");
+		addTextToDebug("Problem saving Song Data", 0xFFFF0000);
 	}
 
 	function getSectionBeats(?section:Null<Int> = null)
@@ -3061,7 +3069,7 @@ class ChartingState extends MusicBeatState
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
 	
-	public function addTextToDebug(text:String, color:FlxColor) {
+	public function addTextToDebug(text:String, color:FlxColor = 0xFFFF0000) {
 		debugGroup.forEachAlive(function(spr:DebugLuaText) {
 			spr.y += 20;
 		});

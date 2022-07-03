@@ -36,7 +36,7 @@ class FreeplayState extends MusicBeatState
 	var scoreBG:FlxSprite;
 	var scoreText:FlxText;
 	var diffText:FlxText;
-	var loadedText:FlxText;
+	var countText:FlxText;
 	var lerpScore:Int = 0;
 	var lerpRating:Float = 0;
 	var intendedScore:Int = 0;
@@ -154,11 +154,11 @@ class FreeplayState extends MusicBeatState
 		diffText = new FlxText(scoreText.x, scoreText.y + 36, 0, "", 24);
 		diffText.font = scoreText.font;
 		
-		loadedText = new FlxText(scoreText.x, scoreText.y + 12, 0, "", 32);
-		loadedText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		loadedText.borderSize = 1.25;
+		countText = new FlxText(scoreText.x, scoreText.y + 12, 0, "", 32);
+		countText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		countText.borderSize = 1.25;
 		
-		add(loadedText);
+		add(countText);
 		add(diffText);
 		add(scoreText);
 
@@ -537,7 +537,7 @@ class FreeplayState extends MusicBeatState
 	}
 
 	private function positionHighscore() {
-		loadedText.text = "(" + ((curSelected + 1) + "/" + songs.length) + ")";
+		countText.text = "(" + ((curSelected + 1) + "/" + songs.length) + ")";
 		
 		scoreText.x = FlxG.width - scoreText.width - 6;
 
@@ -545,8 +545,8 @@ class FreeplayState extends MusicBeatState
 		scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
 		diffText.x = Std.int(scoreBG.x + (scoreBG.width / 2));
 		diffText.x -= diffText.width / 2;
-		loadedText.x = Std.int(scoreBG.x - (scoreBG.scale.x / 2));
-		loadedText.x -= loadedText.width;
+		countText.x = Std.int(scoreBG.x - (scoreBG.scale.x / 2));
+		countText.x -= countText.width;
 	}
 }
 
