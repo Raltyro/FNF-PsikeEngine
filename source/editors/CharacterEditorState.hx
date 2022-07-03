@@ -82,6 +82,8 @@ class CharacterEditorState extends MusicBeatState
 	override function create()
 	{
 		//FlxG.sound.playMusic(Paths.music('breakfast'), 0.5);
+		
+		Main.fpsVar.inEditor = true;
 
 		camEditor = new FlxCamera();
 		camHUD = new FlxCamera();
@@ -1110,6 +1112,7 @@ class CharacterEditorState extends MusicBeatState
 					MusicBeatState.switchState(new editors.MasterEditorMenu());
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				}
+				Main.fpsVar.inEditor = false;
 				FlxG.mouse.visible = false;
 				return;
 			}

@@ -9,9 +9,7 @@ import flixel.math.FlxMath;
 import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
 #end
-#if flash
 import openfl.Lib;
-#end
 
 #if openfl
 import openfl.system.System;
@@ -47,12 +45,13 @@ class FPS extends TextField
 	public var showFPS:Bool = true;
 	public var showMem:Bool = false;
 	public var showMemPeak:Bool = false;
+	public var inEditor:Bool = false;
 
 	@:noCompletion private var cacheCount:Int;
 	@:noCompletion private var currentTime:Float;
 	@:noCompletion private var times:Array<Float>;
 
-	public function new(x:Float = 10, y:Float = 10, color:Int = 0x000000, showFPS:Bool = true, showMem:Bool = false)
+	public function new(x:Float = 3, y:Float = 3, color:Int = 0x000000, showFPS:Bool = true, showMem:Bool = false)
 	{
 		super();
 
@@ -124,6 +123,13 @@ class FPS extends TextField
 				);
 
 				text += "\n";
+			}
+			
+			if (inEditor) {
+				y = (Lib.current.stage.stageHeight - 3) - (16 * ((showMem || showMemPeak) ? 2 : 1));
+			}
+			else {
+				y = 3;
 			}
 		}
 		else

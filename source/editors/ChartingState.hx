@@ -229,6 +229,8 @@ class ChartingState extends MusicBeatState
 		}
 
 		// Paths.clearMemory();
+		
+		Main.fpsVar.inEditor = true;
 
 		#if desktop
 		// Updating Discord Rich Presence
@@ -1700,6 +1702,7 @@ class ChartingState extends MusicBeatState
 					MusicBeatState.switchState(new editors.MasterEditorMenu());
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				//}
+				Main.fpsVar.inEditor = false;
 				FlxG.mouse.visible = false;
 				return;
 			}
@@ -2927,6 +2930,10 @@ class ChartingState extends MusicBeatState
 		//shitty null fix, i fucking hate it when this happens
 		//make it look sexier if possible
 		try {
+			var ind:Int = song.lastIndexOf("-");
+			if (ind != -1)
+				PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.substring(0, ind).toLowerCase());
+			
 			if (CoolUtil.difficulties[PlayState.storyDifficulty] != CoolUtil.defaultDifficulty) {
 				if(CoolUtil.difficulties[PlayState.storyDifficulty] == null){
 					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
@@ -2938,7 +2945,7 @@ class ChartingState extends MusicBeatState
 			}
 		}
 		catch(e) {
-			addTextToDebug("Problem with Loading to Song \"" + song.toLowerCase() + "\"", FlxColor.RED);
+			addTextToDebug("Problem with Loading Song \"" + song.toLowerCase() + "\"", FlxColor.RED);
 			return;
 		}
 		MusicBeatState.resetState();

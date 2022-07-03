@@ -55,6 +55,8 @@ class WeekEditorState extends MusicBeatState
 	}
 
 	override function create() {
+		Main.fpsVar.inEditor = true;
+		
 		txtWeekTitle = new FlxText(FlxG.width * 0.7, 10, 0, "", 32);
 		txtWeekTitle.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, RIGHT);
 		txtWeekTitle.alpha = 0.7;
@@ -448,6 +450,7 @@ class WeekEditorState extends MusicBeatState
 			if(FlxG.keys.justPressed.ESCAPE) {
 				MusicBeatState.switchState(new editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				Main.fpsVar.inEditor = false;
 			}
 		}
 
@@ -810,6 +813,7 @@ class WeekEditorFreeplayState extends MusicBeatState
 			if(FlxG.keys.justPressed.ESCAPE) {
 				MusicBeatState.switchState(new editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				Main.fpsVar.inEditor = false;
 			}
 
 			if(controls.UI_UP_P) changeSelection(-1);

@@ -40,6 +40,8 @@ class MenuCharacterEditorState extends MusicBeatState
 	var defaultCharacters:Array<String> = ['dad', 'bf', 'gf'];
 
 	override function create() {
+		Main.fpsVar.inEditor = true;
+		
 		characterFile = {
 			image: 'Menu_Dad',
 			scale: 1,
@@ -292,6 +294,7 @@ class MenuCharacterEditorState extends MusicBeatState
 			if(FlxG.keys.justPressed.ESCAPE) {
 				MusicBeatState.switchState(new editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				Main.fpsVar.inEditor = false;
 			}
 
 			var shiftMult:Int = 1;
