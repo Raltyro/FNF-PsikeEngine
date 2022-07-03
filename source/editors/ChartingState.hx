@@ -46,6 +46,7 @@ import lime.media.AudioBuffer;
 import haxe.io.Bytes;
 import flash.geom.Rectangle;
 import flixel.util.FlxSort;
+import FunkinLua;
 #if sys
 import sys.io.File;
 import sys.FileSystem;
@@ -195,7 +196,7 @@ class ChartingState extends MusicBeatState
 		192
 	];
 
-
+	private var debugGroup:FlxTypedGroup<DebugLuaText>;
 
 	var text:String = "";
 	public static var vortex:Bool = false;
@@ -386,6 +387,10 @@ class ChartingState extends MusicBeatState
 		add(zoomTxt);
 
 		updateGrid();
+		
+		debugGroup = new FlxTypedGroup<DebugLuaText>();
+		add(debugGroup);
+		
 		super.create();
 	}
 
@@ -2921,14 +2926,20 @@ class ChartingState extends MusicBeatState
 	{
 		//shitty null fix, i fucking hate it when this happens
 		//make it look sexier if possible
-		if (CoolUtil.difficulties[PlayState.storyDifficulty] != CoolUtil.defaultDifficulty) {
-			if(CoolUtil.difficulties[PlayState.storyDifficulty] == null){
-				PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+		try {
+			if (CoolUtil.difficulties[PlayState.storyDifficulty] != CoolUtil.defaultDifficulty) {
+				if(CoolUtil.difficulties[PlayState.storyDifficulty] == null){
+					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+				}else{
+					PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + CoolUtil.difficulties[PlayState.storyDifficulty], song.toLowerCase());
+				}
 			}else{
-				PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + CoolUtil.difficulties[PlayState.storyDifficulty], song.toLowerCase());
+				PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
 			}
-		}else{
-		PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+		}
+		catch(e) {
+			addTextToDebug("Problem with Loading to Song \"" + song.toLowerCase() + "\"", FlxColor.RED);
+			return;
 		}
 		MusicBeatState.resetState();
 	}
@@ -3041,6 +3052,24 @@ class ChartingState extends MusicBeatState
 		var shit = ((Conductor.songPosition ) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = lastChange.stepTime + Math.floor(shit);
+	}
+	
+	public function addTextToDebug(text:String, color:FlxColor) {
+		debugGroup.forEachAlive(function(spr:DebugLuaText) {
+			spr.y += 20;
+		});
+
+		if(debugGroup.members.length > 34) {
+			var blah = debugGroup.members[34];
+			blah.destroy();
+			debugGroup.remove(blah);
+		}
+		debugGroup.insert(0, new DebugLuaText(text, debugGroup, color));
+		#if debug
+		FlxG.log.notice(text);
+		#else
+		trace(text);
+		#end
 	}
 }
 
