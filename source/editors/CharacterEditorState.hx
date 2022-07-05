@@ -1104,6 +1104,20 @@ class CharacterEditorState extends MusicBeatState
 			textAnim.text = '';
 		}
 
+		var inputTexts:Array<FlxUIInputText> = [animationInputText, imageInputText, healthIconInputText, animationNameInputText, animationIndicesInputText];
+		for (i in 0...inputTexts.length) {
+			if(inputTexts[i].hasFocus) {
+				FlxG.sound.muteKeys = [];
+				FlxG.sound.volumeDownKeys = [];
+				FlxG.sound.volumeUpKeys = [];
+				super.update(elapsed);
+				return;
+			}
+		}
+		FlxG.sound.muteKeys = TitleState.muteKeys;
+		FlxG.sound.volumeDownKeys = TitleState.volumeDownKeys;
+		FlxG.sound.volumeUpKeys = TitleState.volumeUpKeys;
+
 		if(!charDropDown.dropPanel.visible) {
 			if (FlxG.keys.justPressed.ESCAPE) {
 				if(goToPlayState) {
