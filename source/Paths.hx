@@ -107,7 +107,6 @@ class Paths
 				
 				obj.destroy();
 				currentTrackedAssets.remove(key);
-				compress();
 			}
 		}
 	}
@@ -130,8 +129,6 @@ class Paths
 				}
 				obj = null;
 			}
-			
-			compress();
 		}
 	}
 	
