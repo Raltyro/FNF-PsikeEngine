@@ -446,7 +446,7 @@ class FunkinLua {
 
 			if(exclusions==null)exclusions=[];
 
-			Lua.getglobal(lua, scriptName);
+			Lua.getglobal(lua, 'scriptName');
 			var daScriptName = Lua.tostring(lua, -1);
 			Lua.pop(lua, 1);
 			if(ignoreSelf && !exclusions.contains(daScriptName))exclusions.push(daScriptName);
@@ -516,13 +516,13 @@ class FunkinLua {
 				#if (linc_luajit >= "0.0.6")
 				LuaL.error(lua, "bad argument #1 to 'getGlobalFromScript' (string expected, got nil)");
 				#end
-				return null;
+				return;
 			}
 			if(global==null){
 				#if (linc_luajit >= "0.0.6")
 				LuaL.error(lua, "bad argument #2 to 'getGlobalFromScript' (string expected, got nil)");
 				#end
-				return null;
+				return;
 			}
 			var cervix = luaFile + ".lua";
 			if(luaFile.endsWith(".lua"))cervix=luaFile;
@@ -571,7 +571,7 @@ class FunkinLua {
 
 				}
 			}
-			return null;
+			Lua.pushnil(lua);
 		});
 		Lua_helper.add_callback(lua, "setGlobalFromScript", function(luaFile:String, global:String, val:Dynamic){ // returns the global from a script
 			var cervix = luaFile + ".lua";
@@ -2697,7 +2697,6 @@ class FunkinLua {
 		Lua_helper.add_callback(lua, "stringEndsWith", function(str:String, end:String) {
 			return str.endsWith(end);
 		});
-		
 		Lua_helper.add_callback(lua, "stringSplit", function(str:String, split:String) {
 			return str.split(split);
 		});
