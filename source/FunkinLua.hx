@@ -568,10 +568,10 @@ class FunkinLua {
 						return;*/
 						return result;
 					}
-
 				}
 			}
 			Lua.pushnil(lua);
+			return null;
 		});
 		Lua_helper.add_callback(lua, "setGlobalFromScript", function(luaFile:String, global:String, val:Dynamic){ // returns the global from a script
 			var cervix = luaFile + ".lua";
