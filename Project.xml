@@ -204,6 +204,8 @@
 	<!--Used for Izzy Engine's crash handler-->
 	<haxedef name="HXCPP_CHECK_POINTER" if="CRASH_HANDLER" />
 	<haxedef name="HXCPP_STACK_LINE" if="CRASH_HANDLER" />
+	
+	<haxeflag name="--dce no"/>
 
 	<!-- _________________________________ Custom _______________________________ -->
 
