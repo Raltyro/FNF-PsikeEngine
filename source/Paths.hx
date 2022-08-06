@@ -68,9 +68,9 @@ class Paths
 
 	public static var dumpExclusions:Array<String> =
 	[
-		'assets/music/freakyMenu.$SOUND_EXT',
-		'assets/shared/music/breakfast.$SOUND_EXT',
-		'assets/shared/music/tea-time.$SOUND_EXT',
+		'music/freakyMenu.$SOUND_EXT',
+		'music/breakfast.$SOUND_EXT',
+		'music/tea-time.$SOUND_EXT',
 	];
 	
 	private inline static function _compress() {
