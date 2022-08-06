@@ -386,7 +386,7 @@ class Paths
 	}
 
 	inline static public function formatToSongPath(path:String) {
-		return path.toLowerCase().replace(' ', '-');
+		return path.toLowerCase().replace(' ', '-').replace('.', '').replace('?', '').replace('!', '').replace('\\', '').replace('/', '');
 	}
 
 	private static function regBitmap(key:String, ?hardware:Null<Bool>):BitmapData {
