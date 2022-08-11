@@ -247,7 +247,8 @@ class MenuCharacterEditorState extends MusicBeatState
 		char.frames = Paths.getSparrowAtlas('menucharacters/' + characterFile.image);
 		char.animation.addByPrefix('idle', characterFile.idle_anim, 24);
 		if(characterFile.confirm_anim != null
-			&& characterFile.confirm_anim != '') char.animation.addByPrefix('confirm', characterFile.confirm_anim, 24, false);
+			&& characterFile.confirm_anim != ''
+			&& characterFile.confirm_anim != characterFile.idle_anim) char.animation.addByPrefix('confirm', characterFile.confirm_anim, 24, false);
 		
 		char.flipX = (characterFile.flipX == true);
 
@@ -313,7 +314,7 @@ class MenuCharacterEditorState extends MusicBeatState
 
 			if(FlxG.keys.justPressed.LEFT) 
 			{
-				if (offsetType < 1)
+				if (offsetType < 2)
 				{
 					characterFile.position[0] += shiftMult;
 					updateOffset();
@@ -327,7 +328,7 @@ class MenuCharacterEditorState extends MusicBeatState
 			}
 			if(FlxG.keys.justPressed.RIGHT) 
 			{
-				if (offsetType < 1)
+				if (offsetType < 2)
 				{
 					characterFile.position[0] -= shiftMult;
 					updateOffset();
@@ -342,7 +343,7 @@ class MenuCharacterEditorState extends MusicBeatState
 
 			if(FlxG.keys.justPressed.UP) 
 			{
-				if (offsetType < 1)
+				if (offsetType < 2)
 				{
 					characterFile.position[1] += shiftMult;
 					updateOffset();
@@ -356,7 +357,7 @@ class MenuCharacterEditorState extends MusicBeatState
 			}
 			if (FlxG.keys.justPressed.DOWN) 
 			{
-				if (offsetType < 1)
+				if (offsetType < 2)
 				{
 					characterFile.position[1] -= shiftMult;
 					updateOffset();
@@ -370,23 +371,21 @@ class MenuCharacterEditorState extends MusicBeatState
 			}
 
 			if(FlxG.keys.justPressed.SPACE && grpWeekCharacters.members[curTypeSelected].hasConfirmAnimation) {
-				grpWeekCharacters.members[curTypeSelected].playAnim();
+				updateConfirmOffset();
 			}
 		}
 
 		updateText();
 
-		var chars:Array<MenuCharacter> = grpWeekCharacters.members;
+		var char:MenuCharacter = grpWeekCharacters.members[curTypeSelected];
 
-		for (char in chars)
-			if (chars.indexOf(char) == curTypeSelected)
-				if (char.animation.curAnim != null && char.animation.curAnim.name == 'confirm' && char.animation.curAnim.finished) 
-				{
-					updateOffset();
-					char.animation.play('idle', true);
-				}
+		if (char.animation.curAnim != null && char.animation.curAnim.name == 'confirm' && char.animation.curAnim.finished) 
+		{
+			updateOffset();
+			char.animation.play('idle', true);
+		}
 
-		if (FlxG.keys.justPressed.TWO)
+		if (FlxG.keys.justPressed.TWO && char.hasConfirmAnimation)
 			offsetType = 2;
 		else if (FlxG.keys.justPressed.ONE)
 			offsetType = 1;
@@ -412,7 +411,7 @@ class MenuCharacterEditorState extends MusicBeatState
 	function updateText() {
 		var char:MenuCharacter = grpWeekCharacters.members[curTypeSelected];
 
-		if (offsetType < 1)
+		if (offsetType < 2)
 			txtOffsets.text = 'Character Offsets: ' + beautifyOffset(characterFile.position);
 		else
 			txtOffsets.text = 'Confirm Animation Offsets: ${beautifyOffset(char.confirmPosition)}';
@@ -442,16 +441,16 @@ class MenuCharacterEditorState extends MusicBeatState
 		if(fullPath != null) {
 			var rawJson:String = File.getContent(fullPath);
 			if(rawJson != null) {
-				var loadedChar:MenuCharacterFile = cast Json.parse(rawJson);
-				if(loadedChar.idle_anim != null && loadedChar.confirm_anim != null) //Make sure it's really a character
+				var loadedChar:MenuCharacterFile = Json.parse(rawJson);
+				if (loadedChar.idle_anim != null && loadedChar.confirm_anim != null) //Make sure it's really a character
 				{
 					var cutName:String = _file.name.substr(0, _file.name.length - 5);
 					trace("Successfully loaded file: " + cutName);
 					characterFile = loadedChar;
 					reloadSelectedCharacter();
 					imageInputText.text = characterFile.image;
-					idleInputText.text = characterFile.image;
-					confirmInputText.text = characterFile.image;
+					idleInputText.text = characterFile.idle_anim;
+					confirmInputText.text = characterFile.confirm_anim;
 					scaleStepper.value = characterFile.scale;
 					updateConfirmOffset();
 					updateOffset();

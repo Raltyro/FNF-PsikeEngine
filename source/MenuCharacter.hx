@@ -81,18 +81,14 @@ class MenuCharacter extends FlxSprite
 				animation.addByPrefix('idle', charFile.idle_anim, 24);
 				confirmPosition = charFile.confirmPosition;
 
+				if (confirmPosition == null)
+					confirmPosition = [0, 0];
+
 				var confirmAnim:String = charFile.confirm_anim;
 				if(confirmAnim != null && confirmAnim != charFile.idle_anim)
 				{
 					animation.addByPrefix('confirm', confirmAnim, 24, false);
 				}
-
-				//check for invalid animation
-				#if (flixel >= "4.11.0")
-				hasConfirmAnimation = animation.exists('confirm');
-				#else
-				hasConfirmAnimation = animation.getByName('confirm') != null;
-				#end
 				
 				flipX = (charFile.flipX == true);
 
@@ -107,18 +103,24 @@ class MenuCharacter extends FlxSprite
 
 	public function playAnim(name:String = 'confirm')
 	{
-		if 
-		( 	#if (flixel >= "4.11.0")
-			animation.exists(name)
-			#else
-			animation.getByName(name) != null
-			#end
-		) 
+		if (hasConfirmAnimation) 
 		{
 			animation.play(name);
 
 			if (confirmPosition.length > 0 && name == 'confirm' && hasConfirmAnimation)
 				offset.set(offset.x + confirmPosition[0], offset.y + confirmPosition[1]);
 		}	
+	}
+
+	override function update(elapsed:Float)
+	{
+		super.update(elapsed);
+
+		//check for invalid animation
+		#if (flixel >= "4.11.0")
+		hasConfirmAnimation = animation.exists('confirm');
+		#else
+		hasConfirmAnimation = animation.getByName('confirm') != null;
+		#end
 	}
 }
