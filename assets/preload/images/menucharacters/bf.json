@@ -5,6 +5,10 @@
 		15,
 		-40
 	],
+	"confirmPosition": [
+		0, 
+		0
+	],
 	"scale": 1,
 	"idle_anim": "M BF Idle",
 	"confirm_anim": "M bf HEY"
