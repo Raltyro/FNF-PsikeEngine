@@ -81,7 +81,7 @@ class MenuCharacter extends FlxSprite
 				animation.addByPrefix('idle', charFile.idle_anim, 24);
 				confirmPosition = charFile.confirmPosition;
 
-				if (confirmPosition == null)
+				if (confirmPosition == null || confirmPosition.length < 2)
 					confirmPosition = [0, 0];
 
 				var confirmAnim:String = charFile.confirm_anim;
