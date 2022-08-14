@@ -85,6 +85,7 @@ jobs:
           git clone --recurse-submodules https://github.com/Raltyro/lime
           haxelib dev lime lime
           haxelib run lime rebuild tools
+          haxelib install lime-samples --quiet
           haxelib run lime setup --quiet
           git clone --recurse-submodules https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
