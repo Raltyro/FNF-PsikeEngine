@@ -89,6 +89,7 @@ jobs:
           haxelib run lime setup --quiet
           git clone --recurse-submodules https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
+          haxelib install openfl-samples
           haxelib run openfl setup --quiet
         shell: cmd
           
