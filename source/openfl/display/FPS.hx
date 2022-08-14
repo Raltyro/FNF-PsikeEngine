@@ -161,19 +161,19 @@ class FPS extends TextField
 			return 0;
 	")
 	#elseif linux
-	@:functionCode("
+	@:functionCode('
 		long rss = 0L;
 		FILE* fp = NULL;
-		if ( (fp = fopen( '/proc/self/statm', 'r' )) == NULL )
-			return (size_t)0L;      /* Can't open? */
+		if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
+			return (size_t)0L;      /* Cant open? */
 		if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
 		{
 			fclose( fp );
-			return (size_t)0L;      /* Can't read? */
+			return (size_t)0L;      /* Cant read? */
 		}
 		fclose( fp );
 		return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
-	")
+	')
 	#end
 	public static function get_totalMemory():Int return 0;
 	#else
