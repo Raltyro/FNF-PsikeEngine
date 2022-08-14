@@ -15,6 +15,17 @@ import openfl.Lib;
 import openfl.system.System;
 #end
 
+#if windows
+@:headerCode("
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <psapi.h>
+")
+#elseif linux
+@:headerCode("
+#include <stdio.h>
+")
+#else
 #if cpp
 import cpp.vm.Gc;
 #elseif hl
@@ -23,6 +34,7 @@ import hl.Gc;
 import java.vm.Gc;
 #elseif neko
 import neko.vm.Gc;
+#end
 #end
 
 /**
@@ -138,6 +150,33 @@ class FPS extends TextField
 		cacheCount = currentCount;
 	}
 	
+	#if (windows || linux)
+	#if windows
+	@:functionCode("
+		auto memhandle = GetCurrentProcess();
+		PROCESS_MEMORY_COUNTERS pmc;
+		if (GetProcessMemoryInfo(memhandle, &pmc, sizeof(pmc)))
+			return(pmc.WorkingSetSize);
+		else
+			return 0;
+	")
+	#elseif linux
+	@:functionCode("
+		long rss = 0L;
+		FILE* fp = NULL;
+		if ( (fp = fopen( '/proc/self/statm', 'r' )) == NULL )
+			return (size_t)0L;      /* Can't open? */
+		if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
+		{
+			fclose( fp );
+			return (size_t)0L;      /* Can't read? */
+		}
+		fclose( fp );
+		return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
+	")
+	#end
+	public static function get_totalMemory():Int return 0;
+	#else
 	public static function get_totalMemory():Int {
 		return
 			#if cpp
@@ -149,4 +188,5 @@ class FPS extends TextField
 			#end
 		;
 	}
+	#end
 }

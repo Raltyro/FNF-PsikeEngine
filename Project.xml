@@ -151,7 +151,7 @@
 	<!--In case you want to use the ui package-->
 	<haxelib name="flixel-ui" />
 	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="hxCodec" if="VIDEOS_ALLOWED"/>
+	<haxelib name="hxCodec" version="git" if="VIDEOS_ALLOWED"/>
 	<haxelib name="faxe" if='switch'/>
 	<!--<haxelib name="polymod"/> -->
 	<haxelib name="discord_rpc" if="desktop"/>
@@ -206,13 +206,14 @@
 	<haxedef name="HXCPP_STACK_LINE" if="CRASH_HANDLER" />
 	
 	<haxeflag name="--dce no"/>
+	<haxedef name="queue_experimental_optimization"/>
 
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 	
-	<icon path="art/icon16.png" size='16'/>
-	<icon path="art/icon32.png" size='32'/>
-	<icon path="art/icon64.png" size='64'/>
-	<icon path="art/iconOG.png" />
+	<icon path="art/icon16.png" size='16' priority="1"/>
+	<icon path="art/icon32.png" size='32' priority="2"/>
+	<icon path="art/icon64.png" size='64' priority="3"/>
+	<icon path="art/iconOG.png" priority="4"/>
 </project>
