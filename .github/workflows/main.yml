@@ -84,6 +84,8 @@ jobs:
           haxelib install hxp --quiet
           git clone --recurse-submodules https://github.com/Raltyro/lime
           haxelib dev lime lime
+          haxelib run lime rebuild tools
+          haxelib run lime setup --quiet
           git clone --recurse-submodules https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
         shell: cmd
@@ -91,8 +93,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Install Haxelib
         run: |
-          haxelib run lime setup flixel --quiet
-          haxelib run lime setup --quiet
+          haxelib run lime setup flixel
           haxelib install flixel-tools --quiet
           haxelib install flixel-ui --quiet
           haxelib install flixel-addons --quiet
