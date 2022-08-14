@@ -82,15 +82,18 @@ jobs:
           haxelib install hxcpp > nul --quiet
           haxelib install format --quiet
           haxelib install hxp --quiet
-          git clone --recurse-submodules https://github.com/Raltyro/lime
-          haxelib dev lime lime
-          haxelib run lime rebuild tools
-          haxelib install lime-samples --quiet
-          haxelib run lime setup --quiet
-          git clone --recurse-submodules https://github.com/Raltyro/openfl
-          haxelib dev openfl openfl
-          haxelib install openfl-samples
-          haxelib run openfl setup --quiet
+          # git clone --recurse-submodules https://github.com/Raltyro/lime
+          # haxelib dev lime lime
+          # haxelib run lime rebuild tools
+          # haxelib install lime-samples --quiet
+          # haxelib run lime setup --quiet
+          # git clone --recurse-submodules https://github.com/Raltyro/openfl
+          # haxelib dev openfl openfl
+          # haxelib install openfl-samples
+          # haxelib run openfl setup --quiet
+          haxelib install lime
+          haxelib install openfl
+          haxelib run lime setup
         shell: cmd
           
       # Runs a set of commands using the runners shell
