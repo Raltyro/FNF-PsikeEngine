@@ -118,7 +118,7 @@ class FPS extends TextField
 		
 		currentMem = (get_totalMemory() / 1024) / 1000;
 		#if (windows || linux)
-		var memPeak:Int = (get_memPeak() / 1024) / 1000;
+		var memPeak:Float = (get_memPeak() / 1024) / 1000;
 		if (memPeak > currentMemPeak) currentMemPeak = memPeak;
 		#else
 		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
