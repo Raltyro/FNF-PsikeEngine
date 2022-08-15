@@ -33,20 +33,20 @@ jobs:
           haxelib install hxcpp > /dev/null
           haxelib install format --quiet
           haxelib install hxp --quiet
-          git clone https://github.com/Raltyro/lime
+          git clone --recurse-submodules https://github.com/Raltyro/lime
           haxelib dev lime lime
           haxelib install lime-samples --quiet
-          haxelib run lime setup
-          git clone https://github.com/Raltyro/openfl
+          haxelib run lime setup --quiet
+          git clone --recurse-submodules https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
-          haxelib run openfl setup
+          haxelib run openfl setup --quiet
       
       - name: Install Haxelib
         run: |
           sudo apt-get install libvlc-dev
           sudo apt-get install libvlccore-dev
-          haxelib run lime setup flixel
+          haxelib run lime setup flixel --quiet
           haxelib install flixel-tools --quiet
           haxelib install flixel-ui --quiet
           haxelib install flixel-addons --quiet
@@ -102,19 +102,19 @@ jobs:
           haxelib install hxcpp > nul --quiet
           haxelib install format --quiet
           haxelib install hxp --quiet
-          git clone https://github.com/Raltyro/lime
+          git clone --recurse-submodules https://github.com/Raltyro/lime
           haxelib dev lime lime
           haxelib install lime-samples --quiet
-          haxelib run lime setup
-          git clone https://github.com/Raltyro/openfl
+          haxelib run lime setup --quiet
+          git clone --recurse-submodules https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
-          haxelib run openfl setup
+          haxelib run openfl setup --quiet
         shell: cmd
       
       - name: Install Haxelib
         run: |
-          haxelib run lime setup flixel
+          haxelib run lime setup flixel --quiet
           haxelib install flixel-tools --quiet
           haxelib install flixel-ui --quiet
           haxelib install flixel-addons --quiet
@@ -171,18 +171,18 @@ jobs:
           haxelib install hxcpp > /dev/null --quiet
           haxelib install format --quiet
           haxelib install hxp --quiet
-          git clone https://github.com/Raltyro/lime
+          git clone --recurse-submodules https://github.com/Raltyro/lime
           haxelib dev lime lime
           haxelib install lime-samples --quiet
-          haxelib run lime setup
-          git clone https://github.com/Raltyro/openfl
+          haxelib run lime setup --quiet
+          git clone --recurse-submodules https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
-          haxelib run openfl setup
+          haxelib run openfl setup --quiet
       
       - name: Install Haxelib
         run: |
-          haxelib run lime setup flixel
+          haxelib run lime setup flixel --quiet
           haxelib install flixel-tools --quiet
           haxelib install flixel-ui --quiet
           haxelib install flixel-addons --quiet
