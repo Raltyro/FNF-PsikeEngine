@@ -66,14 +66,14 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Linux64
-          path: export/release/linux/bin
+          path: 'export/release/linux/bin'
           if-no-files-found: error
       
       - name: Publish Artifact 32-bit
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Linux32
-          path: export/32bit/linux/bin
+          path: 'export/32bit/linux/bin'
           if-no-files-found: error
       
   buildWindows:
@@ -133,14 +133,14 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Windows64
-          path: export/release/windows/bin
+          path: 'export/release/windows/bin'
           if-no-files-found: error
       
       - name: Publish Artifact 32-bit
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Windows32
-          path: export/32bit/windows/bin
+          path: 'export/32bit/windows/bin'
           if-no-files-found: error
       
   buildMac:
@@ -198,4 +198,4 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Mac64
-          path: export/release/macos/bin
+          path: 'export/release/macos/bin'
