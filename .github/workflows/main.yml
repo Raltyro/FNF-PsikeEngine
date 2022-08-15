@@ -66,22 +66,13 @@ jobs:
         run: echo "${{github.run_id}}" > VERSION
       
       - name: Compile
-        run: |
-          haxelib run openfl build Project.xml linux -64 --app-version="4.0.0-${{ github.run_id}}"
-          haxelib run openfl build Project.xml linux -32 --app-version="4.0.0-${{ github.run_id}}"
+        run:  haxelib run openfl build Project.xml linux -64 --app-version="4.0.0-${{ github.run_id}}"
       
       - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Linux64
           path: 'export/release/linux/bin'
-          if-no-files-found: error
-      
-      - name: Publish Artifact 32-bit
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: Linux32
-          path: 'export/32bit/linux/bin'
           if-no-files-found: error
       
   buildWindows:
@@ -135,22 +126,13 @@ jobs:
         run: echo "${{github.run_id}}" > VERSION
       
       - name: Compile
-        run: |
-          haxelib run openfl build windows -64 --app-version="4.0.0-${{ github.run_id}}"
-          haxelib run openfl build windows -32 --app-version="4.0.0-${{ github.run_id}}"
+        run: haxelib run openfl build windows -64 --app-version="4.0.0-${{ github.run_id}}"
       
       - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Windows64
           path: 'export/release/windows/bin'
-          if-no-files-found: error
-      
-      - name: Publish Artifact 32-bit
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: Windows32
-          path: 'export/32bit/windows/bin'
           if-no-files-found: error
       
   buildMac:
