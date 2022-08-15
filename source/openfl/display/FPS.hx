@@ -201,6 +201,8 @@ class FPS extends TextField
 	#end
 	public static function get_memPeak():Int return 0;
 	#else
+	public static function get_memPeak():Int return 0;
+	
 	public static function get_totalMemory():Int {
 		return
 			#if cpp
