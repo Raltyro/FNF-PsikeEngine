@@ -15,19 +15,8 @@ import openfl.Lib;
 import openfl.system.System;
 #end
 
-#if windows
-@:headerCode("
-#include <windows.h>
-#include <psapi.h>
-")
-#elseif linux
-@:headerCode("
-#include <unistd.h>
-#include <sys/resource.h>
-
-#include <stdio.h>
-")
-#else
+// https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
+#if (!(windows || linux))
 #if cpp
 import cpp.vm.Gc;
 #elseif hl
@@ -46,6 +35,20 @@ import neko.vm.Gc;
 #if !openfl_debug
 @:fileXml('tags="haxe,release"')
 @:noDebug
+#end
+
+#if windows
+@:cppFileCode("
+#include <windows.h>
+#include <psapi.h>
+")
+#elseif linux
+@:cppFileCode("
+#include <unistd.h>
+#include <sys/resource.h>
+
+#include <stdio.h>
+")
 #end
 class FPS extends TextField
 {
@@ -163,22 +166,18 @@ class FPS extends TextField
 		PROCESS_MEMORY_COUNTERS info;
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
 			return (size_t)info.WorkingSetSize;
-		
-		return 0;
 	")
 	#elseif linux
 	@:functionCode('
 		long rss = 0L;
 		FILE* fp = NULL;
-		if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
-			return (size_t)0L;      /* Cant open? */
-		if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
-		{
-			fclose( fp );
-			return (size_t)0L;      /* Cant read? */
-		}
-		fclose( fp );
-		return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
+		
+		if ((fp = fopen("/proc/self/statm", "r")) == NULL)
+			return (size_t)0L;
+		
+		fclose(fp);
+		if (fscanf(fp, "%*s%ld", &rss) == 1)
+			return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
 	')
 	#end
 	public static function get_totalMemory():Int return 0;
@@ -188,15 +187,14 @@ class FPS extends TextField
 		PROCESS_MEMORY_COUNTERS info;
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
 			return (size_t)info.PeakWorkingSetSize;
-		
-		return 0;
 	")
 	#elseif linux
 	@:functionCode("
 		struct rusage rusage;
 		getrusage(RUSAGE_SELF, &rusage);
 		
-		return (size_t)(rusage.ru_maxrss * 1024L);
+		if (true)
+			return (size_t)(rusage.ru_maxrss * 1024L);
 	")
 	#end
 	public static function get_memPeak():Int return 0;
