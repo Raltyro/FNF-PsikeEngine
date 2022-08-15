@@ -174,7 +174,7 @@ jobs:
           haxelib install openfl-samples --quiet
           haxelib run openfl setup
       
-     - name: Install Haxelib
+      - name: Install Haxelib
         run: |
           sudo apt-get install libvlc-dev
           sudo apt-get install libvlccore-dev
