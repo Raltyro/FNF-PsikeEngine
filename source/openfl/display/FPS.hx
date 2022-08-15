@@ -15,7 +15,7 @@ import openfl.Lib;
 import openfl.system.System;
 #end
 
-#if windows
+#if false
 @:headerCode("
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -150,8 +150,8 @@ class FPS extends TextField
 		cacheCount = currentCount;
 	}
 	
-	#if (windows || linux)
-	#if windows
+	#if (false || linux)
+	#if false
 	@:functionCode("
 		auto memhandle = GetCurrentProcess();
 		PROCESS_MEMORY_COUNTERS pmc;

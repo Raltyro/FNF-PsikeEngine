@@ -1,5 +1,6 @@
 package;
 
+#if windows
 import lime.ui.Window;
 import flixel.util.FlxColor;
 
@@ -39,7 +40,7 @@ class WindowUtil {
 	@:native("LWA_COLORKEY") @:extern
 	private var COLORKEY:DWORD;
 	
-	private static function getSDLWindow(limeWin:Window):Dynamic
+	public static function getSDLWindow(limeWin:Window):Dynamic
 		return limeWin.__backend.handle;
 	
 	@:functionCode("
@@ -51,9 +52,9 @@ class WindowUtil {
 			return hwnd;
 		}
 	")
-	private static function getSDLWindowHWND(sdlWin:Dynamic):HWND return null;
+	public static function getSDLWindowHWND(sdlWin:Dynamic):HWND return null;
 	
-	private static function getWindowHWND(win:Window):HWND
+	public static function getWindowHWND(win:Window):HWND
 		return getSDLWindowHWND(getSDLWindow(win));
 	
 	public static function setWindowBackward(win:Window) {
@@ -69,3 +70,21 @@ class WindowUtil {
 		if (setLayeredWindowAttributes(win, color, color.alpha, COLORKEY) == 0) throw getLastError();
 	}
 }
+#else
+class WindowUtil {
+	public static function getSDLWindow(limeWin:Dynamic):Dynamic
+		return null;
+	
+	public static function getSDLWindowHWND(sdlWin:Dynamic):Dynamic
+		return null;
+	
+	public static function getWindowHWND(win:Dynamic):Dynamic
+		return null;
+	
+	public static function setWindowBackward(win:Dynamic)
+		return null;
+	
+	public static function setWindowColor(win:Dynamic, color:Int)
+		return null;
+}
+#end
