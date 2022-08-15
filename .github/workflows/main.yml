@@ -1,28 +1,18 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Build
 
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   buildLinux:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -30,44 +20,66 @@ jobs:
       - uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.2.5
-      # Runs a set of commands using the runners shell
+      
+      - name: Install Core Haxelib
+        run: |
+          haxelib setup ~/haxelib
+          haxelib install hxcpp > /dev/null
+          git clone https://github.com/Raltyro/lime
+          haxelib dev lime lime
+          haxelib install lime-samples --quiet
+          haxelib run lime setup
+          git clone https://github.com/Raltyro/openfl
+          haxelib dev openfl openfl
+          haxelib install openfl-samples --quiet
+          haxelib run openfl setup
+      
       - name: Install Haxelib
         run: |
           sudo apt-get install libvlc-dev
           sudo apt-get install libvlccore-dev
-          haxelib setup ~/haxelib
-          haxelib install hxcpp > /dev/null
-          haxelib install lime
-          haxelib install openfl
-          haxelib --never install flixel
           haxelib run lime setup flixel
-          haxelib run lime setup
-          haxelib install flixel-tools
-          haxelib install flixel-ui
-          haxelib install flixel-addons
-          haxelib install tjson
-          haxelib install hxjsonast
-          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit
-          haxelib install hscript
-          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex
-          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
-          haxelib install hxcpp-debug-server
-          haxelib list
+          haxelib install flixel-tools --quiet
+          haxelib install flixel-ui --quiet
+          haxelib install flixel-addons --quiet
+          haxelib install tjson --quiet
+          haxelib install hxjsonast --quiet
+          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec --quiet
+          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
+          haxelib install hscript --quiet
+          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
+          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc --quiet
+          haxelib install hxcpp-debug-server --quiet
+      
+      - name: Check Haxelib List
+        run: haxelib list
+      
       - name: Create Version Tag
         run: echo "${{github.run_id}}" > VERSION
+      
       - name: Compile
-        run: haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id}}"
-      - name: Publish Artifact
+        run: |
+          haxelib run openfl build Project.xml linux -64 --app-version="4.0.0-${{ github.run_id}}"
+          haxelib run openfl build Project.xml linux -32 --app-version="4.0.0-${{ github.run_id}}"
+      
+      - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: linuxBuild
-          path: 'export/release/linux/bin'
+          name: Linux64
+          path: export/release/linux/bin
+          if-no-files-found: error
+      
+      - name: Publish Artifact 32-bit
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: Linux32
+          path: export/32bit/linux/bin
+          if-no-files-found: error
+      
   buildWindows:
     runs-on: windows-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2.3.0
         with:
           submodules: true
@@ -80,20 +92,16 @@ jobs:
         run: |
           haxelib setup C:/haxelib
           haxelib install hxcpp > nul --quiet
-          haxelib install format --quiet
-          haxelib install hxp --quiet
-          git clone --recurse-submodules https://github.com/Raltyro/lime
+          git clone https://github.com/Raltyro/lime
           haxelib dev lime lime
-          haxelib run lime rebuild tools
           haxelib install lime-samples --quiet
-          haxelib run lime setup --quiet
-          git clone --recurse-submodules https://github.com/Raltyro/openfl
+          haxelib run lime setup
+          git clone https://github.com/Raltyro/openfl
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
-          haxelib run openfl setup --quiet
+          haxelib run openfl setup
         shell: cmd
-          
-      # Runs a set of commands using the runners shell
+      
       - name: Install Haxelib
         run: |
           haxelib run lime setup flixel
@@ -112,26 +120,33 @@ jobs:
       
       - name: Check Haxelib List
         run: haxelib list
-        shell: cmd
       
       - name: Create Version Tag
         run: echo "${{github.run_id}}" > VERSION
       
       - name: Compile
         run: |
-          haxelib run openfl build windows --app-version="4.0.0-${{ github.run_id}}"
+          haxelib run openfl build windows -64 --app-version="4.0.0-${{ github.run_id}}"
+          haxelib run openfl build windows -32 --app-version="4.0.0-${{ github.run_id}}"
       
-      - name: Publish Artifact
+      - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: windowsBuild
+          name: Windows64
           path: export/release/windows/bin
+          if-no-files-found: error
+      
+      - name: Publish Artifact 32-bit
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: Windows32
+          path: export/32bit/windows/bin
+          if-no-files-found: error
       
   buildMac:
     runs-on: macos-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -139,34 +154,48 @@ jobs:
       - uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.2.5
-      # Runs a set of commands using the runners shell
-      - name: Install Haxelib
+      
+      - name: Install Core Haxelib
         run: |
           haxelib setup ~/haxelib
           haxelib install hxcpp > /dev/null
-          haxelib install lime
-          haxelib install openfl
-          haxelib --never install flixel
-          haxelib run lime setup flixel
+          git clone https://github.com/Raltyro/lime
+          haxelib dev lime lime
+          haxelib install lime-samples --quiet
           haxelib run lime setup
-          haxelib install flixel-tools
-          haxelib install flixel-ui
-          haxelib install flixel-addons
-          haxelib install tjson
-          haxelib install hxjsonast
-          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit
-          haxelib install hscript
-          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex
-          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
-          haxelib install hxcpp-debug-server
-          haxelib list
+          git clone https://github.com/Raltyro/openfl
+          haxelib dev openfl openfl
+          haxelib install openfl-samples --quiet
+          haxelib run openfl setup
+      
+     - name: Install Haxelib
+        run: |
+          sudo apt-get install libvlc-dev
+          sudo apt-get install libvlccore-dev
+          haxelib run lime setup flixel
+          haxelib install flixel-tools --quiet
+          haxelib install flixel-ui --quiet
+          haxelib install flixel-addons --quiet
+          haxelib install tjson --quiet
+          haxelib install hxjsonast --quiet
+          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec --quiet
+          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
+          haxelib install hscript --quiet
+          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
+          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc --quiet
+          haxelib install hxcpp-debug-server --quiet
+      
+      - name: Check Haxelib List
+        run: haxelib list
+      
       - name: Create Version Tag
         run: echo "${{github.run_id}}" > VERSION
+      
       - name: Compile
-        run: haxelib run lime build mac --app-version="4.0.0-${{ github.run_id}}"
-      - name: Publish Artifact
+        run: haxelib run lime build mac -64 --app-version="4.0.0-${{ github.run_id}}"
+      
+      - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: macBuild
+          name: Mac64
           path: export/release/macos/bin

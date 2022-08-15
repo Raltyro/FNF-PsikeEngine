@@ -205,7 +205,7 @@
 	<haxedef name="HXCPP_CHECK_POINTER" if="CRASH_HANDLER" />
 	<haxedef name="HXCPP_STACK_LINE" if="CRASH_HANDLER" />
 	
-	<haxeflag name="--dce no"/>
+	<haxeflag name="-dce" value="no"/>
 	<haxedef name="queue_experimental_optimization"/>
 
 	<!-- _________________________________ Custom _______________________________ -->

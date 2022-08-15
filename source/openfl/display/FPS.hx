@@ -15,14 +15,16 @@ import openfl.Lib;
 import openfl.system.System;
 #end
 
-#if false
+#if windows
 @:headerCode("
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <psapi.h>
 ")
 #elseif linux
 @:headerCode("
+#include <unistd.h>
+#include <sys/resource.h>
+
 #include <stdio.h>
 ")
 #else
@@ -115,7 +117,12 @@ class FPS extends TextField
 		if (currentFPS > ClientPrefs.framerate) currentFPS = ClientPrefs.framerate;
 		
 		currentMem = (get_totalMemory() / 1024) / 1000;
+		#If (windows || linux)
+		var memPeak = (get_memPeak() / 1024) / 1000;
+		if (memPeak > currentMemPeak) currentMemPeak = memPeak;
+		#else
 		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
+		#end
 
 		if (canRender) {
 			if (currentCount != cacheCount) {
@@ -150,15 +157,14 @@ class FPS extends TextField
 		cacheCount = currentCount;
 	}
 	
-	#if (false || linux)
-	#if false
+	#if (windows || linux)
+	#if windows
 	@:functionCode("
-		auto memhandle = GetCurrentProcess();
-		PROCESS_MEMORY_COUNTERS pmc;
-		if (GetProcessMemoryInfo(memhandle, &pmc, sizeof(pmc)))
-			return(pmc.WorkingSetSize);
-		else
-			return 0;
+		PROCESS_MEMORY_COUNTERS info;
+		if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
+			return (size_t)info.WorkingSetSize;
+		
+		return 0;
 	")
 	#elseif linux
 	@:functionCode('
@@ -176,6 +182,24 @@ class FPS extends TextField
 	')
 	#end
 	public static function get_totalMemory():Int return 0;
+	
+	#if windows
+	@:functionCode("
+		PROCESS_MEMORY_COUNTERS info;
+		if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
+			return (size_t)info.PeakWorkingSetSize;
+		
+		return 0;
+	")
+	#elseif linux
+	@:functionCode("
+		struct rusage rusage;
+		getrusage(RUSAGE_SELF, &rusage);
+		
+		return (size_t)(rusage.ru_maxrss * 1024L);
+	")
+	#end
+	public static function get_memPeak():Int return 0;
 	#else
 	public static function get_totalMemory():Int {
 		return
