@@ -91,9 +91,6 @@ jobs:
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
           haxelib run openfl setup --quiet
-          # haxelib install lime
-          # haxelib install openfl
-          # haxelib run lime setup
         shell: cmd
           
       # Runs a set of commands using the runners shell
