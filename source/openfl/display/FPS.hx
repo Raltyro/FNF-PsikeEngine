@@ -5,10 +5,8 @@ import openfl.events.Event;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 import flixel.math.FlxMath;
-#if gl_stats
 import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
-#end
 import openfl.Lib;
 
 #if openfl
@@ -16,7 +14,19 @@ import openfl.system.System;
 #end
 
 // https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
-#if (!(windows || linux))
+#if windows
+@:cppFileCode("
+#include <windows.h>
+#include <psapi.h>
+")
+#elseif linux
+@:cppFileCode("
+#include <unistd.h>
+#include <sys/resource.h>
+
+#include <stdio.h>
+")
+#else
 #if cpp
 import cpp.vm.Gc;
 #elseif hl
@@ -36,20 +46,6 @@ import neko.vm.Gc;
 @:fileXml('tags="haxe,release"')
 @:noDebug
 #end
-
-#if windows
-@:cppFileCode("
-#include <windows.h>
-#include <psapi.h>
-")
-#elseif linux
-@:cppFileCode("
-#include <unistd.h>
-#include <sys/resource.h>
-
-#include <stdio.h>
-")
-#end
 class FPS extends TextField
 {
 	/**
@@ -62,6 +58,7 @@ class FPS extends TextField
 	public var showFPS:Bool = true;
 	public var showMem:Bool = false;
 	public var showMemPeak:Bool = false;
+	public var showGLStats:Bool = false;
 	public var inEditor:Bool = false;
 
 	@:noCompletion private var cacheCount:Int;
@@ -117,15 +114,14 @@ class FPS extends TextField
 
 		var currentCount = times.length;
 		currentFPS = Math.round((currentCount + cacheCount) / 2);
-		if (currentFPS > ClientPrefs.framerate) currentFPS = ClientPrefs.framerate;
+		//if (currentFPS > ClientPrefs.framerate) currentFPS = ClientPrefs.framerate;
 		
 		currentMem = (get_totalMemory() / 1024) / 1000;
 		#if (windows || linux)
 		var memPeak:Float = (get_memPeak() / 1024) / 1000;
 		if (memPeak > currentMemPeak) currentMemPeak = memPeak;
-		#else
-		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
 		#end
+		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
 
 		if (canRender) {
 			if (currentCount != cacheCount) {
@@ -141,6 +137,19 @@ class FPS extends TextField
 						showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
 						showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
 						""
+					) +
+					(
+						showGLStats ?
+						(
+							#if (!disable_cffi && (!html5 || !canvas))
+							"totalDC: " + Context3DStats.totalDrawCalls() + "\n" +
+							"stageDC: " + Context3DStats.totalDrawCalls(DrawCallContext.STAGE) + "\n" +
+							"stage3DDC: " + Context3DStats.totalDrawCalls(DrawCallContext.STAGE3D) + "\n"
+							#else
+							"totalDC: 0\nstageDC: 0\nstage3DDC: 0\n"
+							#end
+						)
+						: ""
 					)
 				);
 
@@ -148,7 +157,7 @@ class FPS extends TextField
 			}
 			
 			if (inEditor) {
-				y = (Lib.current.stage.stageHeight - 3) - (16 * ((showMem || showMemPeak) ? 2 : 1));
+				y = (Lib.current.stage.stageHeight - 3) - (16 * (((showMem || showMemPeak) ? 2 : 1) + (showGLStats ? 3 : 0)));
 			}
 			else {
 				y = 3;

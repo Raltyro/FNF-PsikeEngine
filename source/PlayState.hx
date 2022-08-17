@@ -74,6 +74,8 @@ import sys.io.File;
 import VideoHandler;
 #end
 
+import WindowUtil;
+
 using StringTools;
 
 class PlayState extends MusicBeatState

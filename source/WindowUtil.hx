@@ -13,7 +13,7 @@ typedef LONG = Int;
 typedef DWORD = LONG;
 typedef COLORREF = DWORD;
 
-@:headerCode('
+@:cppFileCode('
 #include <windows.h>
 #include <SDL_syswm.h>
 ')
