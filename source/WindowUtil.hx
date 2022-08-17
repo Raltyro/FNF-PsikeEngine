@@ -1,6 +1,6 @@
 package;
 
-#if windows
+#if false
 import lime.ui.Window;
 import flixel.util.FlxColor;
 
