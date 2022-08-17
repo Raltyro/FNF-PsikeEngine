@@ -143,8 +143,8 @@ class FPS extends TextField
 						(
 							#if (!disable_cffi && (!html5 || !canvas))
 							"totalDC: " + Context3DStats.totalDrawCalls() + "\n" +
-							"stageDC: " + Context3DStats.totalDrawCalls(DrawCallContext.STAGE) + "\n" +
-							"stage3DDC: " + Context3DStats.totalDrawCalls(DrawCallContext.STAGE3D) + "\n"
+							"stageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE) + "\n" +
+							"stage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D) + "\n"
 							#else
 							"totalDC: 0\nstageDC: 0\nstage3DDC: 0\n"
 							#end

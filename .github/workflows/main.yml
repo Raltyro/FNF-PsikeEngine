@@ -52,7 +52,7 @@ jobs:
           haxelib install flixel-addons --quiet
           haxelib install tjson --quiet
           haxelib install hxjsonast --quiet
-          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec --quiet
+          haxelib git hxCodec https://github.com/Raltyro/hxCodec --quiet
           haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
           haxelib install hscript --quiet
           haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
@@ -111,7 +111,7 @@ jobs:
           haxelib install flixel-addons --quiet
           haxelib install tjson --quiet
           haxelib install hxjsonast --quiet
-          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec --quiet
+          haxelib git hxCodec https://github.com/Raltyro/hxCodec --quiet
           haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
           haxelib install hscript --quiet
           haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
@@ -170,7 +170,7 @@ jobs:
           haxelib install flixel-addons --quiet
           haxelib install tjson --quiet
           haxelib install hxjsonast --quiet
-          haxelib git hxCodec https://github.com/polybiusproxy/hxCodec --quiet
+          haxelib git hxCodec https://github.com/Raltyro/hxCodec --quiet
           haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
           haxelib install hscript --quiet
           haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet

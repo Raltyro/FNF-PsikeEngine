@@ -18,30 +18,30 @@ typedef COLORREF = DWORD;
 #include <SDL_syswm.h>
 ')
 class WindowUtil {
-	@:native("SetWindowLongA") @:extern
+	@:native("SetWindowLongA")
 	private static function setWindowLong(hWnd:HWND, nIndex:Int, dwNewLong:LONG):LONG return null;
 
-	@:native("GetWindowLongA") @:extern
+	@:native("GetWindowLongA")
 	private static function getWindowLong(hWnd:HWND, nIndex:Int):LONG return null;
 
-	@:native("SetLayeredWindowAttributes") @:extern
+	@:native("SetLayeredWindowAttributes")
 	private static function setLayeredWindowAttributes(hwnd:HWND, crKey:COLORREF, bAlpha:BYTE, dwFlags:DWORD):BOOL return null;
 
-	@:native("GetLastError") @:extern
+	@:native("GetLastError")
 	private static function _getLastError():DWORD return null;
 	private static function getLastError():String return Std.string(_getLastError());
 	
 	@:native("GWL_EXSTYLE") @:extern
-	private var EXSTYLE:Int;
+	private static var EXSTYLE:Int;
 	
 	@:native("WS_EX_LAYERED") @:extern
-	private var EX_LAYERED:Int;
+	private static var EX_LAYERED:Int;
 	
 	@:native("LWA_COLORKEY") @:extern
-	private var COLORKEY:DWORD;
+	private static var COLORKEY:DWORD;
 	
 	public static function getSDLWindow(limeWin:Window):Dynamic
-		return limeWin.__backend.handle;
+		@:privateAccess return limeWin.__backend.handle;
 	
 	@:functionCode("
 		SDL_SysWMinfo wminfo;
