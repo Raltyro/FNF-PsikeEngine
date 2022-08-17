@@ -18,16 +18,16 @@ typedef COLORREF = DWORD;
 #include <SDL_syswm.h>
 ')
 class WindowUtil {
-	@:native("SetWindowLongA")
+	@:native("SetWindowLongA") @:extern
 	private static function setWindowLong(hWnd:HWND, nIndex:Int, dwNewLong:LONG):LONG return null;
 
-	@:native("GetWindowLongA")
+	@:native("GetWindowLongA") @:extern
 	private static function getWindowLong(hWnd:HWND, nIndex:Int):LONG return null;
 
-	@:native("SetLayeredWindowAttributes")
+	@:native("SetLayeredWindowAttributes") @:extern
 	private static function setLayeredWindowAttributes(hwnd:HWND, crKey:COLORREF, bAlpha:BYTE, dwFlags:DWORD):BOOL return null;
 
-	@:native("GetLastError")
+	@:native("GetLastError") @:extern
 	private static function _getLastError():DWORD return null;
 	private static function getLastError():String return Std.string(_getLastError());
 	
