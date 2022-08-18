@@ -2833,6 +2833,7 @@ class FunkinLua {
 	{
 		if(!ClientPrefs.shaders) return false;
 
+		#if (!flash && sys)
 		if(PlayState.instance.runtimeShaders.exists(name))
 		{
 			luaTrace('Shader $name was already initialized!');
@@ -2876,6 +2877,7 @@ class FunkinLua {
 			}
 		}
 		luaTrace('Missing shader $name .frag AND .vert files!', false, false, FlxColor.RED);
+		#end
 		return false;
 	}
 
@@ -3078,6 +3080,7 @@ class FunkinLua {
 		#end
 	}
 
+	#if LUA_ALLOWED
 	// some fuckery fucks with linc_luajit
 	function getResult(l:State, result:Int):Any {
 		var ret:Any = null;
@@ -3095,6 +3098,7 @@ class FunkinLua {
 		
 		return ret;
 	}
+	#end
 
 	var lastCalledFunction:String = '';
 	public function call(func:String, args:Array<Dynamic>): Dynamic{
