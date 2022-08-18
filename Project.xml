@@ -207,11 +207,13 @@
 	
 	<haxeflag name="-dce no"/> <!-- this doesnt work lmao -->
 	<haxedef name="queue_experimental_optimization"/>
+	<haxedef name="gl_stats"/>
 
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 	
+	<haxedef name="FLX_SUPPRESS_ICON"/>
 	<icon path="art/icon16.png" size='16' priority="1"/>
 	<icon path="art/icon32.png" size='32' priority="2"/>
 	<icon path="art/icon64.png" size='64' priority="3"/>

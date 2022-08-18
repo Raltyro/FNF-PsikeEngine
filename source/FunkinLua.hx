@@ -3108,6 +3108,7 @@ class FunkinLua {
 			Lua.getglobal(lua, func);
 			var type:Int = Lua.type(lua, -1);
 			if (type != Lua.LUA_TFUNCTION) {
+				Lua.pop(lua, 1);
 				return Function_Continue;
 			}
 			
@@ -3117,12 +3118,8 @@ class FunkinLua {
 
 			var result:Null<Int> = Lua.pcall(lua, args.length, 1, 0);
 			var error:Dynamic = getErrorMessage();
-			if(!resultIsAllowed(lua, result) || error != null)
-			{
-				Lua.pop(lua, 1);
-				if(error != null) luaTrace("ERROR (" + func + "): " + error, false, false, FlxColor.RED);
-			}
-			else
+			if(error != null) luaTrace("ERROR (" + func + "): " + error, false, false, FlxColor.RED);
+			if(resultIsAllowed(lua, result))
 			{
 				var conv:Dynamic = cast getResult(lua, result);
 				Lua.pop(lua, 1);

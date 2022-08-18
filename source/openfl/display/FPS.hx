@@ -4,13 +4,25 @@ import haxe.Timer;
 import openfl.events.Event;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
-import flixel.math.FlxMath;
+import openfl.Lib;
+
+#if (gl_stats && !disable_cffi && (!html5 || !canvas))
 import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
-import openfl.Lib;
+#end
 
 #if openfl
 import openfl.system.System;
+#end
+
+#if cpp
+import cpp.vm.Gc;
+#elseif hl
+import hl.Gc;
+#elseif java
+import java.vm.Gc;
+#elseif neko
+import neko.vm.Gc;
 #end
 
 // https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
@@ -26,16 +38,13 @@ import openfl.system.System;
 
 #include <stdio.h>
 ")
-#else
-#if cpp
-import cpp.vm.Gc;
-#elseif hl
-import hl.Gc;
-#elseif java
-import java.vm.Gc;
-#elseif neko
-import neko.vm.Gc;
-#end
+#elseif mac
+@:cppFileCode("
+#include <unistd.h>
+#include <sys/resource.h>
+
+#include <mach/mach.h>
+")
 #end
 
 /**
@@ -54,6 +63,9 @@ class FPS extends TextField
 	public var currentFPS(default, null):Int;
 	public var currentMem(default, null):Float;
 	public var currentMemPeak(default, null):Float;
+	
+	public var currentGcMem(default, null):Float;
+	public var currentGcMemPeak(default, null):Float;
 	
 	public var showFPS:Bool = true;
 	public var showMem:Bool = false;
@@ -77,7 +89,7 @@ class FPS extends TextField
 		this.y = y;
 		selectable = false;
 		mouseEnabled = false;
-		defaultTextFormat = new TextFormat(Paths.font("vcr.ttf"), 16, color);
+		defaultTextFormat = new TextFormat('assets/fonts/vcr.ttf', 16, color);
 
 		width = 400;
 		height = 70;
@@ -113,40 +125,53 @@ class FPS extends TextField
 		}
 
 		var currentCount = times.length;
-		currentFPS = Math.round((currentCount + cacheCount) / 2);
+		var fps = (currentCount + cacheCount) / 2;
+		currentFPS = Math.round(fps);
 		//if (currentFPS > ClientPrefs.framerate) currentFPS = ClientPrefs.framerate;
 		
-		currentMem = (get_totalMemory() / 1024) / 1000;
+		currentGcMem = Math.abs((get_gcMemory() / 1024) / 1000);
+		if (currentGcMem > currentGcMemPeak) currentGcMemPeak = currentGcMem;
 		#if (windows || linux)
-		var memPeak:Float = (get_memPeak() / 1024) / 1000;
+		currentMem = Math.abs((get_totalMemory() / 1024) / 1000);
+		var memPeak:Float = Math.abs((get_memPeak() / 1024) / 1000);
 		if (memPeak > currentMemPeak) currentMemPeak = memPeak;
-		#end
 		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
+		#else
+		currentMem = currentGcMem;
+		currentMemPeak = currentGcMemPeak;
+		#end
 
 		if (canRender) {
 			if (currentCount != cacheCount) {
-				if (currentMem > 3000 || currentFPS <= ClientPrefs.framerate / 2)
+				if (currentMem > 3000 || fps <= ClientPrefs.framerate / 2)
 					textColor = 0xFFFF0000;
 				else
 					textColor = 0xFFFFFFFF;
 				
 				text = (
-					(showFPS ? ("FPS: " + Math.floor(currentFPS) + "\n") : "") +
+					(showFPS ? ("FPS: " + currentFPS + " (" + CoolUtil.truncateFloat((1 / fps) * 1000) + "ms)\n") : "") +
 					(
-						showMem && showMemPeak ? ("MEM / PEAK: " + CoolUtil.truncateFloat(currentMem) + " MB / " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
-						showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
-						showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
-						""
+						(
+							showMem && showMemPeak ? ("MEM / PEAK: " + CoolUtil.truncateFloat(currentMem) + " MB / " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+							showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
+							showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+							""
+						)
+						#if (windows || linux) + (
+							showMem && showMemPeak ? ("GC MEM / PEAK: " + CoolUtil.truncateFloat(currentGcMem) + " MB / " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+							showMem ? ("GC MEM: " + CoolUtil.truncateFloat(currentGcMem) + " MB\n") :
+							showMemPeak ? ("GC MEM PEAK: " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+							""
+						)
+						#end
 					) +
 					(
 						showGLStats ?
 						(
-							#if (!disable_cffi && (!html5 || !canvas))
-							"totalDC: " + Context3DStats.totalDrawCalls() + "\n" +
-							"stageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE) + "\n" +
-							"stage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D) + "\n"
+							#if (gl_stats && !disable_cffi && (!html5 || !canvas))
+							"DRAWS: " + Context3DStats.totalDrawCalls() + "\n"
 							#else
-							"totalDC: 0\nstageDC: 0\nstage3DDC: 0\n"
+							"DRAWS: 0\n"
 							#end
 						)
 						: ""
@@ -157,7 +182,14 @@ class FPS extends TextField
 			}
 			
 			if (inEditor) {
-				y = (Lib.current.stage.stageHeight - 3) - (16 * (((showMem || showMemPeak) ? 2 : 1) + (showGLStats ? 3 : 0)));
+				y = (Lib.current.stage.stageHeight - 3) - (
+					16 *
+					(
+						(showFPS ? 1 : 0) +
+						((showMem || showMemPeak) ? #if (windows || linux) 2 #else 1 #end : 0) +
+						(showGLStats ? 1 : 0)
+					)
+				);
 			}
 			else {
 				y = 3;
@@ -167,6 +199,18 @@ class FPS extends TextField
 			text = "\n";
 
 		cacheCount = currentCount;
+	}
+	
+	public static function get_gcMemory():Int {
+		return
+			#if cpp
+			Gc.memUsage()
+			#elseif hl
+			Gc.stats().totalAllocated
+			#elseif (java || neko)
+			Gc.stats().heap
+			#end
+		;
 	}
 	
 	#if (windows || linux)
@@ -188,6 +232,14 @@ class FPS extends TextField
 		if (fscanf(fp, "%*s%ld", &rss) == 1)
 			return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
 	')
+	#elseif mac
+	@:functionCode("
+		struct mach_task_basic_info info;
+		mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+		
+		if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &infoCount) == KERN_SUCCESS)
+			return (size_t)info.resident_size;
+	")
 	#end
 	public static function get_totalMemory():Int return 0;
 	
@@ -205,21 +257,19 @@ class FPS extends TextField
 		if (true)
 			return (size_t)(rusage.ru_maxrss * 1024L);
 	")
+	#elseif mac
+	@:functionCode("
+		struct rusage rusage;
+		getrusage(RUSAGE_SELF, &rusage);
+		
+		if (true)
+			return (size_t)rusage.ru_maxrss;
+	")
 	#end
 	public static function get_memPeak():Int return 0;
 	#else
 	public static function get_memPeak():Int return 0;
 	
-	public static function get_totalMemory():Int {
-		return
-			#if cpp
-			Gc.memUsage()
-			#elseif hl
-			Gc.stats().totalAllocated
-			#elseif (java || neko)
-			Gc.stats().heap
-			#end
-		;
-	}
+	inline public static function get_totalMemory():Int return get_gcMemory();
 	#end
 }
