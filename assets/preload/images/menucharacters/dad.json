@@ -5,6 +5,10 @@
 		0,
 		0
 	],
+	"confirmPosition": [
+		0,
+		0
+	],
 	"scale": 1,
 	"idle_anim": "M Dad Idle",
 	"confirm_anim": "M Dad Idle"

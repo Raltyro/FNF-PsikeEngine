@@ -8,6 +8,7 @@ import flixel.FlxSprite;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
@@ -39,6 +40,9 @@ class MenuCharacterEditorState extends MusicBeatState
 	var txtOffsets:FlxText;
 	var defaultCharacters:Array<String> = ['dad', 'bf', 'gf'];
 
+	//1 = idle offset, 2 = confirm offset
+	var offsetType:Int = 1;
+
 	override function create() {
 		Main.fpsVar.inEditor = true;
 		
@@ -46,10 +50,12 @@ class MenuCharacterEditorState extends MusicBeatState
 			image: 'Menu_Dad',
 			scale: 1,
 			position: [0, 0],
+			confirmPosition: [0, 0],
 			idle_anim: 'M Dad Idle',
 			confirm_anim: 'M Dad Idle',
 			flipX: false
 		};
+
 		#if desktop
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Menu Character Editor", "Editting: " + characterFile.image);
@@ -67,14 +73,16 @@ class MenuCharacterEditorState extends MusicBeatState
 		add(new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51));
 		add(grpWeekCharacters);
 
-		txtOffsets = new FlxText(20, 10, 0, "[0, 0]", 32);
+		txtOffsets = new FlxText(20, 10, 0, "", 32);
 		txtOffsets.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER);
 		txtOffsets.alpha = 0.7;
 		add(txtOffsets);
 
 		var tipText:FlxText = new FlxText(0, 540, FlxG.width,
-			"Arrow Keys - Change Offset (Hold shift for 10x speed)
-			\nSpace - Play \"Start Press\" animation (Boyfriend Character Type)", 16);
+			"Arrow Keys - Change Current Offset (Hold shift for 10x speed)
+			\nSpace - Play \"Confirm\" animation
+			\nPress 2 to Adjust Confirm Animation Offset (If exists)
+			\nPress 1 to Adjust Character Offset", 16);
 		tipText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, CENTER);
 		tipText.scrollFactor.set();
 		add(tipText);
@@ -89,7 +97,8 @@ class MenuCharacterEditorState extends MusicBeatState
 	var UI_typebox:FlxUITabMenu;
 	var UI_mainbox:FlxUITabMenu;
 	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
-	function addEditorBox() {
+	function addEditorBox() 
+	{
 		var tabs = [
 			{name: 'Character Type', label: 'Character Type'},
 		];
@@ -192,7 +201,7 @@ class MenuCharacterEditorState extends MusicBeatState
 		
 		scaleStepper = new FlxUINumericStepper(140, imageInputText.y, 0.05, 1, 0.1, 30, 2);
 
-		confirmDescText = new FlxText(10, confirmInputText.y - 18, 0, 'Start Press animation on the .XML:');
+		confirmDescText = new FlxText(10, confirmInputText.y - 18, 0, 'Confirm animation on the .XML:');
 		tab_group.add(new FlxText(10, imageInputText.y - 18, 0, 'Image file name:'));
 		tab_group.add(new FlxText(10, idleInputText.y - 18, 0, 'Idle animation on the .XML:'));
 		tab_group.add(new FlxText(scaleStepper.x, scaleStepper.y - 18, 0, 'Scale:'));
@@ -239,15 +248,19 @@ class MenuCharacterEditorState extends MusicBeatState
 		char.alpha = 1;
 		char.frames = Paths.getSparrowAtlas('menucharacters/' + characterFile.image);
 		char.animation.addByPrefix('idle', characterFile.idle_anim, 24);
-		if(curTypeSelected == 1) char.animation.addByPrefix('confirm', characterFile.confirm_anim, 24, false);
+		if(characterFile.confirm_anim != null
+			&& characterFile.confirm_anim != ''
+			&& characterFile.confirm_anim != characterFile.idle_anim) char.animation.addByPrefix('confirm', characterFile.confirm_anim, 24, false);
+		
 		char.flipX = (characterFile.flipX == true);
 
 		char.scale.set(characterFile.scale, characterFile.scale);
 		char.updateHitbox();
 		char.animation.play('idle');
 
-		confirmDescText.visible = (curTypeSelected == 1);
-		confirmInputText.visible = (curTypeSelected == 1);
+		confirmDescText.visible = true;
+		confirmInputText.visible = true;
+		offsetType = 1;
 		updateOffset();
 		
 		#if desktop
@@ -287,10 +300,12 @@ class MenuCharacterEditorState extends MusicBeatState
 			}
 		}
 
-		if(!blockInput) {
+		if (!blockInput) 
+		{
 			FlxG.sound.muteKeys = TitleState.muteKeys;
 			FlxG.sound.volumeDownKeys = TitleState.volumeDownKeys;
 			FlxG.sound.volumeUpKeys = TitleState.volumeUpKeys;
+			
 			if(FlxG.keys.justPressed.ESCAPE) {
 				MusicBeatState.switchState(new editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
@@ -300,40 +315,109 @@ class MenuCharacterEditorState extends MusicBeatState
 			var shiftMult:Int = 1;
 			if(FlxG.keys.pressed.SHIFT) shiftMult = 10;
 
-			if(FlxG.keys.justPressed.LEFT) {
-				characterFile.position[0] += shiftMult;
-				updateOffset();
+			if(FlxG.keys.justPressed.LEFT) 
+			{
+				if (offsetType < 2)
+				{
+					characterFile.position[0] += shiftMult;
+					updateOffset();
+				}
+
+				else
+				{
+					characterFile.confirmPosition[0] += shiftMult;
+					updateConfirmOffset();
+				}
 			}
-			if(FlxG.keys.justPressed.RIGHT) {
-				characterFile.position[0] -= shiftMult;
-				updateOffset();
-			}
-			if(FlxG.keys.justPressed.UP) {
-				characterFile.position[1] += shiftMult;
-				updateOffset();
-			}
-			if(FlxG.keys.justPressed.DOWN) {
-				characterFile.position[1] -= shiftMult;
-				updateOffset();
+			if(FlxG.keys.justPressed.RIGHT) 
+			{
+				if (offsetType < 2)
+				{
+					characterFile.position[0] -= shiftMult;
+					updateOffset();
+				}
+
+				else
+				{
+					characterFile.confirmPosition[0] -= shiftMult;
+					updateConfirmOffset();
+				}
 			}
 
-			if(FlxG.keys.justPressed.SPACE && curTypeSelected == 1) {
-				grpWeekCharacters.members[curTypeSelected].animation.play('confirm', true);
+			if(FlxG.keys.justPressed.UP) 
+			{
+				if (offsetType < 2)
+				{
+					characterFile.position[1] += shiftMult;
+					updateOffset();
+				}
+
+				else
+				{
+					characterFile.confirmPosition[1] += shiftMult;
+					updateConfirmOffset();
+				}
+			}
+			if (FlxG.keys.justPressed.DOWN) 
+			{
+				if (offsetType < 2)
+				{
+					characterFile.position[1] -= shiftMult;
+					updateOffset();
+				}
+
+				else
+				{
+					characterFile.confirmPosition[1] -= shiftMult;
+					updateConfirmOffset();
+				}
+			}
+
+			if(FlxG.keys.justPressed.SPACE && grpWeekCharacters.members[curTypeSelected].hasConfirmAnimation) {
+				updateConfirmOffset();
 			}
 		}
 
-		var char:MenuCharacter = grpWeekCharacters.members[1];
-		if(char.animation.curAnim != null && char.animation.curAnim.name == 'confirm' && char.animation.curAnim.finished) {
+		updateText();
+
+		var char:MenuCharacter = grpWeekCharacters.members[curTypeSelected];
+
+		if (char.animation.curAnim != null && char.animation.curAnim.name == 'confirm' && char.animation.curAnim.finished) 
+		{
+			updateOffset();
 			char.animation.play('idle', true);
 		}
 
+		if (FlxG.keys.justPressed.TWO && char.hasConfirmAnimation)
+			offsetType = 2;
+		else if (FlxG.keys.justPressed.ONE)
+			offsetType = 1;
+
 		super.update(elapsed);
+	}
+
+	function updateConfirmOffset() 
+	{
+		updateOffset();
+		var char:MenuCharacter = grpWeekCharacters.members[curTypeSelected];
+		char.confirmPosition = characterFile.confirmPosition;
+		char.playAnim();
+		//txtOffsets.text = 'Confirm Animation Offsets: ${beautifyOffset(characterFile.confirmPosition)}';
 	}
 
 	function updateOffset() {
 		var char:MenuCharacter = grpWeekCharacters.members[curTypeSelected];
 		char.offset.set(characterFile.position[0], characterFile.position[1]);
-		txtOffsets.text = '' + characterFile.position;
+		//txtOffsets.text = 'Character Offsets: ' + beautifyOffset(characterFile.position);
+	}
+
+	function updateText() {
+		var char:MenuCharacter = grpWeekCharacters.members[curTypeSelected];
+
+		if (offsetType < 2)
+			txtOffsets.text = 'Character Offsets: ' + beautifyOffset(characterFile.position);
+		else
+			txtOffsets.text = 'Confirm Animation Offsets: ${beautifyOffset(char.confirmPosition)}';
 	}
 
 	var _file:FileReference = null;
@@ -360,18 +444,20 @@ class MenuCharacterEditorState extends MusicBeatState
 		if(fullPath != null) {
 			var rawJson:String = File.getContent(fullPath);
 			if(rawJson != null) {
-				var loadedChar:MenuCharacterFile = cast Json.parse(rawJson);
-				if(loadedChar.idle_anim != null && loadedChar.confirm_anim != null) //Make sure it's really a character
+				var loadedChar:MenuCharacterFile = Json.parse(rawJson);
+				if (loadedChar.idle_anim != null && loadedChar.confirm_anim != null) //Make sure it's really a character
 				{
 					var cutName:String = _file.name.substr(0, _file.name.length - 5);
 					trace("Successfully loaded file: " + cutName);
 					characterFile = loadedChar;
 					reloadSelectedCharacter();
 					imageInputText.text = characterFile.image;
-					idleInputText.text = characterFile.image;
-					confirmInputText.text = characterFile.image;
+					idleInputText.text = characterFile.idle_anim;
+					confirmInputText.text = characterFile.confirm_anim;
 					scaleStepper.value = characterFile.scale;
+					updateConfirmOffset();
 					updateOffset();
+					offsetType = 1;
 					_file = null;
 					return;
 				}
@@ -453,4 +539,12 @@ class MenuCharacterEditorState extends MusicBeatState
 		_file = null;
 		FlxG.log.error("Problem saving file");
 	}
+
+	function beautifyOffset(offset:Array<OneOfTwo<Float, Int>>)
+	{
+		return Std.string(offset.copy()).split(',').join(', ');
+	}
 }
+
+abstract OneOfTwo<K, V>(Dynamic) from K to K from V to V
+{}

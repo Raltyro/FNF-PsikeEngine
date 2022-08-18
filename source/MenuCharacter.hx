@@ -14,6 +14,7 @@ typedef MenuCharacterFile = {
 	var image:String;
 	var scale:Float;
 	var position:Array<Int>;
+	var confirmPosition:Array<Float>;
 	var idle_anim:String;
 	var confirm_anim:String;
 	var flipX:Bool;
@@ -24,6 +25,7 @@ class MenuCharacter extends FlxSprite
 	public var character:String;
 	public var hasConfirmAnimation:Bool = false;
 	private static var DEFAULT_CHARACTER:String = 'bf';
+	public var confirmPosition:Array<Float> = [0, 0];
 
 	public function new(x:Float, character:String = 'bf')
 	{
@@ -32,7 +34,8 @@ class MenuCharacter extends FlxSprite
 		changeCharacter(character);
 	}
 
-	public function changeCharacter(?character:String = 'bf') {
+	public function changeCharacter(?character:String = 'bf') 
+	{
 		if(character == null) character = '';
 		if(character == this.character) return;
 
@@ -45,7 +48,8 @@ class MenuCharacter extends FlxSprite
 		updateHitbox();
 
 		hasConfirmAnimation = false;
-		switch(character) {
+		switch (character) 
+		{
 			case '':
 				visible = false;
 				dontPlayAnim = true;
@@ -75,15 +79,17 @@ class MenuCharacter extends FlxSprite
 				var charFile:MenuCharacterFile = cast Json.parse(rawJson);
 				frames = Paths.getSparrowAtlas('menucharacters/' + charFile.image);
 				animation.addByPrefix('idle', charFile.idle_anim, 24);
+				confirmPosition = charFile.confirmPosition;
+
+				if (confirmPosition == null || confirmPosition.length < 2)
+					confirmPosition = [0, 0];
 
 				var confirmAnim:String = charFile.confirm_anim;
 				if(confirmAnim != null && confirmAnim != charFile.idle_anim)
 				{
 					animation.addByPrefix('confirm', confirmAnim, 24, false);
-					if (animation.getByName('confirm') != null) //check for invalid animation
-						hasConfirmAnimation = true;
 				}
-
+				
 				flipX = (charFile.flipX == true);
 
 				if(charFile.scale != 1) {
@@ -93,5 +99,28 @@ class MenuCharacter extends FlxSprite
 				offset.set(charFile.position[0], charFile.position[1]);
 				animation.play('idle');
 		}
+	}
+
+	public function playAnim(name:String = 'confirm')
+	{
+		if (hasConfirmAnimation) 
+		{
+			animation.play(name);
+
+			if (confirmPosition.length > 0 && name == 'confirm' && hasConfirmAnimation)
+				offset.set(offset.x + confirmPosition[0], offset.y + confirmPosition[1]);
+		}	
+	}
+
+	override function update(elapsed:Float)
+	{
+		super.update(elapsed);
+
+		//check for invalid animation
+		#if (flixel >= "4.11.0")
+		hasConfirmAnimation = animation.exists('confirm');
+		#else
+		hasConfirmAnimation = animation.getByName('confirm') != null;
+		#end
 	}
 }
