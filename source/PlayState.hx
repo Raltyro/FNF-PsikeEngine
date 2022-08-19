@@ -5090,7 +5090,7 @@ class PlayState extends MusicBeatState
 			
 			// had to do this because there is a bug in haxe where Stop != Continue doesnt work
 			var bool:Bool = ret == FunkinLua.Function_Continue;
-			if(!bool && (ret != true || !Std.isOfType(ret, Bool))) {
+			if(!bool && ret != 0) {
 				returnVal = cast ret;
 			}
 		}
