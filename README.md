@@ -1,3 +1,27 @@
+# Friday Night Funkin' Raltyro Fork
+Psych Engine Fork that included bugfixes, minor QOL features, and performance to make the game runs better.
+
+## Fork Installation:
+You must have raltyro haxelib forks of hxCodec
+You can install raltyro forks of lime, and openfl, well its optional btw
+
+To install hxCodec, do this
+```bat
+haxelib git hxCodec https://github.com/Raltyro/hxCodec
+```
+
+To install lime, openfl, do this
+```bat
+cd yourspecificfolder // THIS IS IMPORTANT, you dont want ur folders to be mixed up with these lmao
+git clone --recurse-submodules https://github.com/Raltyro/lime
+haxelib dev lime lime
+haxelib install lime-samples --quiet
+haxelib run lime setup --quiet
+git clone --recurse-submodules https://github.com/Raltyro/openfl
+haxelib dev openfl openfl
+haxelib install openfl-samples --quiet
+```
+
 # Friday Night Funkin' - Psych Engine
 Engine originally used on [Mind Games Mod](https://gamebanana.com/mods/301107), intended to be a fix for the vanilla version's many issues while keeping the casual play aspect of it. Also aiming to be an easier alternative to newbie coders.
 
