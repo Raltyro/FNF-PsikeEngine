@@ -40,7 +40,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		instance = this;
 		PlayState.instance.callOnLuas('onGameOverStart', []);
-		Paths.compress(16);
+		Paths.compress();
 		
 		FlxG.sound.play(Paths.sound(deathSoundName));
 
