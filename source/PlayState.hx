@@ -1581,9 +1581,9 @@ class PlayState extends MusicBeatState
 		if(!OpenFlAssets.exists(filepath))
 		#end
 		{
-		    FlxG.log.warn('Couldnt find video file: ' + name);
-		    startAndEnd();
-		    return;
+			FlxG.log.warn('Couldnt find video file: ' + name);
+			startAndEnd();
+			return;
 		}
 
 		var bg = new FlxSprite(-FlxG.width, -FlxG.height).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
@@ -1597,9 +1597,9 @@ class PlayState extends MusicBeatState
 		});
 		video.finishCallback = function()
 		{
-		    remove(bg);
-		    startAndEnd();
-		    Paths.clearUnusedMemory();
+			remove(bg);
+			startAndEnd();
+			Paths.clearUnusedMemory();
 			return;
 		}
 		return;
@@ -1608,7 +1608,7 @@ class PlayState extends MusicBeatState
 		startAndEnd();
 		return;
 		#end
-    }
+	}
 
 	function startAndEnd()
 	{
