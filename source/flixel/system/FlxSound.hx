@@ -598,7 +598,7 @@ class FlxSound extends FlxBasic
 	 */
 	public inline function getActualPitch():Float
 	{
-		return _pitch * _timeScaleAdjust;
+		return Math.max(_pitch * _timeScaleAdjust);
 	}
 
 	/**
@@ -808,7 +808,7 @@ class FlxSound extends FlxBasic
 	function set_pitch(v:Float):Float
 	{
 		v = Math.max(0, v);
-		var adjusted:Float = v * _timeScaleAdjust;
+		var adjusted:Float = Math.max(0, v * _timeScaleAdjust);
 		
 		if (_channel != null) {
 			if (_channel.pitch == adjusted) return v;
