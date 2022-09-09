@@ -1,29 +1,6 @@
 package options;
 
-#if desktop
-import Discord.DiscordClient;
-#end
-import flash.text.TextField;
 import flixel.FlxG;
-import flixel.FlxSprite;
-import flixel.addons.display.FlxGridOverlay;
-import flixel.group.FlxGroup.FlxTypedGroup;
-import flixel.math.FlxMath;
-import flixel.text.FlxText;
-import flixel.util.FlxColor;
-import lime.utils.Assets;
-import flixel.FlxSubState;
-import flash.text.TextField;
-import flixel.FlxG;
-import flixel.FlxSprite;
-import flixel.util.FlxSave;
-import haxe.Json;
-import flixel.tweens.FlxEase;
-import flixel.tweens.FlxTween;
-import flixel.util.FlxTimer;
-import flixel.input.keyboard.FlxKey;
-import flixel.graphics.FlxGraphic;
-import Controls;
 
 using StringTools;
 
@@ -89,58 +66,6 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		
-		#if !mobile
-		var option:Option = new Option('FPS Counter',
-			'If unchecked, hides FPS Counter.',
-			'showFPS',
-			'bool',
-			true);
-		addOption(option);
-		option.onChange = onChangeCounter;
-		
-		var option:Option = new Option('Memory Counter',
-			'If unchecked, hides Memory Counter.',
-			'showMem',
-			'bool',
-			true);
-		addOption(option);
-		option.onChange = onChangeCounter;
-		
-		var option:Option = new Option('Memory Peak Counter',
-			'If unchecked, hides Memory Peak Counter.',
-			'showMemPeak',
-			'bool',
-			true);
-		addOption(option);
-		option.onChange = onChangeCounter;
-		
-		var option:Option = new Option('GL Statistics Counter',
-			'If unchecked, hides GL Statistics Counte',
-			'showGLStats',
-			'bool',
-			true);
-		addOption(option);
-		option.onChange = onChangeCounter;
-		#end
-		
-		var option:Option = new Option('Pause Screen Song:',
-			"What song do you prefer for the Pause Screen?",
-			'pauseMusic',
-			'string',
-			'Tea Time',
-			['None', 'Breakfast', 'Tea Time']);
-		addOption(option);
-		option.onChange = onChangePauseMusic;
-		
-		#if CHECK_FOR_UPDATES
-		var option:Option = new Option('Check for Updates',
-			'On Release builds, turn this on to check for updates when you start the game.',
-			'checkForUpdates',
-			'bool',
-			true);
-		addOption(option);
-		#end
-
 		var option:Option = new Option('Combo Stacking',
 			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read",
 			'comboStacking',
@@ -150,33 +75,4 @@ class VisualsUISubState extends BaseOptionsMenu
 
 		super();
 	}
-
-	var changedMusic:Bool = false;
-	function onChangePauseMusic()
-	{
-		if(ClientPrefs.pauseMusic == 'None')
-			FlxG.sound.music.volume = 0;
-		else
-			FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.pauseMusic)));
-
-		changedMusic = true;
-	}
-
-	override function destroy()
-	{
-		if(changedMusic) FlxG.sound.playMusic(Paths.music('freakyMenu'));
-		super.destroy();
-	}
-
-	#if !mobile
-	function onChangeCounter()
-	{
-		if(Main.fpsVar != null) {
-			Main.fpsVar.showFPS = ClientPrefs.showFPS;
-			Main.fpsVar.showMem = ClientPrefs.showMem;
-			Main.fpsVar.showMemPeak = ClientPrefs.showMemPeak;
-			Main.fpsVar.showGLStats = ClientPrefs.showGLStats;
-		}
-	}
-	#end
 }

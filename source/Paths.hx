@@ -576,17 +576,47 @@ class Paths
 		return globalMods;
 	}
 
-	static public function getModDirectories():Array<String> {
+	static public function getModDirectories(lowercase:Bool = false):Array<String> {
 		var list:Array<String> = [];
 		var modsFolder:String = mods();
-		if(FileSystem.exists(modsFolder)) {
-			for (folder in FileSystem.readDirectory(modsFolder)) {
-				var path = haxe.io.Path.join([modsFolder, folder]);
-				if (sys.FileSystem.isDirectory(path) && !ignoreModFolders.contains(folder) && !list.contains(folder)) {
-					list.push(folder);
+
+		if (!FileSystem.exists(modsFolder)) return list;
+
+		for (folder in FileSystem.readDirectory(modsFolder)) {
+			var path:String = haxe.io.Path.join([modsFolder, folder]);
+			var lower:String = folder.toLowerCase();
+			
+			if (FileSystem.isDirectory(path) && !ignoreModFolders.contains(lower) && !list.contains(lower))
+				list.push(lowercase ? lower : folder);
+		}
+
+		return list;
+	}
+	
+	static public function getActiveModDirectories(lowercase:Bool = false):Array<String> {
+		var list:Array<String> = [];
+		var modsFolder:String = mods();
+		var path:String = 'modsList.txt';
+		
+		var remains:Array<String> = getModDirectories(true);
+		
+		if (remains.length <= 0 || !FileSystem.exists(path)) return list;
+		var leMods:Array<String> = CoolUtil.coolTextFile(path);
+
+		for (i in 0...leMods.length) {
+			if (remains.length <= 0) break;
+			if (leMods.length > 1 && leMods[0].length > 0) {
+				var modSplit:Array<String> = leMods[i].split('|');
+				var modLower:String = modSplit[0].toLowerCase();
+				
+				if (remains.contains(modLower) && modSplit[1] == '1') {
+					remains.remove(modLower);
+					list.push(lowercase ? modLower : modSplit[0]);
 				}
 			}
 		}
+		
+		remains = null;
 		return list;
 	}
 	#end

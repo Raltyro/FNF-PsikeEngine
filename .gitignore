@@ -21,3 +21,7 @@ export/*
 
 ### Personalized Stuffs
 temporary
+_build.bat
+_run.bat
+_test.bat
+_copyrun.bat

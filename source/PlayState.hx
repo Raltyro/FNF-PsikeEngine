@@ -4298,16 +4298,20 @@ class PlayState extends MusicBeatState
 				var notesStopped:Bool = false;
 
 				var sortedNotesList:Array<Note> = [];
+				var delta:Float = Conductor.songPosition - lastTime;
 				notes.forEachAlive(function(daNote:Note)
 				{
-					if (strumsBlocked[daNote.noteData] != true && daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.wasGoodHit && !daNote.isSustainNote && !daNote.blockHit)
+					if (strumsBlocked[daNote.noteData] != true && daNote.mustPress && !daNote.wasGoodHit && !daNote.isSustainNote && !daNote.blockHit)
 					{
-						if(daNote.noteData == key)
-						{
-							sortedNotesList.push(daNote);
-							//notesDatas.push(daNote.noteData);
+						if (!daNote.canBeHit) daNote.update(delta);
+						if (daNote.canBeHit && !daNote.tooLate) {
+							if(daNote.noteData == key)
+							{
+								sortedNotesList.push(daNote);
+								//notesDatas.push(daNote.noteData);
+							}
+							canMiss = true;
 						}
-						canMiss = true;
 					}
 				});
 				sortedNotesList.sort(sortHitNotes);

@@ -15,7 +15,8 @@ class ClientPrefs {
 	public static var showFPS:Bool = true;
 	public static var showMem:Bool = true;
 	public static var showMemPeak:Bool = true;
-	public static var showGLStats:Bool = true;
+	public static var showGc:Bool = false;
+	public static var showGLStats:Bool = false;
 	public static var flashing:Bool = true;
 	public static var globalAntialiasing:Bool = true;
 	public static var noteSplashes:Bool = true;
@@ -110,6 +111,7 @@ class ClientPrefs {
 		FlxG.save.data.showFPS = showFPS;
 		FlxG.save.data.showMem = showMem;
 		FlxG.save.data.showMemPeak = showMemPeak;
+		FlxG.save.data.showGc = showGc;
 		FlxG.save.data.showGLStats = showGLStats;
 		FlxG.save.data.flashing = flashing;
 		FlxG.save.data.globalAntialiasing = globalAntialiasing;
@@ -177,6 +179,9 @@ class ClientPrefs {
 		if(FlxG.save.data.showMemPeak != null) {
 			showMemPeak = FlxG.save.data.showMemPeak;
 		}
+		if(FlxG.save.data.showGc != null) {
+			showGc = FlxG.save.data.showGc;
+		}
 		if(FlxG.save.data.showGLStats != null) {
 			showGLStats = FlxG.save.data.showGLStats;
 		}
@@ -184,6 +189,7 @@ class ClientPrefs {
 			Main.fpsVar.showFPS = showFPS;
 			Main.fpsVar.showMem = showMem;
 			Main.fpsVar.showMemPeak = showMemPeak;
+			Main.fpsVar.showGc = showGc;
 			Main.fpsVar.showGLStats = showGLStats;
 		}
 		

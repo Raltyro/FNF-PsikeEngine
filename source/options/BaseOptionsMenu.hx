@@ -38,11 +38,15 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	private var grpTexts:FlxTypedGroup<AttachedText>;
 
 	private var boyfriend:Character = null;
-	private var descBox:FlxSprite;
+	private var descBox:AttachedSprite;
 	private var descText:FlxText;
 
 	public var title:String;
 	public var rpcTitle:String;
+
+	public var canInteract:Bool = true;
+	
+	var offsetThing:Float = -75;
 
 	public function new()
 	{
@@ -71,7 +75,11 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		checkboxGroup = new FlxTypedGroup<CheckboxThingie>();
 		add(checkboxGroup);
 
-		descBox = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
+		descBox = new AttachedSprite();
+		descBox.makeGraphic(1, 1, FlxColor.BLACK);
+		descBox.xAdd = -10;
+		descBox.yAdd = -10;
+		descBox.alphaMult = 0.6;
 		descBox.alpha = 0.6;
 		add(descBox);
 
@@ -85,6 +93,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		descText.scrollFactor.set();
 		descText.borderSize = 2.4;
+		descBox.sprTracker = descText;
 		add(descText);
 
 		for (i in 0...optionsArray.length)
@@ -95,6 +104,8 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			optionText.yMult = 90;*/
 			optionText.targetY = i;
 			grpOptions.add(optionText);
+			
+			optionText.startPosition.y += 20;
 
 			if(optionsArray[i].type == 'bool') {
 				var checkbox:CheckboxThingie = new CheckboxThingie(optionText.x - 105, optionText.y, optionsArray[i].getValue() == true);
@@ -104,7 +115,6 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			} else {
 				optionText.x -= 80;
 				optionText.startPosition.x -= 80;
-				//optionText.xAdd -= 80;
 				var valueText:AttachedText = new AttachedText('' + optionsArray[i].getValue(), optionText.width + 80);
 				valueText.sprTracker = optionText;
 				valueText.copyAlpha = true;
@@ -135,127 +145,126 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var holdValue:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)
-		{
-			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P)
-		{
-			changeSelection(1);
-		}
-
-		if (controls.BACK) {
-			close();
-			FlxG.sound.play(Paths.sound('cancelMenu'));
-		}
-
-		if(nextAccept <= 0)
-		{
-			var usesCheckbox = true;
-			if(curOption.type != 'bool')
+		if (canInteract) {
+			if (controls.UI_UP_P)
 			{
-				usesCheckbox = false;
+				changeSelection(-1);
+			}
+			if (controls.UI_DOWN_P)
+			{
+				changeSelection(1);
 			}
 
-			if(usesCheckbox)
+			if (controls.BACK) {
+				close();
+				FlxG.sound.play(Paths.sound('cancelMenu'));
+			}
+
+			if(nextAccept <= 0)
 			{
-				if(controls.ACCEPT)
+				var type:String = curOption.type;
+				var usesCheckbox = type == 'bool';
+
+				if(usesCheckbox || type == 'button')
 				{
-					FlxG.sound.play(Paths.sound('scrollMenu'));
-					curOption.setValue((curOption.getValue() == true) ? false : true);
-					curOption.change();
+					if(controls.ACCEPT)
+					{
+						FlxG.sound.play(Paths.sound('scrollMenu'));
+						if (usesCheckbox) curOption.setValue((curOption.getValue() == true) ? false : true);
+						curOption.change();
+						if (usesCheckbox) reloadCheckboxes();
+					}
+				} else {
+					if(controls.UI_LEFT || controls.UI_RIGHT) {
+						var pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
+						if(holdTime > 0.5 || pressed) {
+							if(pressed) {
+								var add:Dynamic = null;
+								if(type != 'string') {
+									add = controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue;
+								}
+
+								switch(type)
+								{
+									case 'int' | 'float' | 'percent':
+										holdValue = curOption.getValue() + add;
+										if(holdValue < curOption.minValue) holdValue = curOption.minValue;
+										else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
+
+										switch(type)
+										{
+											case 'int':
+												holdValue = Math.round(holdValue);
+												curOption.setValue(holdValue);
+
+											case 'float' | 'percent':
+												holdValue = FlxMath.roundDecimal(holdValue, curOption.decimals);
+												curOption.setValue(holdValue);
+										}
+
+									case 'string':
+										var num:Int = curOption.curOption; //lol
+										if(controls.UI_LEFT_P) --num;
+										else num++;
+
+										if(num < 0) {
+											num = curOption.options.length - 1;
+										} else if(num >= curOption.options.length) {
+											num = 0;
+										}
+
+										curOption.curOption = num;
+										curOption.setValue(curOption.options[num]); //lol
+										//trace(curOption.options[num]);
+								}
+								updateTextFrom(curOption);
+								curOption.change();
+								FlxG.sound.play(Paths.sound('scrollMenu'));
+							} else if(type != 'string') {
+								holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
+								if(holdValue < curOption.minValue) holdValue = curOption.minValue;
+								else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
+
+								switch(type)
+								{
+									case 'int':
+										curOption.setValue(Math.round(holdValue));
+									
+									case 'float' | 'percent':
+										curOption.setValue(FlxMath.roundDecimal(holdValue, curOption.decimals));
+								}
+								updateTextFrom(curOption);
+								curOption.change();
+							}
+						}
+
+						if(type != 'string') {
+							holdTime += elapsed;
+						}
+					} else if(controls.UI_LEFT_R || controls.UI_RIGHT_R) {
+						clearHold();
+					}
+				}
+
+				if(controls.RESET && type != 'button')
+				{
+					for (i in 0...optionsArray.length)
+					{
+						var leOption:Option = optionsArray[i];
+						leOption.setValue(leOption.defaultValue);
+						if(leOption.type != 'bool')
+						{
+							if(leOption.type == 'string')
+							{
+								leOption.curOption = leOption.options.indexOf(leOption.getValue());
+							}
+							updateTextFrom(leOption);
+						}
+						leOption.change();
+					}
+					FlxG.sound.play(Paths.sound('cancelMenu'));
 					reloadCheckboxes();
 				}
-			} else {
-				if(controls.UI_LEFT || controls.UI_RIGHT) {
-					var pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
-					if(holdTime > 0.5 || pressed) {
-						if(pressed) {
-							var add:Dynamic = null;
-							if(curOption.type != 'string') {
-								add = controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue;
-							}
-
-							switch(curOption.type)
-							{
-								case 'int' | 'float' | 'percent':
-									holdValue = curOption.getValue() + add;
-									if(holdValue < curOption.minValue) holdValue = curOption.minValue;
-									else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-
-									switch(curOption.type)
-									{
-										case 'int':
-											holdValue = Math.round(holdValue);
-											curOption.setValue(holdValue);
-
-										case 'float' | 'percent':
-											holdValue = FlxMath.roundDecimal(holdValue, curOption.decimals);
-											curOption.setValue(holdValue);
-									}
-
-								case 'string':
-									var num:Int = curOption.curOption; //lol
-									if(controls.UI_LEFT_P) --num;
-									else num++;
-
-									if(num < 0) {
-										num = curOption.options.length - 1;
-									} else if(num >= curOption.options.length) {
-										num = 0;
-									}
-
-									curOption.curOption = num;
-									curOption.setValue(curOption.options[num]); //lol
-									//trace(curOption.options[num]);
-							}
-							updateTextFrom(curOption);
-							curOption.change();
-							FlxG.sound.play(Paths.sound('scrollMenu'));
-						} else if(curOption.type != 'string') {
-							holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
-							if(holdValue < curOption.minValue) holdValue = curOption.minValue;
-							else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-
-							switch(curOption.type)
-							{
-								case 'int':
-									curOption.setValue(Math.round(holdValue));
-								
-								case 'float' | 'percent':
-									curOption.setValue(FlxMath.roundDecimal(holdValue, curOption.decimals));
-							}
-							updateTextFrom(curOption);
-							curOption.change();
-						}
-					}
-
-					if(curOption.type != 'string') {
-						holdTime += elapsed;
-					}
-				} else if(controls.UI_LEFT_R || controls.UI_RIGHT_R) {
-					clearHold();
-				}
-			}
-
-			if(controls.RESET)
-			{
-				for (i in 0...optionsArray.length)
-				{
-					var leOption:Option = optionsArray[i];
-					leOption.setValue(leOption.defaultValue);
-					if(leOption.type != 'bool')
-					{
-						if(leOption.type == 'string')
-						{
-							leOption.curOption = leOption.options.indexOf(leOption.getValue());
-						}
-						updateTextFrom(leOption);
-					}
-					leOption.change();
-				}
-				FlxG.sound.play(Paths.sound('cancelMenu'));
-				reloadCheckboxes();
 			}
 		}
 
@@ -263,9 +272,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			boyfriend.dance();
 		}
 
-		if(nextAccept > 0) {
-			nextAccept -= 1;
-		}
+		if(nextAccept > 0) nextAccept--;
 		super.update(elapsed);
 	}
 
@@ -285,6 +292,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		holdTime = 0;
 	}
 	
+	var moveTween:FlxTween = null;
 	function changeSelection(change:Int = 0)
 	{
 		curSelected += change;
@@ -292,10 +300,6 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			curSelected = optionsArray.length - 1;
 		if (curSelected >= optionsArray.length)
 			curSelected = 0;
-
-		descText.text = optionsArray[curSelected].description;
-		descText.screenCenter(Y);
-		descText.y += 270;
 
 		var bullShit:Int = 0;
 
@@ -314,6 +318,12 @@ class BaseOptionsMenu extends MusicBeatSubstate
 				text.alpha = 1;
 			}
 		}
+		
+		descText.text = optionsArray[curSelected].description;
+		descText.y = FlxG.height - descText.height + offsetThing - 30;
+
+		if(moveTween != null) moveTween.cancel();
+		moveTween = FlxTween.tween(descText, {y : descText.y + 45}, 0.25, {ease: FlxEase.sineOut});
 
 		descBox.setPosition(descText.x - 10, descText.y - 10);
 		descBox.setGraphicSize(Std.int(descText.width + 20), Std.int(descText.height + 25));

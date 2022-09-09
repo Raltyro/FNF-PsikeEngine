@@ -70,6 +70,7 @@ class FPS extends TextField
 	public var showFPS:Bool = true;
 	public var showMem:Bool = false;
 	public var showMemPeak:Bool = false;
+	public var showGc:Bool = false;
 	public var showGLStats:Bool = false;
 	public var inEditor:Bool = false;
 
@@ -131,7 +132,7 @@ class FPS extends TextField
 		
 		currentGcMem = Math.abs((get_gcMemory() / 1024) / 1000);
 		if (currentGcMem > currentGcMemPeak) currentGcMemPeak = currentGcMem;
-		#if (windows || linux)
+		#if (windows || linux || mac)
 		currentMem = Math.abs((get_totalMemory() / 1024) / 1000);
 		var memPeak:Float = Math.abs((get_memPeak() / 1024) / 1000);
 		if (memPeak > currentMemPeak) currentMemPeak = memPeak;
@@ -157,10 +158,13 @@ class FPS extends TextField
 							showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
 							""
 						)
-						#if (windows || linux) + (
-							showMem && showMemPeak ? ("GC MEM / PEAK: " + CoolUtil.truncateFloat(currentGcMem) + " MB / " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
-							showMem ? ("GC MEM: " + CoolUtil.truncateFloat(currentGcMem) + " MB\n") :
-							showMemPeak ? ("GC MEM PEAK: " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+						#if (windows || linux || mac) + (
+							showGc ? (
+								showMem && showMemPeak ? ("GC MEM / PEAK: " + CoolUtil.truncateFloat(currentGcMem) + " MB / " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+								showMem ? ("GC MEM: " + CoolUtil.truncateFloat(currentGcMem) + " MB\n") :
+								showMemPeak ? ("GC MEM PEAK: " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+								""
+							) :
 							""
 						)
 						#end

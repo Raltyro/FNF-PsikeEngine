@@ -8,6 +8,7 @@ import lime.utils.AssetLibrary;
 import lime.utils.AssetManifest;
 #if sys
 import sys.io.File;
+import sys.io.Process;
 import sys.FileSystem;
 #else
 import openfl.utils.Assets;
@@ -153,5 +154,117 @@ class CoolUtil
 		#else
 		FlxG.openURL(site);
 		#end
+	}
+	
+	public static var mustUpdate:Bool = false;
+	public static var realUpdateVersion:String = null;
+	public static var updateVersion(get, null):String;
+	static function get_updateVersion():String
+		return realUpdateVersion != null ? realUpdateVersion : MainMenuState.psychEngineVersion.trim();
+	
+	public static function getUpdateVersion(?onComplete:String->Void) {
+		var http = new haxe.Http("https://raw.githubusercontent.com/Raltyro/FNF-PsychEngine/main/gitVersion.txt");
+
+		http.onData = function(data:String) {
+			realUpdateVersion = data.split('\n')[0].trim();
+			if (onComplete != null) onComplete(realUpdateVersion);
+		}
+
+		http.onError = function(error) {
+			trace('error: $error');
+			if (onComplete != null) onComplete(null);
+		}
+
+		http.request();
+	}
+	
+	public static var realUpstreamVersion:String = null;
+	public static var upstreamVersion(get, null):String;
+	static function get_upstreamVersion():String
+		return realUpstreamVersion != null ? realUpstreamVersion : MainMenuState.psychEngineVersion.trim();
+	
+	public static function getUpstreamVersion(?onComplete:String->Void) {
+		if (realUpstreamVersion != null) {
+			onComplete(realUpstreamVersion);
+			return;
+		}
+		
+		var http = new haxe.Http("https://raw.githubusercontent.com/ShadowMario/FNF-PsychEngine/main/gitVersion.txt");
+
+		http.onData = function(data:String) {
+			realUpstreamVersion = data.split('\n')[0].trim();
+			if (onComplete != null) onComplete(realUpstreamVersion);
+		}
+
+		http.onError = function(error) {
+			trace('error: $error');
+			if (onComplete != null) onComplete(null);
+		}
+
+		http.request();
+	}
+	
+	private static var cantGit:Bool = false;
+	private static var realGitCommitHash:String = null;
+	public static function tryGetGitCommitHash():String {
+		#if sys
+		if (cantGit && realGitCommitHash == null) return null;
+		var process = new Process('git', ['rev-parse', 'HEAD']);
+		var commitHash:String = null;
+		try {
+			commitHash = process.stdout.readLine();
+		}
+		catch(e) {}
+		process.kill(); process.close();
+		
+		cantGit = commitHash == null;
+		if (!cantGit) {
+			commitHash = commitHash.substr(0, 7);
+			realGitCommitHash = commitHash;
+		}
+		return commitHash;
+		#else
+		cantGit = true;
+		return null;
+		#end
+	}
+	
+	private static var gitCommitHash:String = null;
+	public static function getGitCommitHash():String {
+		if (gitCommitHash != null) return gitCommitHash;
+
+		#if sys
+		var commitHash:String = tryGetGitCommitHash();
+		if (commitHash != null) {
+			File.saveContent("manifest/hash.dat", commitHash);
+			gitCommitHash = commitHash;
+			return commitHash;
+		}
+
+		if (FileSystem.exists("manifest/hash.dat"))
+			gitCommitHash = File.getContent("manifest/hash.dat").split('\n')[0].trim().substr(0, 7);
+
+		return gitCommitHash;
+		#end
+	}
+	
+	public static function checkForUpdates(?onComplete:Bool->Void):Void {
+		if (!mustUpdate && realUpdateVersion != null) mustUpdate = updateVersion != MainMenuState.psychEngineVersion.trim();
+		if (mustUpdate) {
+			if (onComplete != null) onComplete(true);
+			return;
+		}
+		
+		getUpdateVersion(function(updateVersion:String) {
+			if (updateVersion != null) mustUpdate = updateVersion != MainMenuState.psychEngineVersion.trim();
+			getUpstreamVersion(function(upstreamVersion:String) {
+				if (updateVersion != upstreamVersion) mustUpdate = true;
+				onComplete(mustUpdate);
+			});
+		});
+	}
+	
+	public static function tryUpdate() {
+		CoolUtil.browserLoad("https://github.com/Raltyro/FNF-PsychEngine");
 	}
 }

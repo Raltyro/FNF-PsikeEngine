@@ -50,7 +50,7 @@ class Option
 	public var description:String = '';
 	public var name:String = 'Unknown';
 
-	public function new(name:String, description:String = '', variable:String, type:String = 'bool', defaultValue:Dynamic = 'null variable value', ?options:Array<String> = null)
+	public function new(name:String, description:String = '', ?variable:String = null, type:String = 'bool', defaultValue:Dynamic = 'null variable value', ?options:Array<String> = null)
 	{
 		this.name = name;
 		this.description = description;
@@ -77,7 +77,7 @@ class Option
 			}
 		}
 
-		if(getValue() == null) {
+		if(getValue() == null && type != 'bool') {
 			setValue(defaultValue);
 		}
 
@@ -107,13 +107,12 @@ class Option
 		}
 	}
 
-	public function getValue():Dynamic
-	{
-		return Reflect.getProperty(ClientPrefs, variable);
+	public function getValue():Dynamic {
+		return variable != null ? Reflect.getProperty(ClientPrefs, variable) : null;
 	}
-	public function setValue(value:Dynamic)
-	{
-		Reflect.setProperty(ClientPrefs, variable, value);
+	
+	public function setValue(value:Dynamic) {
+		if (variable != null) Reflect.setProperty(ClientPrefs, variable, value);
 	}
 
 	public function setChild(child:Alphabet)
@@ -141,7 +140,7 @@ class Option
 		var newValue:String = 'bool';
 		switch(type.toLowerCase().trim())
 		{
-			case 'int' | 'float' | 'percent' | 'string': newValue = type;
+			case 'int' | 'float' | 'percent' | 'string' | 'button': newValue = type;
 			case 'integer': newValue = 'int';
 			case 'str': newValue = 'string';
 			case 'fl': newValue = 'float';

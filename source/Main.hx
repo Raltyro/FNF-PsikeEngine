@@ -96,7 +96,6 @@ class Main extends Sprite
 		ClientPrefs.loadDefaultKeys();
 		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
 
-		#if !mobile
 		fpsVar = new FPS(3, 3, 0xFFFFFF);
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
@@ -105,7 +104,8 @@ class Main extends Sprite
 		fpsVar.showFPS = ClientPrefs.showFPS;
 		fpsVar.showMem = ClientPrefs.showMem;
 		fpsVar.showMemPeak = ClientPrefs.showMemPeak;
-		#end
+		fpsVar.showGc = ClientPrefs.showGc;
+		fpsVar.showGLStats = ClientPrefs.showGLStats;
 
 		FlxG.signals.focusGained.add(onFocus);
 		FlxG.signals.focusLost.add(onFocusLost);

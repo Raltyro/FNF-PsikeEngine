@@ -718,7 +718,7 @@ class ModMetadata
 	public var alphabet:Alphabet;
 	public var icon:AttachedSprite;
 
-	public function new(folder:String)
+	public function new(?folder:String = null)
 	{
 		this.folder = folder;
 		this.name = folder;
@@ -727,7 +727,7 @@ class ModMetadata
 		this.restart = false;
 
 		//Try loading json
-		var path = Paths.mods(folder + '/pack.json');
+		var path = Paths.mods((folder != null ? folder + '/' : '') + 'pack.json');
 		if(FileSystem.exists(path)) {
 			var rawJson:String = File.getContent(path);
 			if(rawJson != null && rawJson.length > 0) {
