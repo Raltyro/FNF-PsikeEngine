@@ -807,7 +807,7 @@ class FlxSound extends FlxBasic
 
 	function set_pitch(v:Float):Float
 	{
-		v = v != null ? Math.max(0, v) : _pitch;
+		v = Math.max(0, v);
 		var adjusted:Float = v * _timeScaleAdjust;
 		
 		if (_channel != null) {
