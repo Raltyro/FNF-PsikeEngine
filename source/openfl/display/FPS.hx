@@ -208,13 +208,13 @@ class FPS extends TextField
 	public static function get_gcMemory():Int {
 		return
 			#if cpp
-			untyped __global__.__hxcpp_gc_used_bytes();
+			untyped __global__.__hxcpp_gc_used_bytes()
 			#elseif hl
 			Gc.stats().totalAllocated
 			#elseif (java || neko)
 			Gc.stats().heap
 			#elseif (js && html5)
-			untyped #if haxe4 js.Syntax.code #else __js__ #end ("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
+			untyped #if haxe4 js.Syntax.code #else __js__ #end ("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0")
 			#end
 		;
 	}
