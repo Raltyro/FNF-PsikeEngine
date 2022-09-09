@@ -258,7 +258,7 @@ class FlxSound extends FlxBasic
 		_time = 0;
 		_paused = false;
 		_volume = 1.0;
-		_volumeAdjust = 1.0;
+		_volumeAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
 		_pitch = 1.0;
 		_realPitch = 1.0;
 		_timeScaleAdjust = 1.0;
@@ -309,15 +309,16 @@ class FlxSound extends FlxBasic
 	 */
 	override public function update(elapsed:Float):Void
 	{
-		if (!playing)
-			return;
-
 		var timeScaleTarget:Float = timeScaleBased ? FlxG.timeScale : 1.0;
 
 		if (_timeScaleAdjust != timeScaleTarget) {
 			_timeScaleAdjust = timeScaleTarget;
-			pitch = _pitch;
+			if (playing) pitch = _pitch;
 		}
+		
+		if (!playing)
+			return;
+
 		if (_realPitch > 0) _time = _channel.position;
 
 		var radialMultiplier:Float = 1.0;
@@ -641,6 +642,9 @@ class FlxSound extends FlxBasic
 		_channel = _sound.play(_time, 0, _transform);
 		if (_channel != null)
 		{
+			var timeScaleTarget:Float = timeScaleBased ? FlxG.timeScale : 1.0;
+			if (_timeScaleAdjust != timeScaleTarget) _timeScaleAdjust = timeScaleTarget;
+			
 			_amplitudeTime = -1;
 			pitch = _pitch;
 			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
