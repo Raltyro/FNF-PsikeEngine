@@ -778,11 +778,12 @@ class FlxSound extends FlxBasic
 		}
 		if (_pitch == v) return v;
 		if (_pitch <= 0 && v > 0) {
-			_pitch = Math.max(0,Math.min(v,6));
+			_pitch = v;
 			time = _time;
 		}
 		else
-			_pitch = Math.max(0,Math.min(v,6));
+			_pitch = v;
+		
 		return v;
 	}
 

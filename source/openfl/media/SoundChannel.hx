@@ -59,8 +59,8 @@ import lime.media.AudioSource;
 	public var soundTransform(get, set):SoundTransform;
 	
 	/**
-		Pitch LOLOL HUGE PROPS TO NINJAMUFFNIN99
-	**/
+		self explanatory
+	*/
 	public var pitch(get, set):Float;
 
 	@:noCompletion private var __isValid:Bool;
