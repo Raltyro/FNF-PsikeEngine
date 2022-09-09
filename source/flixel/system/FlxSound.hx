@@ -98,6 +98,11 @@ class FlxSound extends FlxBasic
 	 * Set pitch, which also alters the playback speed. Default is 1.
 	 */
 	public var pitch(get, set):Float;
+	
+	/**
+	 * Alters the pitch of the sound depends on the current FlxG.timeScale. Default is true.
+	 */
+	public var timeScaleBased:Bool;
 
 	/**
 	 * The position in runtime of the music playback in milliseconds.
@@ -190,11 +195,21 @@ class FlxSound extends FlxBasic
 	 * Internal tracker for sound length, so that length can still be obtained while a sound is paused, because _sound becomes null.
 	 */
 	var _length:Float = 0;
+	
+	/**
+	 * Internal tracker for real pitch.
+	 */
+	var _realPitch:Float = 1.0;
 
 	/**
 	 * Internal tracker for pitch.
 	 */
 	var _pitch:Float = 1.0;
+	
+	/**
+	 * Internal tracker for FlxG.timeScale adjustment.
+	 */
+	var _timeScaleAdjust:Float = 1.0;
 
 	/**
 	 * Internal tracker for total volume adjustment.
@@ -244,6 +259,10 @@ class FlxSound extends FlxBasic
 		_paused = false;
 		_volume = 1.0;
 		_volumeAdjust = 1.0;
+		_pitch = 1.0;
+		_realPitch = 1.0;
+		_timeScaleAdjust = 1.0;
+		timeScaleBased = true;
 		looped = false;
 		loopTime = 0.0;
 		endTime = 0.0;
@@ -293,7 +312,13 @@ class FlxSound extends FlxBasic
 		if (!playing)
 			return;
 
-		if (pitch > 0) _time = _channel.position;
+		var timeScaleTarget:Float = timeScaleBased ? FlxG.timeScale : 1.0;
+
+		if (_timeScaleAdjust != timeScaleTarget) {
+			_timeScaleAdjust = timeScaleTarget;
+			pitch = _pitch;
+		}
+		if (_realPitch > 0) _time = _channel.position;
 
 		var radialMultiplier:Float = 1.0;
 
@@ -565,6 +590,16 @@ class FlxSound extends FlxBasic
 	{
 		return _volume * _volumeAdjust;
 	}
+	
+	/**
+	 * Returns the currently selected "real" pitch of the sound.
+	 *
+	 * @return	The adjusted pitch of the sound.
+	 */
+	public inline function getActualPitch():Float
+	{
+		return _pitch * _timeScaleAdjust;
+	}
 
 	/**
 	 * Helper function to set the coordinates of this object.
@@ -772,19 +807,22 @@ class FlxSound extends FlxBasic
 
 	function set_pitch(v:Float):Float
 	{
+		v = Math.max(0, v);
+		var adjusted:Float = v * _timeScaleAdjust;
+		
 		if (_channel != null) {
-			if (_channel.pitch == v) return v;
-			_channel.pitch = v;
+			if (_channel.pitch == adjusted) return v;
+			_channel.pitch = adjusted;
 		}
-		if (_pitch == v) return v;
-		if (_pitch <= 0 && v > 0) {
-			_pitch = v;
+		if (_realPitch == adjusted) return v;
+		if (_realPitch <= 0 && adjusted > 0) {
+			_realPitch = adjusted;
 			time = _time;
 		}
 		else
-			_pitch = v;
-		
-		return v;
+			_realPitch = adjusted;
+
+		return _pitch = v;
 	}
 
 	inline function get_pan():Float
@@ -804,7 +842,7 @@ class FlxSound extends FlxBasic
 
 	function set_time(time:Float):Float
 	{
-		if (playing && _pitch > 0)
+		if (playing && _realPitch > 0)
 		{
 			#if openfl
 			if (_channel == null) {

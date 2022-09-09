@@ -241,7 +241,7 @@ class CreditsState extends MusicBeatState
 	var moveTween:FlxTween = null;
 	function changeSelection(change:Int = 0)
 	{
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		FlxG.sound.play(Paths.sound('scrollMenu'));
 		do {
 			curSelected += change;
 			if (curSelected < 0)
@@ -502,7 +502,7 @@ class CreditSectionState extends MusicBeatState {
 	var moveTween:FlxTween = null;
 	function changeSelection(change:Int = 0)
 	{
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		FlxG.sound.play(Paths.sound('scrollMenu'));
 		do {
 			curSelected += change;
 			if (curSelected < 0)

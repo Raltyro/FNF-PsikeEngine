@@ -116,7 +116,7 @@ class AudioSource
 
 	@:noCompletion private function set_pitch(value:Float):Float
 	{
-		return __backend.setPitch(value);
+		return __backend.setPitch(Math.max(0, value));
 	}
 
 	@:noCompletion private function get_position():Vector4

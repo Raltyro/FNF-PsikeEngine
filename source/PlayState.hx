@@ -2828,10 +2828,18 @@ class PlayState extends MusicBeatState
 
 	override public function onFocusLost():Void
 	{
+		if (ClientPrefs.pauseOnLostFocus && startedCountdown && canPause) {
+			var ret:Dynamic = callOnLuas('onPause', [], false);
+			if(ret != FunkinLua.Function_Stop) {
+				openPauseMenu();
+			}
+		}
 		#if desktop
-		if (health > 0 && !paused)
-		{
-			DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+		else {
+			if (health > 0 && !paused)
+			{
+				DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+			}
 		}
 		#end
 

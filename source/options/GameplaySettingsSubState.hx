@@ -63,6 +63,14 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onChangePauseMusic;
 		
+		var option:Option = new Option('Pause on Lost Focus',
+			"If checked, in gameplay whenever you left window unfocused, the game will pause",
+			'pauseOnLostFocus',
+			'bool',
+			true);
+		option.onChange = onChangeAutoPause;
+		addOption(option);
+		
 		#if !html5
 		var option:Option = new Option('Auto Pause',
 			"If checked, game will pause if it's unfocused",

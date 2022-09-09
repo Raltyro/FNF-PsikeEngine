@@ -65,6 +65,13 @@ class Paths
 		if (!dumpExclusions.contains(key))
 			dumpExclusions.push(key);
 	}
+	
+	public static function assetExcluded(key:String):Bool {
+		for (v in dumpExclusions) {
+			if (key.endsWith(v)) return true;
+		}
+		return false;
+	}
 
 	public static var dumpExclusions:Array<String> =
 	[
@@ -138,7 +145,7 @@ class Paths
 		for (key in currentTrackedAssets.keys()) {
 			// if it is not currently contained within the used local assets
 			if (!localTrackedAssets.contains(key)
-				&& !dumpExclusions.contains(key)) {
+				&& !assetExcluded(key)) {
 				// get rid of it
 				decacheGraphic(key);
 			}
@@ -165,7 +172,7 @@ class Paths
 		// clear all sounds that are cached
 		for (key in currentTrackedSounds.keys()) {
 			if (!localTrackedAssets.contains(key) 
-			&& !dumpExclusions.contains(key) && key != null)
+			&& !assetExcluded(key) && key != null)
 				decacheSound(key);
 		}
 		compress();

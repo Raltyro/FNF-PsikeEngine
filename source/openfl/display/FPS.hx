@@ -11,10 +11,6 @@ import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
 #end
 
-#if openfl
-import openfl.system.System;
-#end
-
 #if cpp
 import cpp.vm.Gc;
 #elseif hl
