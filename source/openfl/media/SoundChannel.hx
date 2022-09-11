@@ -154,16 +154,12 @@ import lime.media.AudioSource;
 		if (!__isValid) return;
 		
 		var currentTime:Float = position;
-		if (Math.abs(__lastPeakTime - currentTime) < Math.min(1, pitch * 8)) return;
+		if (Math.abs(__lastPeakTime - currentTime) < Math.max(1, pitch * 8)) return;
 		__lastPeakTime = currentTime;
 		
 		#if lime
 		
 		#if (lime_cffi && !macro)
-		// MS, NOT SECOND
-		var time:Float = currentTime - 10;
-		var endTime:Float = time + 10 + Math.min(pitch * 150, 500);
-		
 		var buffer = __source.buffer;
 		if (buffer == null || buffer.data == null) return;
 		var bytes = buffer.data.buffer;
@@ -172,14 +168,21 @@ import lime.media.AudioSource;
 		var channels:Int = buffer.channels;
 		var stereo:Bool = channels > 1;
 		
+		// MS, NOT SECOND
+		var minimum:Float = Math.max(currentTime - (1 / khz * 2500), currentTime - 25);
+		var time:Float = __lastPeakTime > currentTime ? minimum : Math.max(minimum, currentTime - (currentTime - __lastPeakTime));
+		var endTime:Float = currentTime + Math.min(pitch * 6, 50);
+		
 		var index:Int = Std.int(time * khz);
 		
 		var samples:Float = ((endTime - time) * khz);
 		samples = samples < 1 ? 1 : samples;
 		
+		var leftFull:Bool = false;
 		var lmin:Float = 0;
 		var lmax:Float = 0;
 		
+		var rightFull:Bool = !stereo;
 		var rmin:Float = 0;
 		var rmax:Float = 0;
 		
@@ -187,19 +190,22 @@ import lime.media.AudioSource;
 		
 		while (index < (bytes.length - 1)) {
 			if (index >= 0) {
-				var byte:Int = bytes.getUInt16(index * channels * 2);
-				
-				if (byte > 65535 / 2) byte -= 65535;
-				
-				var sample:Float = (byte / 65535);
-				
-				if (sample > 0) {
-					if (sample > lmax) lmax = sample;
-				} else if (sample < 0) {
-					if (sample < lmin) lmin = sample;
+				if (!leftFull) {
+					var byte:Int = bytes.getUInt16(index * channels * 2);
+					
+					if (byte > 65535 / 2) byte -= 65535;
+					
+					var sample:Float = (byte / 65535);
+					
+					if (sample > 0) {
+						if (sample > lmax) lmax = sample;
+					} else if (sample < 0) {
+						if (sample < lmin) lmin = sample;
+					}
+					if (lmax - lmin > 1) leftFull = true;
 				}
 				
-				if (stereo) {
+				if (!rightFull) {
 					var byte:Int = bytes.getUInt16((index * channels * 2) + 2);
 					
 					if (byte > 65535 / 2) byte -= 65535;
@@ -211,15 +217,16 @@ import lime.media.AudioSource;
 					} else if (sample < 0) {
 						if (sample < rmin) rmin = sample;
 					}
+					if (rmax - rmin > 1) rightFull = true;
 				}
 			}
 			
-			if (rows >= samples) break;
+			if (rows >= samples || (leftFull && rightFull)) break;
 			rows++;
 		}
 		
-		__leftPeak = (Math.abs(lmin) + lmax) * 2;
-		__rightPeak = stereo ? (Math.abs(rmin) + rmax) * 2 : 0;
+		__leftPeak = (lmax - lmin) * 2;
+		__rightPeak = stereo ? (rmax - rmin) * 2 : 0;
 		#else
 		__leftPeak = __rightPeak = 1;
 		#end

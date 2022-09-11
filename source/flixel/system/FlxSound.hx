@@ -283,6 +283,8 @@ class FlxSound extends FlxBasic
 		_pitch = 1.0;
 		_realPitch = 1.0;
 		_timeScaleAdjust = 1.0;
+		_amplitudeLeft = 0.0;
+		_amplitudeRight = 0.0;
 		_amplitudeUpdate = true;
 		timeScaleBased = true;
 		looped = false;
@@ -669,6 +671,12 @@ class FlxSound extends FlxBasic
 		_channel = _sound.play(_time, 0, _transform);
 		if (_channel != null)
 		{
+			@:privateAccess{
+				_channel.__lastPeakTime = 0;
+				_channel.__leftPeak = 0;
+				_channel.__rightPeak = 0;
+			}
+			
 			var timeScaleTarget:Float = timeScaleBased ? FlxG.timeScale : 1.0;
 			if (_timeScaleAdjust != timeScaleTarget) _timeScaleAdjust = timeScaleTarget;
 			
