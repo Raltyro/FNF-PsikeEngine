@@ -52,6 +52,16 @@ class FlxSound extends FlxBasic
 	 * The ID3 artist name. Defaults to null. Currently only works for streamed sounds.
 	 */
 	public var artist(default, null):String;
+	
+	/**
+	 * Stores for how much channels are in the loaded sound
+	 */
+	public var channels(get, null):Int;
+	
+	/**
+	 * Whether or not this sound is stereo instead of mono
+	 */
+	public var stereo(get, null):Bool;
 
 	/**
 	 * Stores the average wave amplitude of both stereo channels
@@ -185,11 +195,21 @@ class FlxSound extends FlxBasic
 	 * Internal tracker for sound last position on when amplitude was used.
 	 */
 	var _amplitudeTime:Float;
+	
+	/**
+	 * Internal tracker for amplitude update debounce.
+	 */
+	var _amplitudeUpdate:Bool;
 
 	/**
 	 * Internal tracker for sound channel position.
 	 */
 	var _time:Float = 0;
+	
+	/**
+	 * Internal tracker for time update debounces.
+	 */
+	var _timeUpdates:Int;
 
 	/**
 	 * Internal tracker for sound length, so that length can still be obtained while a sound is paused, because _sound becomes null.
@@ -227,7 +247,7 @@ class FlxSound extends FlxBasic
 	var _radius:Float;
 
 	/**
-	 * Internal tracker for whether to pan the sound left and right.  Default is false.
+	 * Internal tracker for whether to pan the sound left and right. Default is false.
 	 */
 	var _proximityPan:Bool;
 
@@ -256,12 +276,14 @@ class FlxSound extends FlxBasic
 		y = 0;
 
 		_time = 0;
+		_timeUpdates = 12;
 		_paused = false;
 		_volume = 1.0;
 		_volumeAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
 		_pitch = 1.0;
 		_realPitch = 1.0;
 		_timeScaleAdjust = 1.0;
+		_amplitudeUpdate = true;
 		timeScaleBased = true;
 		looped = false;
 		loopTime = 0.0;
@@ -318,9 +340,14 @@ class FlxSound extends FlxBasic
 		
 		if (!playing)
 			return;
+		
+		_amplitudeUpdate = true;
 
-		if (_realPitch > 0) _time = _channel.position;
-
+		if (_realPitch > 0) {
+			_time = _channel.position;
+			if (_timeUpdates < 12) _timeUpdates++;
+		}
+		
 		var radialMultiplier:Float = 1.0;
 
 		// Distance-based volume control
@@ -771,37 +798,45 @@ class FlxSound extends FlxBasic
 		return Volume;
 	}
 	
-	function update_amplitude()
+	function get_channels():Int
 	{
-		if (_channel == null || _time == _amplitudeTime) return;
-		
-		if (_transform.volume > 0)
-		{
-			_amplitudeLeft = _channel.leftPeak / _transform.volume;
-			_amplitudeRight = _channel.rightPeak / _transform.volume;
-		}
-		else
-		{
-			_amplitudeLeft = 0;
-			_amplitudeRight = 0;
-		}
-		
-		_amplitudeTime = _time;
+		@:privateAccess return (_channel == null || !_channel.__isValid) ? 0 : _channel.__source.buffer.channels;
 	}
 	
-	function get_amplitudeLeft():Float {
+	function get_stereo():Bool
+	{
+		return channels > 1;
+	}
+	
+	function update_amplitude()
+	{
+		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return;
+		@:privateAccess{
+			_channel.__updatePeaks();
+			
+			_amplitudeLeft = _channel.__leftPeak;
+			_amplitudeRight = _channel.__rightPeak;
+		}
+
+		_amplitudeTime = _time;
+		_amplitudeUpdate = false;
+	}
+	
+	function get_amplitudeLeft():Float
+	{
 		update_amplitude();
 		return _amplitudeLeft;
 	}
 	
-	function get_amplitudeRight():Float {
+	function get_amplitudeRight():Float
+	{
 		update_amplitude();
 		return _amplitudeRight;
 	}
 	
 	function get_amplitude():Float {
 		update_amplitude();
-		return (_amplitudeLeft + _amplitudeRight) * 0.5;
+		return channels > 1 ? (_amplitudeLeft + _amplitudeRight) * 0.5 : _amplitudeLeft;
 	}
 
 	inline function get_pitch():Float
@@ -841,6 +876,10 @@ class FlxSound extends FlxBasic
 
 	inline function get_time():Float
 	{
+		if (playing && _realPitch > 0 && _timeUpdates > 0) {
+			_time = _channel.position;
+			_timeUpdates--;
+		}
 		return _time;
 	}
 
@@ -849,20 +888,21 @@ class FlxSound extends FlxBasic
 		if (playing && _realPitch > 0)
 		{
 			#if openfl
-			if (_channel == null) {
-				cleanup(false, true);
-				startSound(time);
+			@:privateAccess{
+				if (_channel == null || !_channel.__isValid) {
+					cleanup(false, true);
+					startSound(time);
+				}
+				else {
+					#if lime
+					_channel.__source.offset = Std.int(Math.max(0, Math.min(time, length - 1)));
+					_channel.__source.currentTime = 0;
+					#else
+					_channel.__source.offset = 0;
+					_channel.position = Std.int(Math.max(0, Math.min(time, length - 1)));
+					#end
+				}
 			}
-			else {
-				#if lime
-				@:privateAccess _channel.__source.offset = Std.int(Math.max(0, Math.min(time, length - 1)));
-				@:privateAccess _channel.__source.currentTime = 0;
-				#else
-				@:privateAccess _channel.__source.offset = 0;
-				_channel.position = Std.int(Math.max(0, Math.min(time, length - 1)));
-				#end
-			}
-			
 			#else
 			if (time < 0 || time > length) {
 				cleanup(false, true);

@@ -5127,14 +5127,17 @@ class PlayState extends MusicBeatState
 		callOnLuas('onSectionHit', []);
 	}
 
+	public var traceCallOnLuas:Bool = false;
 	public function callOnLuas(event:String, args:Array<Dynamic>, ignoreStops = true, exclusions:Array<String> = null):Dynamic {
 		var returnVal:Dynamic = FunkinLua.Function_Continue;
 		#if LUA_ALLOWED
+		if (traceCallOnLuas) trace("callOnLuas", event, args);
 		if(exclusions == null) exclusions = [];
 		for (script in luaArray) {
 			if(exclusions.contains(script.scriptName))
 				continue;
 
+			if (traceCallOnLuas) trace(script.scriptName);
 			var ret:Dynamic = script.call(event, args);
 			if(ret == FunkinLua.Function_StopLua && !ignoreStops)
 				break;
@@ -5143,10 +5146,11 @@ class PlayState extends MusicBeatState
 			var bool:Bool = ret == FunkinLua.Function_Continue;
 			if(!bool && ret != 0) {
 				returnVal = cast ret;
+				if (traceCallOnLuas) trace(returnVal);
 			}
 		}
+		if (traceCallOnLuas) trace("------", returnVal);
 		#end
-		//trace(event, returnVal);
 		return returnVal;
 	}
 
