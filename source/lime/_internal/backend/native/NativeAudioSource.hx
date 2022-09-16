@@ -251,6 +251,9 @@ class NativeAudioSource
 	private function refillBuffers(buffers:Array<ALBuffer> = null):Void
 	{
 		#if lime_vorbis
+		if (handle == null || parent == null || parent.buffer == null || parent.buffer.__srcVorbisFile == null)
+			return;
+		
 		var vorbisFile = null;
 		var position = 0;
 
@@ -400,19 +403,21 @@ class NativeAudioSource
 			return value;
 		} */
 
-		if (handle != null)
+		if (handle != null && parent != null && parent.buffer != null)
 		{
 			if (stream)
 			{
 				AL.sourceStop(handle);
 
-				parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
+				if (parent.buffer.__srcVorbisFile != null)
+					parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
+
 				AL.sourceUnqueueBuffers(handle, STREAM_NUM_BUFFERS);
 				refillBuffers(buffers);
 
 				if (playing) AL.sourcePlay(handle);
 			}
-			else if (parent.buffer != null)
+			else
 			{
 				AL.sourceRewind(handle);
 

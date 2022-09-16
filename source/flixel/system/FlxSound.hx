@@ -20,6 +20,12 @@ import flash.utils.ByteArray;
 #if (openfl >= "8.0.0")
 import openfl.utils.AssetType;
 #end
+#if lime
+import lime.media.AudioBuffer;
+#end
+#if lime_vorbis
+import lime.media.vorbis.VorbisFile;
+#end
 
 /**
  * This is the universal flixel sound object, used for streaming, music, and sound effects.
@@ -52,29 +58,44 @@ class FlxSound extends FlxBasic
 	 * The ID3 artist name. Defaults to null. Currently only works for streamed sounds.
 	 */
 	public var artist(default, null):String;
-	
+
 	/**
-	 * Stores for how much channels are in the loaded sound
+	 * Stores for how much channels are in the loaded sound.
 	 */
 	public var channels(get, null):Int;
-	
+
 	/**
-	 * Whether or not this sound is stereo instead of mono
+	 * Wheter or not this sound is loaded yet.
+	 */
+	public var loaded(get, null):Bool;
+
+	/**
+	 * Whether or not this sound is stereo instead of mono.
 	 */
 	public var stereo(get, null):Bool;
 
 	/**
-	 * Stores the average wave amplitude of both stereo channels
+	 * Stores the sound lime AudioBuffer.
+	 */
+	public var buffer(get, null):#if lime AudioBuffer #else Dynamic #end;
+
+	/**
+	 * Stores the sound VorbisFile if exists.
+	 */
+	public var vorbis(get, null):#if lime_vorbis VorbisFile #else Dynamic #end;
+
+	/**
+	 * Stores the average wave amplitude of both stereo channels.
 	 */
 	public var amplitude(get, null):Float;
 
 	/**
-	 * Just the amplitude of the left stereo channel
+	 * Just the amplitude of the left stereo channel.
 	 */
 	public var amplitudeLeft(get, null):Float;
 
 	/**
-	 * Just the amplitude of the left stereo channel
+	 * Just the amplitude of the left stereo channel.
 	 */
 	public var amplitudeRight(get, null):Float;
 
@@ -806,9 +827,14 @@ class FlxSound extends FlxBasic
 		return Volume;
 	}
 	
+	function get_loaded():Bool
+	{
+		return #if lime buffer != null #else _sound != null #end;
+	}
+	
 	function get_channels():Int
 	{
-		@:privateAccess return (_channel == null || !_channel.__isValid) ? 0 : _channel.__source.buffer.channels;
+		@:privateAccess return (buffer == null) ? 0 : buffer.channels;
 	}
 	
 	function get_stereo():Bool
@@ -816,6 +842,22 @@ class FlxSound extends FlxBasic
 		return channels > 1;
 	}
 	
+	function get_buffer():#if lime AudioBuffer #else Dynamic #end
+	{
+		#if lime
+		@:privateAccess if (_sound != null) return _sound.__buffer;
+		#end
+		return null;
+	}
+
+	function get_vorbis():#if lime_vorbis VorbisFile #else Dynamic #end
+	{
+		#if lime_vorbis
+		@:privateAccess if (buffer != null) return buffer.__srcVorbisFile;
+		#end
+		return null;
+	}
+
 	function update_amplitude()
 	{
 		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return;

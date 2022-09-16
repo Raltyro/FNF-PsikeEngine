@@ -2321,18 +2321,27 @@ class PlayState extends MusicBeatState
 	public function setSongTime(time:Float)
 	{
 		if(time < 0) time = 0;
-
-		//FlxG.sound.music.pause();
-		//vocals.pause();
+		
+		Conductor.songPosition = songTime = time;
+		
+		var resetTime:Bool = !FlxG.sound.music.playing || !vocals.playing;
+		if ((FlxG.sound.music.vorbis != null || vocals.vorbis != null) && resetTime) {
+			FlxG.sound.music.pause();
+			vocals.pause();
+			
+			FlxG.sound.music.time = time;
+			if (time <= vocals.length) vocals.time = time;
+			
+			FlxG.sound.music.play();
+			vocals.play();
+			return;
+		}
 
 		FlxG.sound.music.time = time;
 		if (!FlxG.sound.music.playing) FlxG.sound.music.play();
 
-		if (Conductor.songPosition <= vocals.length) vocals.time = time;
+		if (time <= vocals.length) vocals.time = time;
 		if (!vocals.playing) vocals.play();
-		
-		Conductor.songPosition = time;
-		songTime = time;
 	}
 
 	function startNextDialogue() {
@@ -2355,24 +2364,24 @@ class PlayState extends MusicBeatState
 		previousFrameTime = FlxG.game.ticks;
 		lastReportedPlayheadPosition = 0;
 
-		FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 1, false);
-		FlxG.sound.music.onComplete = finishSong.bind();
-		vocals.play();
-
-		if(startOnTime > 0)
-		{
-			setSongTime(startOnTime - 500);
-		}
+		var music:FlxSound = FlxG.sound.music;
+		if (music == null) music = FlxG.sound.music = new FlxSound();
+		music.loadEmbedded(Paths.inst(PlayState.SONG.song), false);
+		music.volume = 1;
+		music.persist = true;
+		
+		music.onComplete = finishSong.bind();
+		
+		setSongTime(startOnTime - 500);
 		startOnTime = 0;
 
-		if(paused) {
-			//trace('Oopsie doopsie! Paused sound');
-			FlxG.sound.music.pause();
+		if (paused) {
+			music.pause();
 			vocals.pause();
 		}
 
 		// Song duration in a float, useful for the time left feature
-		songLength = FlxG.sound.music.length;
+		songLength = music.length;
 		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeTxt, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 
@@ -2845,17 +2854,30 @@ class PlayState extends MusicBeatState
 		super.onFocusLost();
 	}
 
-	function resyncVocals():Void
+	function resyncVocals(resync:Bool = true):Void
 	{
 		if(finishTimer != null) return;
-
-		//vocals.pause();
-
-		Conductor.songPosition = FlxG.sound.music.time;
 		
-		if (Conductor.songPosition <= vocals.length) vocals.time = Conductor.songPosition;
+		Conductor.songPosition = FlxG.sound.music.time;
+
+		var resetTime:Bool = !FlxG.sound.music.playing || !vocals.playing;
+		if ((FlxG.sound.music.vorbis != null || vocals.vorbis != null) && resetTime && resync) {
+			FlxG.sound.music.pause();
+			vocals.pause();
+			
+			FlxG.sound.music.time = Conductor.songPosition;
+			if (Conductor.songPosition <= vocals.length) vocals.time = Conductor.songPosition;
+			
+			FlxG.sound.music.play();
+			vocals.play();
+			return;
+		}
+
+		if (Conductor.songPosition <= vocals.length) {
+			if (resync) vocals.time = Conductor.songPosition;
+			if (!vocals.playing) vocals.play();
+		}
 		if (!FlxG.sound.music.playing) FlxG.sound.music.play();
-		if (!vocals.playing) vocals.play();
 	}
 
 	public var paused:Bool = false;
@@ -4981,10 +5003,12 @@ class PlayState extends MusicBeatState
 	override function stepHit()
 	{
 		super.stepHit();
-		if (Math.abs(FlxG.sound.music.time - (Conductor.songPosition - Conductor.offset)) > 20
-			|| (SONG.needsVoices && Math.abs(vocals.time - (Conductor.songPosition - Conductor.offset)) > 20))
+		
+		var time:Float = FlxG.sound.music.time;
+		var resync:Bool = vocals.loaded && Math.abs(vocals.time - time) > 20;
+		if (Math.abs(time - (Conductor.songPosition - Conductor.offset)) > 20 || resync)
 		{
-			resyncVocals();
+			resyncVocals(resync);
 		}
 
 		if(curStep == lastStepHit) {

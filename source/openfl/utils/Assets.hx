@@ -3,9 +3,14 @@ package openfl.utils;
 #if lime
 import haxe.io.Bytes;
 
+#if lime_vorbis
+import lime.media.vorbis.VorbisFile;
+#end
+
 import lime.app.Promise;
 import lime.graphics.PixelFormat;
 import lime.graphics.ImageBuffer;
+import lime.media.AudioBuffer;
 import lime.utils.AssetLibrary as LimeAssetLibrary;
 import lime.utils.Assets as LimeAssets;
 import lime.utils.UInt8Array as LUInt8Array;
@@ -153,16 +158,18 @@ class Assets
 		if (hardware && bitmap.image != null) {
 			if (traceNewBitmaps) trace(key, "hardware");
 			
-			var texture:RectangleTexture = Lib.current.stage.context3D.createRectangleTexture(
+			var texture = Lib.current.stage.context3D.createRectangleTexture(
 				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, true
 			);
 			texture.uploadFromBitmapData(bitmap);
-			bitmap.dispose();
-			Paths.compress();
+			bitmap.dispose(); bitmap.disposeImage();
+			//Paths.compress();
 			
 			bitmap = BitmapData.fromTexture(texture);
 		}
+		else
 		#end
+		if (traceNewBitmaps) trace(key);
 		
 		if (useCache && cache.enabled)
 			cache.setBitmapData(key, bitmap);
@@ -280,11 +287,9 @@ class Assets
 		return null;
 	}
 
-	public static function getMusic(id:String, useCache:Bool = true):Sound
+	public static function getMusic(id:String, useCache:Bool = true, ?key:String):Sound
 	{
-		// TODO: Streaming sound
-
-		return getSound(id, useCache);
+		return getSound(id, useCache, key, true);
 	}
 
 	/**
@@ -307,9 +312,12 @@ class Assets
 		@usage		var sound = Assets.getSound ("sound.wav");
 		@param	id		The ID or asset path for the sound
 		@param	useCache		(Optional) Whether to allow use of the asset cache (Default: true)
+		@param	key		(Optional) The Key for the sound
+		@param	stream		Streaming Sounds (Default: false)
+		
 		@return		A new Sound object
 	**/
-	public static function getSound(id:String, useCache:Bool = true, ?key:String):Sound
+	public static function getSound(id:String, useCache:Bool = true, ?key:String, stream:Bool = false):Sound
 	{
 		#if (lime && tools && !display)
 		key = key != null ? key : id;
@@ -324,25 +332,43 @@ class Assets
 			}
 		}
 
-		var buffer = LimeAssets.getAudioBuffer(id, false);
+		var sound = getRawSound(id, stream);
 
-		if (buffer != null)
+		if (sound != null)
 		{
-			#if flash
-			var sound = buffer.src;
-			#else
-			var sound = Sound.fromAudioBuffer(buffer);
-			#end
-
 			if (useCache && cache.enabled)
-			{
 				cache.setSound(key, sound);
-			}
 
 			return sound;
 		}
 		#end
 
+		return null;
+	}
+
+	public static function getRawAudioBuffer(id:String, stream:Bool = false, fromFile:Bool = false):AudioBuffer
+	{
+		var buffer;
+		#if lime_vorbis
+		if (stream)
+			buffer = AudioBuffer.fromVorbisFile(VorbisFile.fromFile(id));
+		else
+		#end
+		buffer = fromFile ? AudioBuffer.fromFile(id) : LimeAssets.getAudioBuffer(id, false);
+		
+		return buffer;
+	}
+	
+	public static function getRawSound(id:String, stream:Bool = false, fromFile:Bool = false):Sound
+	{
+		var buffer = getRawAudioBuffer(id, stream, fromFile);
+		if (buffer != null)
+			#if flash
+			return buffer.src;
+			#else
+			return Sound.fromAudioBuffer(buffer);
+			#end
+		
 		return null;
 	}
 

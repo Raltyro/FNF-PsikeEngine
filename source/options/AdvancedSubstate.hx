@@ -29,6 +29,22 @@ class AdvancedSubstate extends BaseOptionsMenu
 		coolText.alpha = 0;
 		
 		timer = new FlxTimer();
+		
+		var option:Option = new Option('Hardware Caching',
+			'If checked, the game will uploads images to GPU\nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
+			'fakeHardC',
+			'bool',
+			false);
+		addOption(option);
+		
+		#if desktop
+		var option:Option = new Option('Streaming Music',
+			'If checked, the game will simultaneously read the music from disk on playback\nRestart your game in order for this to work.\n[UNCHECK THIS IF GAME IS CRASHING]',
+			'fakeStreM',
+			'bool',
+			false);
+		addOption(option);
+		#end
 
 		var option:Option = new Option('FPS Counter',
 			'If unchecked, hides FPS Counter.',

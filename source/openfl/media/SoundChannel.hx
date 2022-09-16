@@ -148,16 +148,34 @@ import lime.media.AudioSource;
 	}
 	
 	// hi i made these - raltyro
+	@:noCompletion private function __checkUpdatePeaks(?time:Float):Bool
+	{
+		if (time == null) time = position;
+		if (Math.abs(__lastPeakTime - time) < Math.max(1, pitch * 8)) return false;
+		__lastPeakTime = time;
+		return true;
+	}
+	
+	#if (lime && lime_vorbis)
+	@:noCompletion private function __updateVorbisPeaks():Void
+	{
+		// wip
+	}
+	#end
+	
 	@:noCompletion private function __updatePeaks():Void
 	{
 		__leftPeak = __rightPeak = 0;
 		if (!__isValid) return;
 		
-		var currentTime:Float = position;
-		if (Math.abs(__lastPeakTime - currentTime) < Math.max(1, pitch * 8)) return;
-		__lastPeakTime = currentTime;
-		
 		#if lime
+		
+		#if lime_vorbis
+		return __updateVorbisPeaks();
+		#end
+		
+		var currentTime:Float = position;
+		if (!__checkUpdatePeaks(currentTime)) return;
 		
 		#if (lime_cffi && !macro)
 		var buffer = __source.buffer;

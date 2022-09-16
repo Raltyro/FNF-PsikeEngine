@@ -65,7 +65,7 @@ class Paths
 		if (!dumpExclusions.contains(key))
 			dumpExclusions.push(key);
 	}
-	
+
 	public static function assetExcluded(key:String):Bool {
 		for (v in dumpExclusions) {
 			if (key.endsWith(v)) return true;
@@ -79,7 +79,7 @@ class Paths
 		'music/breakfast.$SOUND_EXT',
 		'music/tea-time.$SOUND_EXT',
 	];
-	
+
 	private inline static function _compress() {
 		#if cpp
 		Gc.compact();
@@ -91,7 +91,7 @@ class Paths
 		Gc.run(true);
 		#end
 	}
-	
+
 	public static function compress(repeat:Int = 1) {
 		if (repeat > 1) {
 			if (repeat > 32) repeat = 32;
@@ -100,7 +100,7 @@ class Paths
 		else
 			_compress();
 	}
-	
+
 	public static function decacheGraphic(key:String) {
 		var obj = currentTrackedAssets.get(key);
 		@:privateAccess{
@@ -108,24 +108,26 @@ class Paths
 			if (obj != null) {
 				OpenFlAssets.cache.removeBitmapData(key);
 				FlxG.bitmap._cache.remove(key);
-				
-				if (obj.bitmap != null && obj.bitmap.__texture != null) obj.bitmap.__texture.dispose();
-				obj.bitmap.disposeImage();
-				
+
+				if (obj.bitmap != null) {
+					if (obj.bitmap.__texture != null) obj.bitmap.__texture.dispose();
+					obj.bitmap.disposeImage();
+				}
+
 				obj.destroy();
 				currentTrackedAssets.remove(key);
 			}
 		}
 	}
-	
+
 	public static function decacheSound(key:String) {
 		var obj = currentTrackedSounds.get(key);
 		if (obj == null && OpenFlAssets.cache.hasSound(key)) obj = OpenFlAssets.cache.getSound(key);
-		
+
 		OpenFlAssets.cache.removeSound(key);
 		Assets.cache.clear(key);
 		currentTrackedSounds.remove(key);
-		
+
 		if (obj != null) {
 			@:privateAccess{
 				if (obj.__buffer != null) {
@@ -138,7 +140,7 @@ class Paths
 			}
 		}
 	}
-	
+
 	/// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory() {
 		// clear non local assets in the tracked assets list
@@ -150,10 +152,10 @@ class Paths
 				decacheGraphic(key);
 			}
 		}
-		
+
 		// run the garbage collector for good measure lmfao
 		//System.gc();
-		
+
 		compress();
 	}
 
@@ -167,7 +169,6 @@ class Paths
 			if (!currentTrackedAssets.exists(key))
 				decacheGraphic(key);
 		}
-		compress();
 
 		// clear all sounds that are cached
 		for (key in currentTrackedSounds.keys()) {
@@ -175,8 +176,7 @@ class Paths
 			&& !assetExcluded(key) && key != null)
 				decacheSound(key);
 		}
-		compress();
-		
+
 		// flags everything to be cleared out next unused memory clear
 		localTrackedAssets = [];
 		openfl.Assets.cache.clear("songs");
@@ -283,23 +283,24 @@ class Paths
 		return sound(key + FlxG.random.int(min, max), library);
 	}
 
-	inline static public function music(key:String, ?library:String):Sound
+	public static var streamMusic:Bool = false;
+	static public function music(key:String, ?library:String):Sound
 	{
-		var file:Sound = returnSound('music', key, library);
+		var file:Sound = returnSound('music', key, library, streamMusic);
 		return file;
 	}
 
-	inline static public function voices(song:String):Any
+	static public function voices(song:String):Any
 	{
 		var songKey:String = '${formatToSongPath(song)}/Voices';
-		var voices = returnSound('songs', songKey);
+		var voices = returnSound('songs', songKey, streamMusic);
 		return voices;
 	}
 
-	inline static public function inst(song:String):Any
+	static public function inst(song:String):Any
 	{
 		var songKey:String = '${formatToSongPath(song)}/Inst';
-		var inst = returnSound('songs', songKey);
+		var inst = returnSound('songs', songKey, streamMusic);
 		return inst;
 	}
 
@@ -400,7 +401,7 @@ class Paths
 		return hideChars.split(path).join("").toLowerCase();
 	}
 
-	private static function regBitmap(key:String, ?hardware:Null<Bool>):BitmapData {
+	private static function regBitmap(key:String, ?hardware:Bool):BitmapData {
 		hardware = hardware == null ? hardwareCache : hardware;
 		
 		if (OpenFlAssets.exists(key, IMAGE))
@@ -451,13 +452,16 @@ class Paths
 		return null;
 	};
 
+	public static var streamSounds:Bool = false;
 	public static var currentTrackedSounds:Map<String, Sound> = [];
-	public static function returnSound(path:String, key:String, ?library:String) {
+	public static function returnSound(path:String, key:String, ?library:String, ?stream:Bool) {
+		stream = stream == null ? streamSounds : stream;
+		
 		#if MODS_ALLOWED
 		var file:String = modsSounds(path, key);
 		if(FileSystem.exists(file)) {
 			if(!currentTrackedSounds.exists(file)) {
-				currentTrackedSounds.set(file, Sound.fromFile(file));
+				currentTrackedSounds.set(file, OpenFlAssets.getRawSound(file, stream, true));
 			}
 			localTrackedAssets.push(key);
 			return currentTrackedSounds.get(file);
@@ -469,13 +473,13 @@ class Paths
 		// trace(gottenPath);
 		if(!currentTrackedSounds.exists(gottenPath))
 		#if MODS_ALLOWED
-			currentTrackedSounds.set(gottenPath, Sound.fromFile('./' + gottenPath));
+			currentTrackedSounds.set(gottenPath, OpenFlAssets.getRawSound('./' + gottenPath, stream, true));
 		#else
 		{
 			var folder:String = '';
 			if(path == 'songs') folder = 'songs:';
 
-			currentTrackedSounds.set(gottenPath, OpenFlAssets.getSound(folder + getPath('$path/$key.$SOUND_EXT', SOUND, library)));
+			currentTrackedSounds.set(gottenPath, OpenFlAssets.getSound(folder + getPath('$path/$key.$SOUND_EXT', SOUND, library, stream)));
 		}
 		#end
 		localTrackedAssets.push(gottenPath);
