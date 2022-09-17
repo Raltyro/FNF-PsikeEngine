@@ -46,6 +46,7 @@ class CreditsState extends MusicBeatState
 		['Engine Contributors'],
 		['iFlicky',				'flicky',			'Composer of Psync and Tea Time\nMade the Dialogue Sounds',		'https://twitter.com/flicky_i',				'9E29CF'],
 		['SqirraRNG',			'sqirra',			'Crash Handler and Base code for\nChart Editor\'s Waveform',	'https://twitter.com/gedehari',				'E1843A'],
+		['EliteMasterEric',		'mastereric',		'Runtime Shaders support',										'https://twitter.com/EliteMasterEric',		'FFBD40'],
 		['PolybiusProxy',		'proxy',			'MP4 Video Loader Library (hxCodec)',							'https://twitter.com/polybiusproxy',		'DCD294'],
 		['KadeDev',				'kade',				'Fixed some cool stuff on Chart Editor\nand other PRs',			'https://twitter.com/kade0912',				'64A250'],
 		['Keoiki',				'keoiki',			'Note Splash Animations',										'https://twitter.com/Keoiki_',				'D2D2D2'],
@@ -598,6 +599,7 @@ class CreditSectionState extends MusicBeatState {
 		
 		var section:Array<String>;
 		var v:String;
+		var graphic:FlxGraphic;
 		for (i in 0...titles.length) {
 			section = titles[i];
 			if (section.length <= 1 || section[1] == 'mod') continue;
@@ -615,11 +617,14 @@ class CreditSectionState extends MusicBeatState {
 
 			for (i in 0...field.length) {
 				if (icon == field[i][1])
-					return Paths.image('credits/' + v + '/' + icon);
+					graphic = Paths.image('credits/' + v + '/' + icon);
+				
+				if (graphic != null) break;
 			}
+			if (graphic != null) break;
 		}
 		
-		return null;
+		return graphic != null ? graphic : Paths.image('credits/' + icon);
 	}
 
 	function getCurrentBGColor() {
