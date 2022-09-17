@@ -599,7 +599,7 @@ class CreditSectionState extends MusicBeatState {
 		
 		var section:Array<String>;
 		var v:String;
-		var graphic:FlxGraphic;
+		var graphic:FlxGraphic = null;
 		for (i in 0...titles.length) {
 			section = titles[i];
 			if (section.length <= 1 || section[1] == 'mod') continue;
