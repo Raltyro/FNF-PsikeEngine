@@ -314,20 +314,18 @@ class ClientPrefs {
 		if(FlxG.save.data.hardwareCache != null) {
 			hardwareCache = FlxG.save.data.hardwareCache;
 			fakeHardC = FlxG.save.data.hardwareCache;
-			
-			if (!isHardCInited) {
-				Paths.hardwareCache = hardwareCache;
-				isHardCInited = true;
-			}
+		}
+		if (!isHardCInited) {
+			Paths.hardwareCache = hardwareCache;
+			isHardCInited = true;
 		}
 		if(FlxG.save.data.streamMusic != null) {
 			streamMusic = FlxG.save.data.streamMusic;
 			fakeStreM = FlxG.save.data.streamMusic;
-			
-			if (!isStreMInited) {
-				Paths.streamMusic = streamMusic;
-				isStreMInited = true;
-			}
+		}
+		if (!isStreMInited) {
+			Paths.streamMusic = streamMusic;
+			isStreMInited = true;
 		}
 		
 		// flixel automatically saves your volume!
