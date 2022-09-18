@@ -12,7 +12,7 @@ class ClientPrefs {
 	public static var middleScroll:Bool = false;
 	public static var opponentStrums:Bool = true;
 	public static var autoPause:Bool = true;
-	public static var pauseOnLostFocus:Bool = true;
+	public static var autoPausePlayState:Bool = true;
 	public static var showFPS:Bool = true;
 	public static var showMem:Bool = true;
 	public static var showMemPeak:Bool = true;
@@ -112,7 +112,7 @@ class ClientPrefs {
 		FlxG.save.data.middleScroll = middleScroll;
 		FlxG.save.data.opponentStrums = opponentStrums;
 		FlxG.save.data.autoPause = autoPause;
-		FlxG.save.data.pauseOnLostFocus = pauseOnLostFocus;
+		FlxG.save.data.autoPausePlayState = autoPausePlayState;
 		FlxG.save.data.showFPS = showFPS;
 		FlxG.save.data.showMem = showMem;
 		FlxG.save.data.showMemPeak = showMemPeak;
@@ -176,8 +176,8 @@ class ClientPrefs {
 		if(FlxG.save.data.autoPause != null) {
 			#if !html5 FlxG.autoPause = #end autoPause = FlxG.save.data.autoPause;
 		}
-		if(FlxG.save.data.pauseOnLostFocus != null) {
-			pauseOnLostFocus = FlxG.save.data.pauseOnLostFocus;
+		if(FlxG.save.data.autoPausePlayState != null) {
+			autoPausePlayState = FlxG.save.data.autoPausePlayState;
 		}
 		if(FlxG.save.data.showFPS != null) {
 			showFPS = FlxG.save.data.showFPS;

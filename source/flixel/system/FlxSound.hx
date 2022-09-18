@@ -22,9 +22,13 @@ import openfl.utils.AssetType;
 #end
 #if lime
 import lime.media.AudioBuffer;
-#end
+
 #if lime_vorbis
 import lime.media.vorbis.VorbisFile;
+#end
+#end
+#if (cpp || sys || js)
+import haxe.Timer;
 #end
 
 /**
@@ -161,7 +165,7 @@ class FlxSound extends FlxBasic
 	 * In case of looping, the point (in milliseconds) from where to restart the sound when it loops back
 	 * @since 4.1.0
 	 */
-	public var loopTime:Float = 0;
+	public var loopTime:Float;
 
 	/**
 	 * At which point to stop playing the sound, in milliseconds.
@@ -225,37 +229,37 @@ class FlxSound extends FlxBasic
 	/**
 	 * Internal tracker for sound channel position.
 	 */
-	var _time:Float = 0;
-	
+	var _time:Float;
+
 	/**
-	 * Internal tracker for time update debounces.
+	 * Internal tracker for the last time the time property updates. (only in cpp/sys/js)
 	 */
-	var _timeUpdates:Int;
+	var _lastTimeUpdate:Float;
 
 	/**
 	 * Internal tracker for sound length, so that length can still be obtained while a sound is paused, because _sound becomes null.
 	 */
-	var _length:Float = 0;
+	var _length:Float;
 	
 	/**
 	 * Internal tracker for real pitch.
 	 */
-	var _realPitch:Float = 1.0;
+	var _realPitch:Float;
 
 	/**
 	 * Internal tracker for pitch.
 	 */
-	var _pitch:Float = 1.0;
+	var _pitch:Float;
 	
 	/**
 	 * Internal tracker for FlxG.timeScale adjustment.
 	 */
-	var _timeScaleAdjust:Float = 1.0;
+	var _timeScaleAdjust:Float;
 
 	/**
 	 * Internal tracker for total volume adjustment.
 	 */
-	var _volumeAdjust:Float = 1.0;
+	var _volumeAdjust:Float;
 
 	/**
 	 * Internal tracker for the sound's "target" (for proximity and panning).
@@ -296,8 +300,8 @@ class FlxSound extends FlxBasic
 		x = 0;
 		y = 0;
 
-		_time = 0;
-		_timeUpdates = 12;
+		update_time(0);
+		_length = 0;
 		_paused = false;
 		_volume = 1.0;
 		_volumeAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
@@ -366,10 +370,7 @@ class FlxSound extends FlxBasic
 		
 		_amplitudeUpdate = true;
 
-		if (_realPitch > 0) {
-			_time = _channel.position;
-			if (_timeUpdates < 12) _timeUpdates++;
-		}
+		if (_realPitch > 0) update_time();
 		
 		var radialMultiplier:Float = 1.0;
 
@@ -551,12 +552,12 @@ class FlxSound extends FlxBasic
 		else if (playing) // Already playing sound
 			return this;
 
+		endTime = EndTime;
 		if (_paused)
 			resume();
 		else
 			startSound(StartTime);
-
-		endTime = EndTime;
+		
 		return this;
 	}
 
@@ -578,7 +579,7 @@ class FlxSound extends FlxBasic
 		if (!playing)
 			return this;
 
-		_time = _channel.position;
+		update_time();
 		_paused = true;
 		cleanup(false, false);
 		return this;
@@ -687,7 +688,7 @@ class FlxSound extends FlxBasic
 		if (_sound == null)
 			return;
 
-		_time = StartTime;
+		update_time(StartTime);
 		_paused = false;
 		_channel = _sound.play(_time, 0, _transform);
 		if (_channel != null)
@@ -759,9 +760,11 @@ class FlxSound extends FlxBasic
 
 		if (resetPosition)
 		{
-			_time = 0;
+			update_time(0);
 			_paused = false;
 		}
+		else
+			update_time();
 	}
 
 	/**
@@ -858,7 +861,7 @@ class FlxSound extends FlxBasic
 		return null;
 	}
 
-	function update_amplitude()
+	function update_amplitude():Void
 	{
 		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return;
 		@:privateAccess{
@@ -884,7 +887,8 @@ class FlxSound extends FlxBasic
 		return _amplitudeRight;
 	}
 	
-	function get_amplitude():Float {
+	function get_amplitude():Float
+	{
 		update_amplitude();
 		return channels > 1 ? (_amplitudeLeft + _amplitudeRight) * 0.5 : _amplitudeLeft;
 	}
@@ -924,13 +928,22 @@ class FlxSound extends FlxBasic
 		return _transform.pan = pan;
 	}
 
+	function update_time(time:Float = null):Float
+	{
+		_time = (time == null && _channel != null) ? _channel.position : time;
+		#if (cpp || sys || js)
+		_lastTimeUpdate = Timer.stamp();
+		#end
+		return _time;
+	}
+
 	inline function get_time():Float
 	{
-		if (playing && _realPitch > 0 && _timeUpdates > 0) {
-			_time = _channel.position;
-			_timeUpdates--;
-		}
+		#if (cpp || sys || js)
+		return _time + (playing ? ((Timer.stamp() - _lastTimeUpdate) / _pitch * 1000) : 0);
+		#else
 		return _time;
+		#end
 	}
 
 	function set_time(time:Float):Float
@@ -960,7 +973,7 @@ class FlxSound extends FlxBasic
 			}
 			#end
 		}
-		return _time = time;
+		return update_time(time);
 	}
 
 	inline function get_length():Float

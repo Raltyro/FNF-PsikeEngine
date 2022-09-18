@@ -95,21 +95,6 @@ class TitleState extends MusicBeatState
 
 		//trace(path, FileSystem.exists(path));
 
-		/*#if (polymod && !html5)
-		if (sys.FileSystem.exists('mods/')) {
-			var folders:Array<String> = [];
-			for (file in sys.FileSystem.readDirectory('mods/')) {
-				var path = haxe.io.Path.join(['mods/', file]);
-				if (sys.FileSystem.isDirectory(path)) {
-					folders.push(file);
-				}
-			}
-			if(folders.length > 0) {
-				polymod.Polymod.init({modRoot: "mods", dirs: folders});
-			}
-		}
-		#end*/
-
 		FlxG.fixedTimestep = false;
 		FlxG.game.focusLostFramerate = 8;
 		FlxG.sound.muteKeys = muteKeys;
@@ -117,15 +102,10 @@ class TitleState extends MusicBeatState
 		FlxG.sound.volumeUpKeys = volumeUpKeys;
 		FlxG.keys.preventDefaultKeys = [TAB];
 
-		PlayerSettings.init();
-
 		curWacky = FlxG.random.getObject(getIntroTextShit());
 
-		// DEBUG BULLSHIT
-
-		swagShader = new ColorSwap();
-		super.create();
-
+		PlayerSettings.init();
+		
 		FlxG.save.bind('funkin', 'ninjamuffin99');
 
 		ClientPrefs.loadPrefs();
@@ -137,8 +117,13 @@ class TitleState extends MusicBeatState
 			});
 		}
 		#end
-		
+
 		Highscore.load();
+
+		// DEBUG BULLSHIT
+
+		swagShader = new ColorSwap();
+		super.create();
 
 		// IGNORE THIS!!!
 		titleJSON = Json.parse(Paths.getTextFromFile('images/gfDanceTitle.json'));

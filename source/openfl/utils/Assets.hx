@@ -158,12 +158,12 @@ class Assets
 		if (hardware && bitmap.image != null) {
 			if (traceNewBitmaps) trace(key, "hardware");
 			
+			bitmap.lock();
 			var texture = Lib.current.stage.context3D.createRectangleTexture(
 				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, true
 			);
 			texture.uploadFromBitmapData(bitmap);
 			bitmap.dispose(); bitmap.disposeImage();
-			//Paths.compress();
 			
 			bitmap = BitmapData.fromTexture(texture);
 		}
@@ -354,7 +354,11 @@ class Assets
 			buffer = AudioBuffer.fromVorbisFile(VorbisFile.fromFile(id));
 		else
 		#end
+		#if (js && html5 && lime_howlerjs)
+		buffer = (fromFile && stream) ? AudioBuffer.fromFile(id, true) : LimeAssets.getAudioBuffer(id, false);
+		#else
 		buffer = fromFile ? AudioBuffer.fromFile(id) : LimeAssets.getAudioBuffer(id, false);
+		#end
 		
 		return buffer;
 	}

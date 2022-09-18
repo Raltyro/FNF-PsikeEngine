@@ -110,6 +110,7 @@ class Paths
 				FlxG.bitmap._cache.remove(key);
 
 				if (obj.bitmap != null) {
+					obj.bitmap.lock();
 					if (obj.bitmap.__texture != null) obj.bitmap.__texture.dispose();
 					obj.bitmap.disposeImage();
 				}
@@ -131,8 +132,6 @@ class Paths
 		if (obj != null) {
 			@:privateAccess{
 				if (obj.__buffer != null) {
-					obj.__buffer.src = null;
-					obj.__buffer.data = null;
 					obj.__buffer.dispose();
 					obj.__buffer = null;
 				}

@@ -27,9 +27,9 @@ class CreditsState extends MusicBeatState
 	// Title, Variable, Description, Color
 	private static var titles(default, never):Array<Array<String>> = [
 		['Credits Sections'],
-		['Psych Engine Team',				'psych',			'Cool peoples that makes Psych Engine real',													'D662EB'],
-		["Raltyro's Psych Fork",			'raltfork',			'One furry that forked psych engine (the one ur currently using)',								'D7CBFD'],
-		["Funkin' Crew",					'funkin',			'AWESOME DUDES WHO BASICALLY STARTED EVERYTHING\nABOUT FNF THEMSELVES',							'FD40AB'],
+		['Psych Engine Team',				'psych',			'Developers of Psych Engine',																	'D662EB'],
+		["Raltyro's Psych Fork",			'raltfork',			'Developer"s" of Raltyro\'s Psych Fork',														'D7CBFD'],
+		["Funkin' Crew",					'funkin',			'The only cool kickers of Friday Night Funkin\'',												'FD40AB'],
 		['']
 	];
 	
@@ -56,7 +56,7 @@ class CreditsState extends MusicBeatState
 	
 	private static var raltfork(default, never):Array<Array<String>> = [
 		['Literal Furry'],
-		['Raltyro',				'raltyro',			'The Furry that made this psych engine fork lol',				'https://gamebanana.com/members/1777465',	'F3F3F3']
+		['Raltyro',				'raltyro',			'Self Explanatory',												'https://gamebanana.com/members/1777465',	'F3F3F3']
 	];
 	
 	private static var funkin(default, never):Array<Array<String>> = [

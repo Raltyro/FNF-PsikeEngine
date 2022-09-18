@@ -1,0 +1,46 @@
+[
+	{
+		"musicName": "Breakfast",
+		"musicLoopPath": "breakfast",
+		"volume": 0.5,
+		"bpm": 160,
+		"fadeTime": 0,
+		"delay": 0,
+		"useStartVariations": true,
+		"startTimeRange": [],
+		"startVariations": [
+			{
+				"musicStartPath": "breakfastStart",
+				"hasStart": true,
+				"fadeTime": 0,
+				"startTime": 0,
+				"delay": 0.75
+			},
+			{
+				"musicStartPath": "breakfastStart",
+				"hasStart": false,
+				"fadeTime": 0,
+				"startTime": 12.4,
+				"delay": 1.15
+			},
+			{
+				"musicStartPath": "breakfastStart",
+				"hasStart": true,
+				"fadeTime": 0,
+				"startTime": 36.75,
+				"delay": 0.75
+			}
+		]
+	},
+	{
+		"musicName": "Tea Time",
+		"musicLoopPath": "tea-time",
+		"volume": 0.5,
+		"bpm": 105,
+		"fadeTime": 6,
+		"delay": 0,
+		"useStartVariations": false,
+		"startTimeRandomRange": [0, 120],
+		"startVariations": []
+	}
+]

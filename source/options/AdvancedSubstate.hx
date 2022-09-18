@@ -24,14 +24,15 @@ class AdvancedSubstate extends BaseOptionsMenu
 		blackBG.updateHitbox();
 		blackBG.alpha = 0;
 		
-		coolText = new Alphabet(FlxG.width / 2, 0, "", true);
+		coolText = new Alphabet(FlxG.width / 2, FlxG.height / 2, "", true);
+		coolText.startPosition.y += 20;
 		coolText.alignment = CENTERED;
 		coolText.alpha = 0;
 		
 		timer = new FlxTimer();
 		
 		var option:Option = new Option('Hardware Caching',
-			'If checked, the game will uploads images to GPU\nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
+			'If checked, the game will uploads images to GPU, useful for lowering MEM usage.\nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
 			'fakeHardC',
 			'bool',
 			false);
@@ -39,7 +40,7 @@ class AdvancedSubstate extends BaseOptionsMenu
 		
 		#if desktop
 		var option:Option = new Option('Streaming Music',
-			'If checked, the game will simultaneously read the music from disk on playback\nRestart your game in order for this to work.\n[UNCHECK THIS IF GAME IS CRASHING]',
+			'If checked, the game will simultaneously load music data on playbacks, useful for lowering MEM usage.\nRestart your game in order for this to work.\n[UNCHECK THIS IF GAME IS CRASHING]',
 			'fakeStreM',
 			'bool',
 			false);
@@ -79,7 +80,7 @@ class AdvancedSubstate extends BaseOptionsMenu
 		option.onChange = onChangeCounter;
 
 		var option:Option = new Option('GL Statistics Counter',
-			'If unchecked, hides GL Statistics Counte',
+			'If unchecked, hides GL Statistics Counter.',
 			'showGLStats',
 			'bool',
 			true);
@@ -94,7 +95,7 @@ class AdvancedSubstate extends BaseOptionsMenu
 		addOption(option);
 		
 		var option:Option = new Option('Check for Updates',
-			'If pressed, it will check for updates',
+			'If pressed, it will check for updates.',
 			null,
 			'button',
 			true);

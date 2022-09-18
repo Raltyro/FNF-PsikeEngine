@@ -51,17 +51,20 @@ class NativeAudioSource
 
 	public function dispose():Void
 	{
+		forceStop();
 		if (handle != null)
 		{
-			stop();
 			AL.sourcei(handle, AL.BUFFER, null);
 			AL.deleteSource(handle);
 			if (buffers != null)
 			{
+				/*
 				for (buffer in buffers)
 				{
 					AL.deleteBuffer(buffer);
 				}
+				*/
+				AL.deleteBuffers(buffers);
 				buffers = null;
 			}
 			handle = null;
@@ -176,18 +179,11 @@ class NativeAudioSource
 
 		playing = true;
 
+		var time = completed ? 0 : getCurrentTime();
+		setCurrentTime(time);
 		if (stream)
 		{
-			setCurrentTime(getCurrentTime());
-
-			streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
-			streamTimer.run = streamTimer_onRun;
-		}
-		else
-		{
-			var time = completed ? 0 : getCurrentTime();
-
-			setCurrentTime(time);
+			resetStreamTimer();
 		}
 	}
 
@@ -198,15 +194,8 @@ class NativeAudioSource
 		if (handle == null) return;
 		AL.sourcePause(handle);
 
-		if (streamTimer != null)
-		{
-			streamTimer.stop();
-		}
-
-		if (timer != null)
-		{
-			timer.stop();
-		}
+		stopStreamTimer();
+		stopTimer();
 	}
 
 	private function readVorbisFileBuffer(vorbisFile:VorbisFile, length:Int):UInt8Array
@@ -252,7 +241,7 @@ class NativeAudioSource
 	{
 		#if lime_vorbis
 		if (handle == null || parent == null || parent.buffer == null || parent.buffer.__srcVorbisFile == null)
-			return;
+			return dispose();
 		
 		var vorbisFile = null;
 		var position = 0;
@@ -311,6 +300,7 @@ class NativeAudioSource
 			if (playing && handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.STOPPED)
 			{
 				AL.sourcePlay(handle);
+				resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
 			}
 		}
 		#end
@@ -325,17 +315,52 @@ class NativeAudioSource
 
 		playing = false;
 
+		stopTimer();
+		stopStreamTimer();
+		setCurrentTime(0);
+	}
+	
+	private function forceStop():Void
+	{
+		stop();
+		
+		completed = true;
+		parent.onComplete.dispatch();
+	}
+
+	private function stopStreamTimer():Void
+	{
 		if (streamTimer != null)
 		{
 			streamTimer.stop();
 		}
+	}
 
+	private function resetStreamTimer():Void
+	{
+		stopStreamTimer();
+		
+		if (stream)
+		{
+			streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
+			streamTimer.run = streamTimer_onRun;
+		}
+	}
+
+	private function stopTimer():Void
+	{
 		if (timer != null)
 		{
 			timer.stop();
 		}
+	}
 
-		setCurrentTime(0);
+	private function resetTimer(timeRemaining:Int):Void
+	{
+		stopTimer();
+
+		timer = new Timer(timeRemaining);
+		timer.run = timer_onRun;
 	}
 
 	// Event Handlers
@@ -346,6 +371,13 @@ class NativeAudioSource
 
 	private function timer_onRun():Void
 	{
+		var timeRemaining = Std.int((getLength() - getCurrentTime()) / getPitch());
+		if (timeRemaining > 0.1)
+		{
+			resetTimer(timeRemaining);
+			return;
+		}
+		
 		if (loops > 0)
 		{
 			playing = false;
@@ -439,18 +471,12 @@ class NativeAudioSource
 
 		if (playing)
 		{
-			if (timer != null)
-			{
-				timer.stop();
-			}
-
 			var timeRemaining = Std.int((getLength() - value) / getPitch());
 
 			if (timeRemaining > 0)
 			{
 				completed = false;
-				timer = new Timer(timeRemaining);
-				timer.run = timer_onRun;
+				resetTimer(timeRemaining);
 			}
 			else
 			{
@@ -498,17 +524,11 @@ class NativeAudioSource
 	{
 		if (playing && length != value)
 		{
-			if (timer != null)
-			{
-				timer.stop();
-			}
-
 			var timeRemaining = Std.int((value - getCurrentTime()) / getPitch());
 
 			if (timeRemaining > 0)
 			{
-				timer = new Timer(timeRemaining);
-				timer.run = timer_onRun;
+				resetTimer(timeRemaining);
 			}
 		}
 
@@ -541,17 +561,11 @@ class NativeAudioSource
 	{
 		if (playing && value != getPitch())
 		{
-			if (timer != null)
-			{
-				timer.stop();
-			}
-
 			var timeRemaining = Std.int((getLength() - getCurrentTime()) / value);
 
 			if (timeRemaining > 0)
 			{
-				timer = new Timer(timeRemaining);
-				timer.run = timer_onRun;
+				resetTimer(timeRemaining);
 			}
 		}
 

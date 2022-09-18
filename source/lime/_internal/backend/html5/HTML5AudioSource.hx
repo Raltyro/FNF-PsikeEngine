@@ -207,16 +207,24 @@ class HTML5AudioSource
 	public function getPitch():Float
 	{
 		#if lime_howlerjs
-		return parent.buffer.__srcHowl.rate();
-		#else
-		return 1;
+		if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		{
+			return parent.buffer.__srcHowl.rate();
+		}
 		#end
+		
+		return 1;
 	}
 
 	public function setPitch(value:Float):Float
 	{
 		#if lime_howlerjs
-		parent.buffer.__srcHowl.rate(value);
+		if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		{
+			parent.buffer.__srcHowl.rate(value);
+		}
+		else
+			return 1;
 		#end
 		
 		return getPitch();

@@ -63,23 +63,22 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onChangePauseMusic;
 		
-		var option:Option = new Option('Pause on Lost Focus',
-			"If checked, in gameplay whenever you left window unfocused, the game will pause",
-			'pauseOnLostFocus',
-			'bool',
-			true);
-		option.onChange = onChangeAutoPause;
-		addOption(option);
-		
 		#if !html5
 		var option:Option = new Option('Auto Pause',
-			"If checked, game will pause if it's unfocused",
+			"If checked, game will pause if it's unfocused.",
 			'autoPause',
 			'bool',
 			true);
 		option.onChange = onChangeAutoPause;
 		addOption(option);
 		#end
+		
+		var option:Option = new Option('Auto Pause Playstate',
+			"If checked, in playstate, gameplay and notes will pause if it's unfocused.",
+			'autoPausePlayState',
+			'bool',
+			true);
+		addOption(option);
 
 		var option:Option = new Option('Hitsound Volume',
 			'Funny notes does \"Tick!\" when you hit them."',

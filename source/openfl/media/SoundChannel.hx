@@ -159,7 +159,11 @@ import lime.media.AudioSource;
 	#if (lime && lime_vorbis)
 	@:noCompletion private function __updateVorbisPeaks():Void
 	{
-		// wip
+		// TODO: Get Vorbis Peaks
+		/*
+			__source.__backend.readVorbisFileBuffer(__source.buffer.__srcVorbisFile, thingy uhh);
+		*/
+		
 	}
 	#end
 	
@@ -171,7 +175,8 @@ import lime.media.AudioSource;
 		#if lime
 		
 		#if lime_vorbis
-		return __updateVorbisPeaks();
+		@:privateAccess if (__source.__backend.stream)
+			return __updateVorbisPeaks();
 		#end
 		
 		var currentTime:Float = position;
