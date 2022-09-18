@@ -186,7 +186,8 @@ class FPS extends TextField
 					16 *
 					(
 						(showFPS ? 1 : 0) +
-						((showMem || showMemPeak) ? #if (windows || linux) 2 #else 1 #end : 0) +
+						((showMem || showMemPeak) ? 1 : 0) +
+						#if (windows || linux || mac) (showGc ? 1 : 0) + #end
 						(showGLStats ? 1 : 0)
 					)
 				);
