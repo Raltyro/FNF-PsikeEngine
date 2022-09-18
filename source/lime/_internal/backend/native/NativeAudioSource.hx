@@ -179,12 +179,8 @@ class NativeAudioSource
 
 		playing = true;
 
-		var time = completed ? 0 : getCurrentTime();
-		setCurrentTime(time);
-		if (stream)
-		{
-			resetStreamTimer();
-		}
+		setCurrentTime(completed ? 0 : getCurrentTime());
+		if (stream) resetStreamTimer();
 	}
 
 	public function pause():Void

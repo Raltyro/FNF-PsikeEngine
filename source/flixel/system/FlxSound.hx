@@ -239,7 +239,7 @@ class FlxSound extends FlxBasic
 	/**
 	 * Internal tracker for sound length, so that length can still be obtained while a sound is paused, because _sound becomes null.
 	 */
-	var _length:Float;
+	var _length:Float = 0;
 	
 	/**
 	 * Internal tracker for real pitch.
@@ -301,7 +301,6 @@ class FlxSound extends FlxBasic
 		y = 0;
 
 		update_time(0);
-		_length = 0;
 		_paused = false;
 		_volume = 1.0;
 		_volumeAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
