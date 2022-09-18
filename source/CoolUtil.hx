@@ -209,17 +209,14 @@ class CoolUtil
 	public static function tryGetGitCommitHash():String {
 		#if sys
 		if (cantGit && realGitCommitHash == null) return null;
-		var process = null;
 		var commitHash:String = null;
 		try {
-			process = new Process('git', ['rev-parse', 'HEAD']);
+			var process = new Process('git', ['rev-parse', 'HEAD']);
 			commitHash = process.stdout.readLine();
-		}
-		catch(e) {cantGit = true;}
-		if (process != null) {
 			process.kill();
 			process.close();
 		}
+		catch(e) {cantGit = true;}
 		
 		cantGit = commitHash == null;
 		if (!cantGit) {
