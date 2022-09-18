@@ -762,8 +762,10 @@ class FlxSound extends FlxBasic
 			update_time(0);
 			_paused = false;
 		}
+		#if (cpp || sys || js)
 		else
-			update_time();
+			_lastTimeUpdate = Timer.stamp();
+		#end
 	}
 
 	/**

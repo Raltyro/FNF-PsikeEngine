@@ -308,7 +308,6 @@ class NativeAudioSource
 		{
 			AL.sourceStop(handle);
 		}
-
 		playing = false;
 
 		stopTimer();
@@ -367,10 +366,9 @@ class NativeAudioSource
 
 	private function timer_onRun():Void
 	{
-		var timeRemaining = Std.int((getLength() - getCurrentTime()) / getPitch());
-		if (timeRemaining > 0.1)
+		if (handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
 		{
-			resetTimer(timeRemaining);
+			resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
 			return;
 		}
 		
@@ -382,13 +380,8 @@ class NativeAudioSource
 			play();
 			return;
 		}
-		else
-		{
-			stop();
-		}
-
-		completed = true;
-		parent.onComplete.dispatch();
+		
+		forceStop();
 	}
 
 	// Get & Set Methods
