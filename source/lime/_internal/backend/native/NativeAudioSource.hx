@@ -366,9 +366,10 @@ class NativeAudioSource
 
 	private function timer_onRun():Void
 	{
-		if (handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
+		var timeRemaining = Std.int((getLength() - getCurrentTime()) / getPitch());
+		if (handle != null && timeRemaining > 444 && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
 		{
-			resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
+			resetTimer(timeRemaining);
 			return;
 		}
 		
