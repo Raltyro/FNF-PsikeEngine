@@ -275,7 +275,12 @@ class FlxSound extends FlxBasic
 	 * Internal tracker for whether to pan the sound left and right. Default is false.
 	 */
 	var _proximityPan:Bool;
-
+	
+	/**
+	 * Helper var to prevent the sound from playing after focus was regained when it was already paused.
+	 */
+	var _focusPreventation:Bool;
+	
 	/**
 	 * Helper var to prevent the sound from playing after focus was regained when it was already paused.
 	 */
@@ -319,6 +324,8 @@ class FlxSound extends FlxBasic
 		_proximityPan = false;
 		visible = false;
 		autoDestroy = false;
+
+		@:privateAccess _focusPreventation = #if FLX_SOUND_SYSTEM FlxG.game != null ? !FlxG.game._lostFocus : #end true;
 
 		if (_transform == null)
 			_transform = new SoundTransform();
@@ -565,8 +572,8 @@ class FlxSound extends FlxBasic
 	 */
 	public function resume():FlxSound
 	{
-		if (_paused)
-			startSound(_time);
+		if (!_focusPreventation) _alreadyPaused = false;
+		if (_paused) startSound(_time);
 		return this;
 	}
 
@@ -577,6 +584,8 @@ class FlxSound extends FlxBasic
 	{
 		if (!playing)
 			return this;
+
+		if (!_focusPreventation) _alreadyPaused = true;
 
 		update_time();
 		_paused = true;
@@ -649,7 +658,7 @@ class FlxSound extends FlxBasic
 	 */
 	public inline function getActualPitch():Float
 	{
-		return Math.max(0, _pitch * _timeScaleAdjust);
+		return _realPitch;//Math.max(0, _pitch * _timeScaleAdjust);
 	}
 
 	/**
@@ -782,6 +791,7 @@ class FlxSound extends FlxBasic
 	@:allow(flixel.system.frontEnds.SoundFrontEnd)
 	function onFocus():Void
 	{
+		_focusPreventation = true;
 		if (!_alreadyPaused)
 			resume();
 	}
@@ -791,6 +801,7 @@ class FlxSound extends FlxBasic
 	{
 		_alreadyPaused = _paused;
 		pause();
+		_focusPreventation = false;
 	}
 	#end
 
@@ -941,7 +952,7 @@ class FlxSound extends FlxBasic
 	inline function get_time():Float
 	{
 		#if (cpp || sys || js)
-		return _time + (playing ? ((Timer.stamp() - _lastTimeUpdate) / _pitch * 1000) : 0);
+		return _time + (playing ? ((Timer.stamp() - _lastTimeUpdate) / _realPitch * 1000) : 0);
 		#else
 		return _time;
 		#end
