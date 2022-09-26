@@ -5,6 +5,11 @@ import openfl.events.Event;
 import openfl.events.EventDispatcher;
 #if lime
 import lime.media.AudioSource;
+
+#if lime_cffi
+import lime._internal.backend.native.NativeAudioSource;
+#end
+
 #end
 
 /**
@@ -20,6 +25,9 @@ import lime.media.AudioSource;
 #if !openfl_debug
 @:fileXml('tags="haxe,release"')
 @:noDebug
+#end
+#if (lime && lime_cffi)
+@:access(lime._internal.backend.native.NativeAudioSource)
 #end
 @:access(openfl.media.SoundMixer)
 @:final @:keep class SoundChannel extends EventDispatcher
@@ -146,7 +154,7 @@ import lime.media.AudioSource;
 	{
 		this.soundTransform = soundTransform;
 	}
-	
+
 	// hi i made these - raltyro
 	@:noCompletion private function __checkUpdatePeaks(?time:Float):Bool
 	{
@@ -155,71 +163,49 @@ import lime.media.AudioSource;
 		__lastPeakTime = time;
 		return true;
 	}
-	
-	#if (lime && lime_vorbis)
+
+	#if (lime && lime_cffi && lime_vorbis)
 	@:noCompletion private function __updateVorbisPeaks():Void
 	{
 		// TODO: Get Vorbis Peaks
-		/*
-			__source.__backend.readVorbisFileBuffer(__source.buffer.__srcVorbisFile, thingy uhh);
-		*/
-		
-	}
-	#end
-	
-	@:noCompletion private function __updatePeaks():Void
-	{
-		__leftPeak = __rightPeak = 0;
-		if (!__isValid) return;
-		
-		#if lime
-		
-		#if lime_vorbis
-		@:privateAccess if (__source.__backend.stream)
-			return __updateVorbisPeaks();
-		#end
-		
 		var currentTime:Float = position;
 		if (!__checkUpdatePeaks(currentTime)) return;
-		
-		#if (lime_cffi && !macro)
+
 		var buffer = __source.buffer;
-		if (buffer == null || buffer.data == null) return;
-		var bytes = buffer.data.buffer;
-		
+		@:privateAccess if (buffer == null || buffer.__srcVorbisFile == null) return;
+
+		@:privateAccess var buffers = __source.__backend.bufferDatas;
+		@:privateAccess var bufferTimeBlocks = __source.__backend.bufferTimeBlocks;
 		var khz:Float = (buffer.sampleRate / 1000);
 		var channels:Int = buffer.channels;
 		var stereo:Bool = channels > 1;
-		
+
 		// MS, NOT SECOND
-		var minimum:Float = Math.max(currentTime - (1 / khz * 2500), currentTime - 25);
-		var time:Float = __lastPeakTime > currentTime ? minimum : Math.max(minimum, currentTime - (currentTime - __lastPeakTime));
-		var endTime:Float = currentTime + Math.min(pitch * 6, 50);
-		
-		var index:Int = Std.int(time * khz);
-		
-		var samples:Float = ((endTime - time) * khz);
-		samples = samples < 1 ? 1 : samples;
-		
+		@:privateAccess var index:Int = Std.int((currentTime - Std.int(bufferTimeBlocks[0] * 1000)) * khz);
+		var samples:Float = 640;
+
 		var leftFull:Bool = false;
 		var lmin:Float = 0;
 		var lmax:Float = 0;
-		
+
 		var rightFull:Bool = !stereo;
 		var rmin:Float = 0;
 		var rmax:Float = 0;
-		
+
 		var rows:Float = 0;
 		
-		while (index < (bytes.length - 1)) {
+		var buffer = buffers[0], bufferi = 0;
+		var bytes = buffer.buffer, length = Std.int((bufferTimeBlocks[1] - bufferTimeBlocks[0]) * 1000);
+
+		while (buffer != null) {
 			if (index >= 0) {
 				if (!leftFull) {
 					var byte:Int = bytes.getUInt16(index * channels * 2);
-					
+
 					if (byte > 65535 / 2) byte -= 65535;
-					
+
 					var sample:Float = (byte / 65535);
-					
+
 					if (sample > 0) {
 						if (sample > lmax) lmax = sample;
 					} else if (sample < 0) {
@@ -227,14 +213,14 @@ import lime.media.AudioSource;
 					}
 					if (lmax - lmin > 1) leftFull = true;
 				}
-				
+
 				if (!rightFull) {
 					var byte:Int = bytes.getUInt16((index * channels * 2) + 2);
-					
+
 					if (byte > 65535 / 2) byte -= 65535;
-					
+
 					var sample:Float = (byte / 65535);
-					
+
 					if (sample > 0) {
 						if (sample > rmax) rmax = sample;
 					} else if (sample < 0) {
@@ -243,17 +229,104 @@ import lime.media.AudioSource;
 					if (rmax - rmin > 1) rightFull = true;
 				}
 			}
-			
-			if (rows >= samples || (leftFull && rightFull)) break;
+
+			index++;
 			rows++;
+			if (rows >= samples || (leftFull && rightFull)) break;
+			/*
+			if (index >= length) {
+				if (++bufferi >= buffers.length) break;
+				index -= length;
+				length = Std.int(((bufferi + 1 >= buffers.length ? 300 : bufferTimeBlocks[bufferi + 1]) - bufferTimeBlocks[bufferi]) * 1000);
+				buffer = buffers[bufferi];
+				bytes = buffer.buffer;
+			}
+			*/
 		}
-		
 		__leftPeak = (lmax - lmin) * 2;
 		__rightPeak = stereo ? (rmax - rmin) * 2 : 0;
-		#else
-		__leftPeak = __rightPeak = 1;
+	}
+	#end
+
+	@:noCompletion private function __updatePeaks():Void
+	{
+		__leftPeak = __rightPeak = 0;
+		if (!__isValid) return;
+
+		#if (lime && lime_cffi && !macro)
+
+		#if lime_vorbis
+		@:privateAccess if (__source.__backend.stream)
+			return __updateVorbisPeaks();
 		#end
-		
+
+		var currentTime:Float = position;
+		if (!__checkUpdatePeaks(currentTime)) return;
+
+		var buffer = __source.buffer;
+		if (buffer == null || buffer.data == null) return;
+		var bytes = buffer.data.buffer;
+
+		var length = bytes.length - 1;
+		var khz:Float = (buffer.sampleRate / 1000);
+		var channels:Int = buffer.channels;
+		var stereo:Bool = channels > 1;
+
+		// MS, NOT SECOND
+		var index:Int = Std.int(currentTime * khz);
+		var samples:Float = 640;
+
+		var leftFull:Bool = false;
+		var lmin:Float = 0;
+		var lmax:Float = 0;
+
+		var rightFull:Bool = !stereo;
+		var rmin:Float = 0;
+		var rmax:Float = 0;
+
+		var rows:Float = 0;
+
+		while (index < length) {
+			if (index >= 0) {
+				if (!leftFull) {
+					var byte:Int = bytes.getUInt16(index * channels * 2);
+
+					if (byte > 65535 / 2) byte -= 65535;
+
+					var sample:Float = (byte / 65535);
+
+					if (sample > 0) {
+						if (sample > lmax) lmax = sample;
+					} else if (sample < 0) {
+						if (sample < lmin) lmin = sample;
+					}
+					if (lmax - lmin > 1) leftFull = true;
+				}
+
+				if (!rightFull) {
+					var byte:Int = bytes.getUInt16((index * channels * 2) + 2);
+
+					if (byte > 65535 / 2) byte -= 65535;
+
+					var sample:Float = (byte / 65535);
+
+					if (sample > 0) {
+						if (sample > rmax) rmax = sample;
+					} else if (sample < 0) {
+						if (sample < rmin) rmin = sample;
+					}
+					if (rmax - rmin > 1) rightFull = true;
+				}
+			}
+
+			index++;
+			rows++;
+			if (rows >= samples || (leftFull && rightFull)) break;
+		}
+
+		__leftPeak = (lmax - lmin) * 2;
+		__rightPeak = stereo ? (rmax - rmin) * 2 : 0;
+
 		#else
 		__leftPeak = __rightPeak = 0;
 		#end
@@ -317,11 +390,11 @@ import lime.media.AudioSource;
 
 		return value;
 	}
-	
+
 	@:noCompletion private function get_pitch():Float
 	{
 		if (!__isValid) return 1;
-		
+
 		#if lime
 		return __source.pitch;
 		#else
@@ -332,20 +405,20 @@ import lime.media.AudioSource;
 	@:noCompletion private function set_pitch(value:Float):Float
 	{
 		if (!__isValid) return 1;
-		
+
 		#if lime
 		return __source.pitch = value;
 		#else
 		return 0;
 		#end
 	}
-	
+
 	@:noCompletion private function get_leftPeak():Float
 	{
 		__updatePeaks();
 		return __leftPeak * (soundTransform == null ? 1 : soundTransform.volume);
 	}
-	
+
 	@:noCompletion private function get_rightPeak():Float
 	{
 		__updatePeaks();

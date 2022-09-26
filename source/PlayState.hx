@@ -2113,7 +2113,6 @@ class PlayState extends MusicBeatState
 
 			var swagCounter:Int = 0;
 
-
 			if(startOnTime < 0) startOnTime = 0;
 
 			if (startOnTime > 0) {
@@ -2365,8 +2364,9 @@ class PlayState extends MusicBeatState
 		
 		music.onComplete = finishSong.bind();
 		
-		setSongTime(startOnTime - 500);
-		startOnTime = 0;
+		setSongTime(Conductor.songPosition);
+		//setSongTime(startOnTime - 350);
+		//startOnTime = 0;
 
 		if (paused) {
 			music.pause();

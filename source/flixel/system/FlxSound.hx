@@ -952,7 +952,7 @@ class FlxSound extends FlxBasic
 	inline function get_time():Float
 	{
 		#if (cpp || sys || js)
-		return _time + (playing ? ((Timer.stamp() - _lastTimeUpdate) / _realPitch * 1000) : 0);
+		return _time + (playing ? ((Math.min(Timer.stamp(), _lastTimeUpdate + 1) - _lastTimeUpdate) / _realPitch * 1000) : 0);
 		#else
 		return _time;
 		#end

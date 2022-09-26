@@ -45,6 +45,8 @@ class AudioBuffer
 	@:noCompletion private var __srcHowl:#if lime_howlerjs Howl #else Dynamic #end;
 	@:noCompletion private var __srcSound:#if flash Sound #else Dynamic #end;
 	@:noCompletion private var __srcVorbisFile:#if lime_vorbis VorbisFile #else Dynamic #end;
+	
+	@:noCompletion private var __format:Int;
 
 	#if commonjs
 	private static function __init__()
@@ -58,6 +60,45 @@ class AudioBuffer
 	#end
 
 	public function new() {}
+
+	public function initBuffer():Void
+	{
+		#if lime_cffi
+		__format = 0;
+		if (channels == 1)
+		{
+			if (bitsPerSample == 8)
+			{
+				__format = AL.FORMAT_MONO8;
+			}
+			else if (bitsPerSample == 16)
+			{
+				__format = AL.FORMAT_MONO16;
+			}
+		}
+		else if (channels == 2)
+		{
+			if (bitsPerSample == 8)
+			{
+				__format = AL.FORMAT_STEREO8;
+			}
+			else if (bitsPerSample == 16)
+			{
+				__format = AL.FORMAT_STEREO16;
+			}
+		}
+
+		if (__srcBuffer == null && data != null)
+		{
+			__srcBuffer = AL.createBuffer();
+
+			if (__srcBuffer != null)
+			{
+				AL.bufferData(__srcBuffer, __format, data, data.length, sampleRate);
+			}
+		}
+		#end
+	}
 
 	public function dispose():Void
 	{
@@ -99,7 +140,9 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 		audioBuffer.data = new UInt8Array(Bytes.alloc(0));
 
-		return NativeCFFI.lime_audio_load_bytes(bytes, audioBuffer);
+		audioBuffer = NativeCFFI.lime_audio_load_bytes(bytes, audioBuffer);
+		audioBuffer.initBuffer();
+		return audioBuffer;
 		#else
 		// if base64String contains codec data, strip it then decode it.
 		var base64StringSplit = base64String.split(",");
@@ -114,6 +157,7 @@ class AudioBuffer
 			audioBuffer.channels = data.channels;
 			audioBuffer.data = new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b));
 			audioBuffer.sampleRate = data.sampleRate;
+			audioBuffer.initBuffer();
 			return audioBuffer;
 		}
 		#end
@@ -136,7 +180,9 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 		audioBuffer.data = new UInt8Array(Bytes.alloc(0));
 
-		return NativeCFFI.lime_audio_load_bytes(bytes, audioBuffer);
+		audioBuffer = NativeCFFI.lime_audio_load_bytes(bytes, audioBuffer);
+		audioBuffer.initBuffer();
+		return audioBuffer;
 		#else
 		var data:Dynamic = NativeCFFI.lime_audio_load_bytes(bytes, null);
 
@@ -147,6 +193,7 @@ class AudioBuffer
 			audioBuffer.channels = data.channels;
 			audioBuffer.data = new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b));
 			audioBuffer.sampleRate = data.sampleRate;
+			audioBuffer.initBuffer();
 			return audioBuffer;
 		}
 		#end
@@ -185,7 +232,9 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 		audioBuffer.data = new UInt8Array(Bytes.alloc(0));
 
-		return NativeCFFI.lime_audio_load_file(path, audioBuffer);
+		audioBuffer = NativeCFFI.lime_audio_load_file(path, audioBuffer);
+		audioBuffer.initBuffer();
+		return audioBuffer;
 		#else
 		var data:Dynamic = NativeCFFI.lime_audio_load_file(path, null);
 
@@ -196,6 +245,7 @@ class AudioBuffer
 			audioBuffer.channels = data.channels;
 			audioBuffer.data = new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b));
 			audioBuffer.sampleRate = data.sampleRate;
+			audioBuffer.initBuffer();
 			return audioBuffer;
 		}
 
@@ -307,6 +357,7 @@ class AudioBuffer
 		{
 			if (buffer != null)
 			{
+				buffer.initBuffer();
 				return Future.withValue(buffer);
 			}
 			else

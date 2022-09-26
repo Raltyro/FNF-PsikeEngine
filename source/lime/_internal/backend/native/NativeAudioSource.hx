@@ -1,5 +1,6 @@
 package lime._internal.backend.native;
 
+import haxe.io.Bytes;
 import haxe.Int64;
 import haxe.Timer;
 import lime.math.Vector4;
@@ -27,6 +28,7 @@ class NativeAudioSource
 	private static var STREAM_TIMER_FREQUENCY = 100;
 
 	private var buffers:Array<ALBuffer>;
+	private var bufferDatas:Array<UInt8Array>;
 	private var bufferTimeBlocks:Array<Float>;
 	private var completed:Bool;
 	private var dataLength:Int;
@@ -73,31 +75,9 @@ class NativeAudioSource
 
 	public function init():Void
 	{
+		parent.buffer.initBuffer();
 		dataLength = 0;
-		format = 0;
-
-		if (parent.buffer.channels == 1)
-		{
-			if (parent.buffer.bitsPerSample == 8)
-			{
-				format = AL.FORMAT_MONO8;
-			}
-			else if (parent.buffer.bitsPerSample == 16)
-			{
-				format = AL.FORMAT_MONO16;
-			}
-		}
-		else if (parent.buffer.channels == 2)
-		{
-			if (parent.buffer.bitsPerSample == 8)
-			{
-				format = AL.FORMAT_STEREO8;
-			}
-			else if (parent.buffer.bitsPerSample == 16)
-			{
-				format = AL.FORMAT_STEREO16;
-			}
-		}
+		format = parent.buffer.__format;
 
 		if (parent.buffer.__srcVorbisFile != null)
 		{
@@ -107,11 +87,13 @@ class NativeAudioSource
 			dataLength = Std.int(Int64.toInt(vorbisFile.pcmTotal()) * parent.buffer.channels * (parent.buffer.bitsPerSample / 8));
 
 			buffers = new Array();
+			bufferDatas = new Array();
 			bufferTimeBlocks = new Array();
 
 			for (i in 0...STREAM_NUM_BUFFERS)
 			{
 				buffers.push(AL.createBuffer());
+				bufferDatas.push(new UInt8Array(Bytes.alloc(0))); // temporary
 				bufferTimeBlocks.push(0);
 			}
 
@@ -119,16 +101,6 @@ class NativeAudioSource
 		}
 		else
 		{
-			if (parent.buffer.__srcBuffer == null)
-			{
-				parent.buffer.__srcBuffer = AL.createBuffer();
-
-				if (parent.buffer.__srcBuffer != null)
-				{
-					AL.bufferData(parent.buffer.__srcBuffer, format, parent.buffer.data, parent.buffer.data.length, parent.buffer.sampleRate);
-				}
-			}
-
 			dataLength = parent.buffer.data.length;
 
 			handle = AL.createSource();
@@ -266,7 +238,7 @@ class NativeAudioSource
 				position = Int64.toInt(vorbisFile.pcmTell());
 			}
 
-			var numBuffers = 0;
+			var numBuffers = 0, index = 0;
 			var data;
 
 			for (buffer in buffers)
@@ -274,6 +246,7 @@ class NativeAudioSource
 				if (dataLength - position >= STREAM_BUFFER_SIZE)
 				{
 					data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
+					bufferDatas[index] = data;
 					AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
 					position += STREAM_BUFFER_SIZE;
 					numBuffers++;
@@ -281,10 +254,12 @@ class NativeAudioSource
 				else if (position < dataLength)
 				{
 					data = readVorbisFileBuffer(vorbisFile, dataLength - position);
+					bufferDatas[index] = data;
 					AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
 					numBuffers++;
 					break;
 				}
+				index++;
 			}
 
 			AL.sourceQueueBuffers(handle, numBuffers, buffers);
