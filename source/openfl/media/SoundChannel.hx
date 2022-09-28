@@ -193,8 +193,9 @@ import lime._internal.backend.native.NativeAudioSource;
 		var rmax:Float = 0;
 
 		var rows:Float = 0;
-		
-		var buffer = buffers[0], bufferi = 0;
+
+		@:privateAccess var buffer = __source.__backend.curBufferData;
+		var bufferi = 0;
 		var bytes = buffer.buffer, length = Std.int((bufferTimeBlocks[1] - bufferTimeBlocks[0]) * 1000);
 
 		while (buffer != null) {

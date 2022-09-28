@@ -29,6 +29,7 @@ class NativeAudioSource
 
 	private var buffers:Array<ALBuffer>;
 	private var bufferDatas:Array<UInt8Array>;
+	private var curBufferData:UInt8Array;
 	private var bufferTimeBlocks:Array<Float>;
 	private var completed:Bool;
 	private var dataLength:Int;
@@ -97,6 +98,7 @@ class NativeAudioSource
 				bufferTimeBlocks.push(0);
 			}
 
+			curBufferData = bufferDatas[0];
 			handle = AL.createSource();
 		}
 		else
@@ -246,7 +248,7 @@ class NativeAudioSource
 				if (dataLength - position >= STREAM_BUFFER_SIZE)
 				{
 					data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
-					bufferDatas[index] = data;
+					curBufferData = bufferDatas[index] = data;
 					AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
 					position += STREAM_BUFFER_SIZE;
 					numBuffers++;
@@ -254,7 +256,7 @@ class NativeAudioSource
 				else if (position < dataLength)
 				{
 					data = readVorbisFileBuffer(vorbisFile, dataLength - position);
-					bufferDatas[index] = data;
+					curBufferData = bufferDatas[index] = data;
 					AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
 					numBuffers++;
 					break;
