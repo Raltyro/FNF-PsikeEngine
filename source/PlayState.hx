@@ -1311,9 +1311,17 @@ class PlayState extends MusicBeatState
 					Paths.music(key);
 			}
 		}
+
+		var music:FlxSound = FlxG.sound.music;
+		if (music == null) music = FlxG.sound.music = new FlxSound();
+		music.loadEmbedded(Paths.inst(PlayState.SONG.song), false);
+		music.pitch = playbackRate;
+		music.volume = 1;
+		music.persist = true;
+
 		Paths.clearUnusedMemory();
 		Paths.compress(8);
-		
+
 		var daSong:String = Paths.formatToSongPath(curSong);
 		if (isStoryMode && !seenCutscene)
 		{
@@ -2373,13 +2381,8 @@ class PlayState extends MusicBeatState
 
 		previousFrameTime = FlxG.game.ticks;
 		lastReportedPlayheadPosition = 0;
-
+		
 		var music:FlxSound = FlxG.sound.music;
-		if (music == null) music = FlxG.sound.music = new FlxSound();
-		music.loadEmbedded(Paths.inst(PlayState.SONG.song), false);
-		music.pitch = playbackRate;
-		music.volume = 1;
-		music.persist = true;
 		
 		music.onComplete = finishSong.bind();
 		vocals.play();
