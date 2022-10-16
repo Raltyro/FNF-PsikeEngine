@@ -160,7 +160,7 @@ class Assets
 			
 			bitmap.lock();
 			var texture = Lib.current.stage.context3D.createRectangleTexture(
-				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, true
+				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, false
 			);
 			texture.uploadFromBitmapData(bitmap);
 			bitmap.dispose(); bitmap.disposeImage();
