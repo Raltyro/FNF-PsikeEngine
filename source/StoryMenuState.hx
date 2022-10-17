@@ -292,10 +292,10 @@ class StoryMenuState extends MusicBeatState
 
 				grpWeekText.members[curWeek].startFlashing();
 
-				for (char in grpWeekCharacters.members)
+				for (char in grpWeekCharacters.members) {
 					if (char.character != "" && char.hasConfirmAnimation)
 						char.playAnim();
-				
+				}
 				stopspamming = true;
 			}
 

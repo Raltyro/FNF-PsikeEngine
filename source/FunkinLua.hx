@@ -566,15 +566,13 @@ class FunkinLua {
 				#if (linc_luajit >= "0.0.6")
 				LuaL.error(lua, "bad argument #1 to 'getGlobalFromScript' (string expected, got nil)");
 				#end
-				Lua.pushnil(lua);
-				return null;
+				return;
 			}
 			if(global==null){
 				#if (linc_luajit >= "0.0.6")
 				LuaL.error(lua, "bad argument #2 to 'getGlobalFromScript' (string expected, got nil)");
 				#end
-				Lua.pushnil(lua);
-				return null;
+				return;
 			}
 			var cervix = luaFile + ".lua";
 			if(luaFile.endsWith(".lua"))cervix=luaFile;
@@ -607,23 +605,26 @@ class FunkinLua {
 				{
 					if(luaInstance.scriptName == cervix)
 					{
-						var result:Dynamic;
 						Lua.getglobal(luaInstance.lua, global);
-						result = Convert.fromLua(luaInstance.lua, -1);
-						Lua.pop(luaInstance.lua, 1);
-						
-						// shit these doesnt work :(
-						/*var success:Bool = Convert.toLua(lua, result);
-						if (!success)
+						if(Lua.isnumber(luaInstance.lua,-1)){
+							Lua.pushnumber(lua, Lua.tonumber(luaInstance.lua, -1));
+						}else if(Lua.isstring(luaInstance.lua,-1)){
+							Lua.pushstring(lua, Lua.tostring(luaInstance.lua, -1));
+						}else if(Lua.isboolean(luaInstance.lua,-1)){
+							Lua.pushboolean(lua, Lua.toboolean(luaInstance.lua, -1));
+						}else{
 							Lua.pushnil(lua);
-						
-						return;*/
-						return result;
+						}
+						// TODO: table
+
+						Lua.pop(luaInstance.lua,1); // remove the global
+
+						return;
 					}
+
 				}
 			}
 			Lua.pushnil(lua);
-			return null;
 		});
 		Lua_helper.add_callback(lua, "setGlobalFromScript", function(luaFile:String, global:String, val:Dynamic){ // returns the global from a script
 			var cervix = luaFile + ".lua";
@@ -2298,32 +2299,10 @@ class FunkinLua {
 			if(tag != null && tag.length > 0 && PlayState.instance.modchartSounds.exists(tag)) {
 				var theSound:FlxSound = PlayState.instance.modchartSounds.get(tag);
 				if(theSound != null) {
-					//var wasResumed:Bool = theSound.playing;
-					//theSound.pause();
+					var wasResumed:Bool = theSound.playing;
+					theSound.pause();
 					theSound.time = value;
-					//if(wasResumed) theSound.play();
-				}
-			}
-		});
-		Lua_helper.add_callback(lua, "getSoundPitch", function(tag:String) {
-			if(tag == null || tag.length < 1) {
-				if(FlxG.sound.music != null)
-					return FlxG.sound.music.pitch;
-			}
-			else if (PlayState.instance.modchartSounds.exists(tag))
-				return PlayState.instance.modchartSounds.get(tag).pitch;
-			
-			return 1;
-		});
-		Lua_helper.add_callback(lua, "setSoundPitch", function(tag:String, value:Float = 1) {
-			if(tag == null || tag.length < 1) {
-				if(FlxG.sound.music != null)
-					FlxG.sound.music.pitch = value;
-			}
-			else if (PlayState.instance.modchartSounds.exists(tag)) {
-				var theSound:FlxSound = PlayState.instance.modchartSounds.get(tag);
-				if(theSound != null) {
-					theSound.pitch = value;
+					if(wasResumed) theSound.play();
 				}
 			}
 		});
@@ -2910,7 +2889,6 @@ class FunkinLua {
 	{
 		if(!ClientPrefs.shaders) return false;
 
-		#if (!flash && sys)
 		if(PlayState.instance.runtimeShaders.exists(name))
 		{
 			luaTrace('Shader $name was already initialized!');
@@ -2954,7 +2932,6 @@ class FunkinLua {
 			}
 		}
 		luaTrace('Missing shader $name .frag AND .vert files!', false, false, FlxColor.RED);
-		#end
 		return false;
 	}
 
@@ -3159,7 +3136,7 @@ class FunkinLua {
 			switch(status) {
 				case Lua.LUA_ERRRUN: return "Runtime Error";
 				case Lua.LUA_ERRMEM: return "Memory Allocation Error";
-				case Lua.LUA_ERRERR: return "Crtical Error";
+				case Lua.LUA_ERRERR: return "Critical Error";
 			}
 			return "Unknown Error";
 		}
