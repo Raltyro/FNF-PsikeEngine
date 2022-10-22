@@ -34,7 +34,7 @@ import flixel.util.FlxSave;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.system.FlxAssets.FlxShader;
 
-#if !flash
+#if (!flash && sys)
 import flixel.addons.display.FlxRuntimeShader;
 #end
 
@@ -2890,6 +2890,7 @@ class FunkinLua {
 		return PlayState.instance.modchartTexts.exists(name) ? PlayState.instance.modchartTexts.get(name) : Reflect.getProperty(PlayState.instance, name);
 	}
 
+	#if (!flash && sys)
 	public function getShader(obj:String):FlxRuntimeShader
 	{
 		var killMe:Array<String> = obj.split('.');
@@ -2905,6 +2906,7 @@ class FunkinLua {
 		}
 		return null;
 	}
+	#end
 
 	function getGroupStuff(leArray:Dynamic, variable:String) {
 		var killMe:Array<String> = variable.split('.');
@@ -3113,6 +3115,8 @@ class FunkinLua {
 		}
 
 		return v;
+		#else
+		return null;
 		#end
 	}
 
@@ -3372,10 +3376,10 @@ class HScript
 		interp.variables.set('Character', Character);
 		interp.variables.set('Alphabet', Alphabet);
 		interp.variables.set('CustomSubstate', CustomSubstate);
-		#if !flash
+		#if (!flash && sys)
 		interp.variables.set('FlxRuntimeShader', FlxRuntimeShader);
-		interp.variables.set('ShaderFilter', openfl.filters.ShaderFilter);
 		#end
+		interp.variables.set('ShaderFilter', openfl.filters.ShaderFilter);
 		interp.variables.set('StringTools', StringTools);
 
 		interp.variables.set('setVar', function(name:String, value:Dynamic)
