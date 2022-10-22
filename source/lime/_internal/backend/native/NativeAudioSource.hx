@@ -331,6 +331,10 @@ class NativeAudioSource
 	{
 		stopTimer();
 
+		if (timeRemaining <= 30) {
+			timer_onRun();
+			return;
+		}
 		timer = new Timer(timeRemaining);
 		timer.run = timer_onRun;
 	}
