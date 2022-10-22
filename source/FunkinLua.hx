@@ -3181,7 +3181,7 @@ class FunkinLua {
 		// Check if it's a valid function.
 		if (type != Lua.LUA_TFUNCTION) {
 			if (type > Lua.LUA_TNIL)
-				luaTrace("ERROR (" + func + "): attempt to call a " + Lua.typename(type) + " value as a callback", false, false, FlxColor.RED);
+				luaTrace("ERROR (" + func + "): attempt to call a " + Lua.typename(lua, type) + " value as a callback", false, false, FlxColor.RED);
 
 			Lua.pop(lua, 1);
 			return Function_Continue;
@@ -3201,7 +3201,7 @@ class FunkinLua {
 		// If successful, checks if a returned value is a valid type, else pass and then return the result.
 		var resultType:Int = Lua.type(lua, -1);
 		if (!resultIsAllowed(resultType)) {
-			luaTrace("WARNING (" + func + "): unsupported returned value type (\"" + Lua.typename(resultType) + "\")", false, false, FlxColor.RED);
+			luaTrace("WARNING (" + func + "): unsupported returned value type (\"" + Lua.typename(lua, resultType) + "\")", false, false, FlxColor.RED);
 			Lua.pop(lua, 1);
 			return Function_Continue;
 		}
