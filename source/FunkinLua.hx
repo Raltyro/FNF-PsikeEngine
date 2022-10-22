@@ -256,7 +256,7 @@ class FunkinLua {
 			if(!ClientPrefs.shaders) return false;
 
 			#if (!flash && MODS_ALLOWED && sys)
-			return initLuaShader(name, glslVersion);
+			return Playstate.instance.initLuaShader(name, glslVersion);
 			#else
 			luaTrace("initLuaShader: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
 			#end
@@ -267,7 +267,7 @@ class FunkinLua {
 			if(!ClientPrefs.shaders) return false;
 
 			#if (!flash && MODS_ALLOWED && sys)
-			if(!PlayState.instance.runtimeShaders.exists(shader) && !initLuaShader(shader))
+			if(!PlayState.instance.runtimeShaders.exists(shader) && !Playstate.instance.initLuaShader(shader))
 			{
 				luaTrace('setSpriteShader: Shader $shader is missing!', false, false, FlxColor.RED);
 				return false;
@@ -2904,58 +2904,6 @@ class FunkinLua {
 			return shader;
 		}
 		return null;
-	}
-	
-	function initLuaShader(name:String, ?glslVersion:Int = 120)
-	{
-		if(!ClientPrefs.shaders) return false;
-
-		#if (!flash && sys)
-		if(PlayState.instance.runtimeShaders.exists(name))
-		{
-			luaTrace('Shader $name was already initialized!');
-			return true;
-		}
-
-		var foldersToCheck:Array<String> = [Paths.mods('shaders/')];
-		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
-			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/shaders/'));
-
-		for(mod in Paths.getGlobalMods())
-			foldersToCheck.insert(0, Paths.mods(mod + '/shaders/'));
-		
-		for (folder in foldersToCheck)
-		{
-			if(FileSystem.exists(folder))
-			{
-				var frag:String = folder + name + '.frag';
-				var vert:String = folder + name + '.vert';
-				var found:Bool = false;
-				if(FileSystem.exists(frag))
-				{
-					frag = File.getContent(frag);
-					found = true;
-				}
-				else frag = null;
-
-				if (FileSystem.exists(vert))
-				{
-					vert = File.getContent(vert);
-					found = true;
-				}
-				else vert = null;
-
-				if(found)
-				{
-					PlayState.instance.runtimeShaders.set(name, [frag, vert]);
-					//trace('Found shader $name!');
-					return true;
-				}
-			}
-		}
-		luaTrace('Missing shader $name .frag AND .vert files!', false, false, FlxColor.RED);
-		#end
-		return false;
 	}
 
 	function getGroupStuff(leArray:Dynamic, variable:String) {
