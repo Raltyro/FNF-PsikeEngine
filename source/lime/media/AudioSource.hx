@@ -17,7 +17,6 @@ class AudioSource
 	public var gain(get, set):Float;
 	public var length(get, set):Int;
 	public var loops(get, set):Int;
-	public var playing(get, null):Bool;
 	public var pitch(get, set):Float;
 	public var offset:Int;
 	public var position(get, set):Vector4;
@@ -108,11 +107,6 @@ class AudioSource
 	@:noCompletion private function set_loops(value:Int):Int
 	{
 		return __backend.setLoops(value);
-	}
-
-	@:noCompletion private function get_playing():Float
-	{
-		return __backend.playing;
 	}
 
 	@:noCompletion private function get_pitch():Float

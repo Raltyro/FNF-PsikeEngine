@@ -3,7 +3,7 @@ package openfl.utils;
 #if lime
 import haxe.io.Bytes;
 
-#if lime_vorbis
+#if (lime_vorbis && lime > "7.9.0")
 import lime.media.vorbis.VorbisFile;
 #end
 
@@ -22,6 +22,7 @@ import lime.system.CFFI;
 import openfl.utils._internal.Log;
 import openfl.display.BitmapData;
 import openfl.display.MovieClip;
+import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import openfl.media.Sound;
@@ -58,6 +59,7 @@ import openfl.Lib;
 #end
 
 @:access(openfl.display.BitmapData)
+@:access(openfl.display.Sprite)
 @:access(openfl.text.Font)
 @:access(openfl.utils.AssetLibrary)
 @:accesS(openfl.display3D.textures.TextureBase.__uploadFromImage)
@@ -66,7 +68,9 @@ class Assets
 	public static var cache:IAssetCache = new AssetCache();
 
 	@:noCompletion private static var dispatcher:EventDispatcher #if !macro = new EventDispatcher() #end;
+	#if (openfl >= "9.2.0")
 	private static var libraryBindings:Map<String, AssetLibrary> = new Map();
+	#end
 
 	public static function addEventListener(type:String, listener:Dynamic, useCapture:Bool = false, priority:Int = 0, useWeakReference:Bool = false):Void
 	{
@@ -351,7 +355,7 @@ class Assets
 	public static function getRawAudioBuffer(id:String, stream:Bool = false, fromFile:Bool = false):AudioBuffer
 	{
 		var buffer;
-		#if lime_vorbis
+		#if (lime_vorbis && lime > "7.9.0")
 		if (stream)
 			buffer = AudioBuffer.fromVorbisFile(VorbisFile.fromFile(id));
 		else
@@ -407,6 +411,7 @@ class Assets
 		#end
 	}
 
+	#if (openfl >= "9.2.0")
 	/**
 		Connects a user-defined class to a related asset class.
 
@@ -445,6 +450,7 @@ class Assets
 			Log.warn("No asset is registered as \"" + className + "\"");
 		}
 	}
+	#end
 
 	/**
 		Returns whether an asset is "local", and therefore can be loaded synchronously
@@ -855,6 +861,7 @@ class Assets
 		#end
 	}
 
+	#if (openfl >= "9.2.0")
 	/**
 		Registers an AssetLibrary binding for use with @:bind or Assets.bind
 		@param	className		The class name to use for the binding
@@ -864,6 +871,7 @@ class Assets
 	{
 		libraryBindings.set(className, library);
 	}
+	#end
 
 	/**
 		Registers a new AssetLibrary with the Assets class
@@ -908,6 +916,7 @@ class Assets
 		#end
 	}
 
+	#if (openfl >= "9.2.0")
 	/**
 		Unregisters an AssetLibrary binding for use with @:bind or Assets.bind
 		@param	className		The class name to use for the binding
@@ -920,6 +929,7 @@ class Assets
 			libraryBindings.remove(className);
 		}
 	}
+	#end
 
 	// Event Handlers
 	@:noCompletion private static function LimeAssets_onChange():Void
