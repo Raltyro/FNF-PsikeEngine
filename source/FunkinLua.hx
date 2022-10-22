@@ -3156,12 +3156,12 @@ class FunkinLua {
 
 		if (v != null) v = v.trim();
 		if (v == null || v == "") {
-			switch(status) {
-				case Lua.LUA_ERRRUN: return "Runtime Error";
-				case Lua.LUA_ERRMEM: return "Memory Allocation Error";
-				case Lua.LUA_ERRERR: return "Critical Error";
+			return switch(status) {
+				case Lua.LUA_ERRRUN: "Runtime Error";
+				case Lua.LUA_ERRMEM: "Memory Allocation Error";
+				case Lua.LUA_ERRERR: "Critical Error";
+				default: "Unknown Error";
 			}
-			return "Unknown Error";
 		}
 
 		return v;
@@ -3169,38 +3169,27 @@ class FunkinLua {
 	}
 
 	var lastCalledFunction:String = '';
-	public function call(func:String, ?args:Array<Dynamic>):Dynamic {
+	public function call(func:String, args:Array<Dynamic>):Dynamic {
 		#if LUA_ALLOWED
-		if (closed || lua == null || func == null) return Function_Continue;
+		if (closed || lua == null || func == null || args == null) return Function_Continue;
 		lastCalledFunction = func;
 
 		// Get the function.
 		Lua.getglobal(lua, func);
-		final type:Int = Lua.type(lua, -1);
+		var type:Int = Lua.type(lua, -1);
 
 		// Check if it's a valid function.
 		if (type != Lua.LUA_TFUNCTION) {
 			if (type > Lua.LUA_TNIL)
-				luaTrace("ERROR (" + func + "): attempt to call a " + typeToString(type) + " value as a callback", false, false, FlxColor.RED);
+				luaTrace("ERROR (" + func + "): attempt to call a " + Lua.typename(type) + " value as a callback", false, false, FlxColor.RED);
 
 			Lua.pop(lua, 1);
 			return Function_Continue;
 		}
 
 		// Insert the arguments then calls the function.
-		var status:Int = -1;
-		try {
-			if (args != null) {
-				for (arg in args) Convert.toLua(lua, arg);
-				status = Lua.pcall(lua, args.length, 1, 0);
-			}
-			else status = Lua.pcall(lua, 0, 1, 0);
-		}
-		catch(e) {
-			luaTrace("ERROR (" + func + "): " + e.message, false, false, FlxColor.RED);
-			Lua.pop(lua, 1);
-			return Function_Continue;
-		}
+		for (arg in args) Convert.toLua(lua, arg);
+		var status:Int = Lua.pcall(lua, args.length, 1, 0);
 
 		// Checks if it's not successful, then show a error.
 		if (status != Lua.LUA_OK) {
@@ -3210,10 +3199,9 @@ class FunkinLua {
 		}
 
 		// If successful, checks if a returned value is a valid type, else pass and then return the result.
-		final resultType:Int = Lua.type(lua, -1);
+		var resultType:Int = Lua.type(lua, -1);
 		if (!resultIsAllowed(resultType)) {
-			luaTrace("WARNING (" + func + "): unsupported returned value type (\"" + typeToString(resultType) + "\")", false, false, FlxColor.RED);
-
+			luaTrace("WARNING (" + func + "): unsupported returned value type (\"" + Lua.typename(resultType) + "\")", false, false, FlxColor.RED);
 			Lua.pop(lua, 1);
 			return Function_Continue;
 		}
@@ -3278,20 +3266,8 @@ class FunkinLua {
 	}
 
 	#if LUA_ALLOWED
-	function resultIsAllowed(type:Int):Bool {
+	inline function resultIsAllowed(type:Int):Bool {
 		return type >= Lua.LUA_TNIL && type < Lua.LUA_TTABLE && type != Lua.LUA_TLIGHTUSERDATA;
-	}
-
-	function typeToString(type:Int):String {
-		switch(type) {
-			case Lua.LUA_TBOOLEAN: return "boolean";
-			case Lua.LUA_TNUMBER: return "number";
-			case Lua.LUA_TSTRING: return "string";
-			case Lua.LUA_TTABLE: return "table";
-			case Lua.LUA_TFUNCTION: return "function";
-		}
-		if (type <= Lua.LUA_TNIL) return "nil";
-		return "unknown";
 	}
 	#end
 
