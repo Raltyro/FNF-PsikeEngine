@@ -5197,7 +5197,7 @@ class PlayState extends MusicBeatState
 	}
 
 	//public var traceCallOnLuas:Bool = false;
-	public function callOnLuas(event:String, args:Array<Dynamic>, ignoreStops = true, exclusions:Array<String> = null):Dynamic {
+	public function callOnLuas(event:String, args:Array<Dynamic>, ignoreStops = true, ?exclusions:Array<String>):Dynamic {
 		var returnVal:Dynamic = FunkinLua.Function_Continue;
 		#if LUA_ALLOWED
 		//if (traceCallOnLuas) trace("callOnLuas", event, args);
