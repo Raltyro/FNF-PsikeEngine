@@ -3174,54 +3174,58 @@ class FunkinLua {
 		if (closed || lua == null || func == null) return Function_Continue;
 		lastCalledFunction = func;
 
-		try {
-			// Get the function.
-			Lua.getglobal(lua, func);
-			var type:Int = Lua.type(lua, -1);
+		// Get the function.
+		Lua.getglobal(lua, func);
+		final type:Int = Lua.type(lua, -1);
 
-			// Check if it's a valid function.
-			if (type != Lua.LUA_TFUNCTION) {
-				if (type > Lua.LUA_TNIL)
-					luaTrace("ERROR (" + func + "): attempt to call a " + typeToString(type) + " value", false, false, FlxColor.RED);
-
-				Lua.pop(lua, 1);
-				return Function_Continue;
-			}
-
-			// Insert the arguments then calls the function.
-			var length:Int = args != null ? args.length : 0;
-			if (length > 0) {
-				for (arg in args) Convert.toLua(lua, arg);
-			}
-			var status:Int = Lua.pcall(lua, length, 1, 0);
-
-			// Checks if it's not successful, then show a error.
-			if (status != Lua.LUA_OK) {
-				var error:String = getErrorMessage(status);
-				luaTrace("ERROR (" + func + "): " + error, false, false, FlxColor.RED);
-				return Function_Continue;
-			}
-
-			// If successful, checks if a returned value is a valid type, else pass and then return the result.
-			var resultType:Int = Lua.type(lua, -1);
-			if (!resultIsAllowed(resultType)) {
-				luaTrace("WARNING (" + func + "): unsupported returned value type (\"" + typeToString(resultType) + "\")", false, false, FlxColor.RED);
-				
-				Lua.pop(lua, 1);
-				return Function_Continue;
-			}
-
-			var result:Dynamic = cast Convert.fromLua(lua, -1);
-			if (result == null) result = Function_Continue;
+		// Check if it's a valid function.
+		if (type != Lua.LUA_TFUNCTION) {
+			if (type > Lua.LUA_TNIL)
+				luaTrace("ERROR (" + func + "): attempt to call a " + typeToString(type) + " value as a callback", false, false, FlxColor.RED);
 
 			Lua.pop(lua, 1);
-			return result;
+			return Function_Continue;
 		}
-		catch (e:Dynamic) {
-			trace(e);
+
+		// Insert the arguments then calls the function.
+		var status:Int = -1;
+		try {
+			if (args != null) {
+				for (arg in args) Convert.toLua(lua, arg);
+				status = Lua.pcall(lua, args.length, 1, 0);
+			}
+			else status = Lua.pcall(lua, 0, 1, 0);
 		}
-		#end
+		catch(e) {
+			luaTrace("ERROR (" + func + "): " + e.message, false, false, FlxColor.RED);
+			Lua.pop(lua, 1);
+			return Function_Continue;
+		}
+
+		// Checks if it's not successful, then show a error.
+		if (status != Lua.LUA_OK) {
+			var error:String = getErrorMessage(status);
+			luaTrace("ERROR (" + func + "): " + error, false, false, FlxColor.RED);
+			return Function_Continue;
+		}
+
+		// If successful, checks if a returned value is a valid type, else pass and then return the result.
+		final resultType:Int = Lua.type(lua, -1);
+		if (!resultIsAllowed(resultType)) {
+			luaTrace("WARNING (" + func + "): unsupported returned value type (\"" + typeToString(resultType) + "\")", false, false, FlxColor.RED);
+
+			Lua.pop(lua, 1);
+			return Function_Continue;
+		}
+
+		var result:Dynamic = cast Convert.fromLua(lua, -1);
+		if (result == null) result = Function_Continue;
+
+		Lua.pop(lua, 1);
+		return result;
+		#else
 		return Function_Continue;
+		#end
 	}
 
 	static function addAnimByIndices(obj:String, name:String, prefix:String, indices:String, framerate:Int = 24, loop:Bool = false)
