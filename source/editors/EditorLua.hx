@@ -45,7 +45,7 @@ class EditorLua {
 		#if LUA_ALLOWED
 		lua = LuaL.newstate();
 		LuaL.openlibs(lua);
-		Lua.init_callbacks(lua);
+		Lua_helper.init_callbacks(lua);
 
 		//trace('Lua version: ' + Lua.version());
 		//trace("LuaJIT version: " + Lua.versionJIT());
@@ -262,6 +262,7 @@ class EditorLua {
 			return;
 		}
 
+		Lua_helper.terminate_callbacks(lua);
 		Lua.close(lua);
 		lua = null;
 		#end

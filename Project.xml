@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	<!-- ________________________ RALT'S PSYCH FORK FLAG ________________________ -->
-	
+
 	<!-- Remove Default FNF Assets so no 100mb additional in assets folder -->
 	<!-- <define name="NO_ASSETSFNF"/> -->
-	
+
 	<!-- _________________________ Application Settings _________________________ -->
-	
+
 	<app title="Friday Night Funkin': Psych Engine" file="PsychEngine" packageName="com.shadowmario.psychengine" package="com.shadowmario.psychengine" main="Main" version="0.2.8" company="ShadowMario" />
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
@@ -46,7 +46,7 @@
 	<set name="BUILD_DIR" value="export/32bit" if="32bits" />
 
 	<classpath name="source" />
-	
+
 	<!-- PSYCH ENGINE CUSTOMIZATION -->
 	<define name="MODS_ALLOWED" if="desktop" />
 	<define name="LUA_ALLOWED" if="desktop" />
@@ -150,7 +150,7 @@
 
 	<!--In case you want to use the ui package-->
 	<haxelib name="flixel-ui" />
-	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
+	<haxelib name="linc_luajit-ralt" rename="linc_luajit" if="LUA_ALLOWED"/>
 	<haxelib name="hxCodec" version="git" if="VIDEOS_ALLOWED"/>
 	<haxelib name="faxe" if='switch'/>
 	<!--<haxelib name="polymod"/> -->
@@ -206,7 +206,7 @@
 	<haxedef name="HXCPP_STACK_LINE" if="CRASH_HANDLER" />
 	
 	<!--Allow working memory greater than 1 gig-->
-	<haxedef name="HXCPP_GC_BIG_BLOCKS" if="desktop" unless="HXCPP_M32"/>
+	<haxedef name="HXCPP_GC_BIG_BLOCKS" if="desktop"/>
 	
 	<haxeflag name="-dce no"/> <!-- this doesnt work lmao -->
 	<haxedef name="queue_experimental_optimization"/>
