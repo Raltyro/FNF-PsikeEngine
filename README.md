@@ -2,12 +2,17 @@
 Psych Engine Fork that included bugfixes, minor QOL features, and performance to make the game runs better.
 
 ## Fork Installation:
-You must have raltyro haxelib forks of hxCodec
+You must have raltyro haxelib forks of hxCodec and linc_luajit
 You can install raltyro forks of lime, and openfl, well its optional btw
 
 To install hxCodec, do this
 ```bat
 haxelib git hxCodec https://github.com/Raltyro/hxCodec
+```
+
+To install linc_luajit, do this
+```bat
+haxelib git linc_luajit-ralt https://github.com/Raltyro/linc_luajit
 ```
 
 To install lime, openfl, do this

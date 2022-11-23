@@ -86,7 +86,7 @@ class FPS extends TextField
 		this.y = y;
 		selectable = false;
 		mouseEnabled = false;
-		defaultTextFormat = new TextFormat('assets/fonts/vcr.ttf', 16, color);
+		defaultTextFormat = new TextFormat('assets/fonts/vcr.ttf', 14, color);
 
 		width = 400;
 		height = 70;
