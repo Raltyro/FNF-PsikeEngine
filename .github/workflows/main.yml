@@ -53,7 +53,7 @@ jobs:
           haxelib install tjson --quiet
           haxelib install hxjsonast --quiet
           haxelib git hxCodec https://github.com/Raltyro/hxCodec --quiet
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
+          haxelib git linc_luajit-ralt https://github.com/Raltyro/linc_luajit --quiet
           haxelib install hscript --quiet
           haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
           haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc --quiet
@@ -112,7 +112,7 @@ jobs:
           haxelib install tjson --quiet
           haxelib install hxjsonast --quiet
           haxelib git hxCodec https://github.com/Raltyro/hxCodec --quiet
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
+          haxelib git linc_luajit-ralt https://github.com/Raltyro/linc_luajit --quiet
           haxelib install hscript --quiet
           haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
           haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc --quiet
@@ -171,7 +171,7 @@ jobs:
           haxelib install tjson --quiet
           haxelib install hxjsonast --quiet
           haxelib git hxCodec https://github.com/Raltyro/hxCodec --quiet
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit --quiet
+          haxelib git linc_luajit-ralt https://github.com/Raltyro/linc_luajit --quiet
           haxelib install hscript --quiet
           haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex --quiet
           haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc --quiet
