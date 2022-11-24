@@ -323,6 +323,9 @@ class PlayState extends MusicBeatState
 
 		// for lua
 		instance = this;
+		#if LUA_ALLOWED
+		FunkinLua.initStatics();
+		#end
 
 		debugKeysChart = ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_1'));
 		debugKeysCharacter = ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_2'));
