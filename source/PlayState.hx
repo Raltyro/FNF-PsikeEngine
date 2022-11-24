@@ -1389,7 +1389,7 @@ class PlayState extends MusicBeatState
 		RecalculateRating();
 
 		Conductor.safeZoneOffset = (ClientPrefs.safeFrames / 60) * 1000;
-		callOnLuas('onCreatePost', []);
+		callOnLuas('onCreatePost');
 
 		super.create();
 
@@ -2099,7 +2099,7 @@ class PlayState extends MusicBeatState
 	public function startCountdown():Void
 	{
 		if(startedCountdown) {
-			callOnLuas('onStartCountdown', []);
+			callOnLuas('onStartCountdown');
 			return;
 		}
 
@@ -2123,7 +2123,7 @@ class PlayState extends MusicBeatState
 			startedCountdown = true;
 			Conductor.songPosition = -Conductor.crochet * 5;
 			setOnLuas('startedCountdown', true);
-			callOnLuas('onCountdownStarted', []);
+			callOnLuas('onCountdownStarted');
 
 			var swagCounter:Int = 0;
 
@@ -2405,7 +2405,7 @@ class PlayState extends MusicBeatState
 		DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength);
 		#end
 		setOnLuas('songLength', songLength);
-		callOnLuas('onSongStart', []);
+		callOnLuas('onSongStart');
 	}
 
 	var debugNum:Int = 0;
@@ -2804,7 +2804,7 @@ class PlayState extends MusicBeatState
 				timer.active = true;
 			}
 			paused = false;
-			callOnLuas('onResume', []);
+			callOnLuas('onResume');
 
 			#if desktop
 			if (startTimer != null && startTimer.finished)
@@ -5002,24 +5002,21 @@ class PlayState extends MusicBeatState
 		@:privateAccess
 		if (!Std.isOfType(FlxG.game._requestedState, PlayState))
 			Paths.clearStoredMemory();
-		
+
 		for (lua in luaArray) {
-			lua.call('onDestroy', []);
+			lua.call('onDestroy');
 			lua.stop();
 		}
-		luaArray = [];
+		luaArray.resize(0);
 
-		#if hscript
-		if(FunkinLua.hscript != null) FunkinLua.hscript = null;
-		#end
-
-		if(!ClientPrefs.controllerMode)
-		{
+		if(!ClientPrefs.controllerMode) {
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		}
+
 		FlxAnimationController.globalSpeed = 1;
 		FlxG.sound.music.pitch = 1;
+
 		super.destroy();
 	}
 
@@ -5048,7 +5045,7 @@ class PlayState extends MusicBeatState
 
 		lastStepHit = curStep;
 		setOnLuas('curStep', curStep);
-		callOnLuas('onStepHit', []);
+		callOnLuas('onStepHit');
 	}
 
 	var lightningStrikeBeat:Int = 0;
@@ -5146,7 +5143,7 @@ class PlayState extends MusicBeatState
 		lastBeatHit = curBeat;
 
 		setOnLuas('curBeat', curBeat); //DAWGG?????
-		callOnLuas('onBeatHit', []);
+		callOnLuas('onBeatHit');
 	}
 
 	override function sectionHit()
@@ -5179,41 +5176,32 @@ class PlayState extends MusicBeatState
 		}
 		
 		setOnLuas('curSection', curSection);
-		callOnLuas('onSectionHit', []);
+		callOnLuas('onSectionHit');
 	}
 
-	//public var traceCallOnLuas:Bool = false;
-	public function callOnLuas(event:String, args:Array<Dynamic>, ignoreStops = true, ?exclusions:Array<String>):Dynamic {
+	public function callOnLuas(event:String, ?args:Array<Any>, ignoreStops = true, ?exclusions:Array<String>):Dynamic {
 		var returnVal:Dynamic = FunkinLua.Function_Continue;
 		#if LUA_ALLOWED
-		//if (traceCallOnLuas) trace("callOnLuas", event, args);
 		for (script in luaArray) {
 			if(exclusions != null && exclusions.contains(script.scriptName))
 				continue;
 
-			//if (traceCallOnLuas) trace(script.scriptName);
 			var ret:Dynamic = script.call(event, args);
 			if(ret == FunkinLua.Function_StopLua && !ignoreStops)
 				break;
 			
 			// had to do this because there is a bug in haxe where Stop != Continue doesnt work
 			var bool:Bool = ret == FunkinLua.Function_Continue;
-			//if (traceCallOnLuas) trace(!bool, ret != 0);
-			if(!bool && ret != 0) {
-				returnVal = cast ret;
-				//if (traceCallOnLuas) trace(returnVal);
-			}
+			if(!bool && ret != 0) returnVal = cast ret;
 		}
-		//if (traceCallOnLuas) trace("------", returnVal);
 		#end
 		return returnVal;
 	}
 
-	public function setOnLuas(variable:String, arg:Dynamic) {
+	public function setOnLuas(variable:String, arg:Any) {
 		#if LUA_ALLOWED
-		for (i in 0...luaArray.length) {
+		for (i in 0...luaArray.length)
 			luaArray[i].set(variable, arg);
-		}
 		#end
 	}
 
@@ -5239,7 +5227,7 @@ class PlayState extends MusicBeatState
 		setOnLuas('misses', songMisses);
 		setOnLuas('hits', songHits);
 
-		var ret:Dynamic = callOnLuas('onRecalculateRating', [], false);
+		var ret:Dynamic = callOnLuas('onRecalculateRating', false);
 		if(ret != FunkinLua.Function_Stop)
 		{
 			if(totalPlayed < 1) //Prevent divide by 0

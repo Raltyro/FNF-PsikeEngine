@@ -719,6 +719,7 @@ class FlxSound extends FlxBasic
 			_amplitudeTime = -1;
 			#if FLX_PITCH
 			_timeScaleAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
+			_realPitch = -1.0;
 			pitch = _pitch;
 			#end
 			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
@@ -842,7 +843,7 @@ class FlxSound extends FlxBasic
 	{
 		_volume = FlxMath.bound(Volume, 0, 1);
 		updateTransform();
-		return Volume;
+		return _volume;
 	}
 
 	inline function get_loaded():Bool
@@ -890,13 +891,19 @@ class FlxSound extends FlxBasic
 	}
 
 	inline function get_amplitudeLeft():Float
+	{
 		return update_amplitude() ? _amplitudeLeft : 0.0;
+	}
 
 	inline function get_amplitudeRight():Float
+	{
 		return update_amplitude() ? _amplitudeRight : 0.0;
+	}
 
 	inline function get_amplitude():Float
+	{
 		return (update_amplitude() && stereo) ? (_amplitudeLeft + _amplitudeRight) * 0.5 : _amplitudeLeft;
+	}
 	#end
 
 	#end
@@ -910,13 +917,14 @@ class FlxSound extends FlxBasic
 	function set_pitch(v:Float):Float
 	{
 		var adjusted:Float = FlxMath.bound(v * _timeScaleAdjust, 0);
-
-		if (_channel != null && _channel.pitch != adjusted) {
+		if (_channel != null && _realPitch != adjusted) {
 			_channel.pitch = adjusted;
-			if (adjusted > 0 && _realPitch <= 0) time = _time;
-			_realPitch = adjusted;
+			if (adjusted > 0 && _realPitch <= 0) {
+				_realPitch = adjusted;
+				time = _time;
+			}
+			else _realPitch = adjusted;
 		}
-
 		return _pitch = FlxMath.bound(v, 0);
 	}
 	#end
@@ -939,7 +947,7 @@ class FlxSound extends FlxBasic
 	function set_time(time:Float):Float
 	{
 		time = FlxMath.bound(time, 0, length - 1);
-		if (playing && _channel.pitch > 0)
+		if (playing && _realPitch > 0)
 		{
 			#if openfl
 			@:privateAccess{

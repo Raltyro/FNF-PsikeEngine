@@ -11,8 +11,9 @@
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
 
-	<!-- NOTE TO SELF: DISABLE THIS IF ISSUES ARE FOUND -->
-	<!-- <haxedef name="LINC_LUA_RELATIVE_DYNAMIC_LIB"/> stable luas PUT AFTER FIRST LINE WITH APP NAME AND ETC -->
+	<haxeflag name="-dce no"/> <!-- this doesnt work lmao -->
+	<haxedef name="queue_experimental_optimization"/>
+	<haxedef name="gl_stats"/>
 
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 		or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"-->
@@ -65,6 +66,7 @@
 	
 	<library name="videos"					preload="true" />
 	<library name="songs"					preload="true" />
+
 	<section if="PRELOAD_ALL">
 		<library name="shared"				preload="true" />
 		<section unless="NO_ASSETSFNF">
@@ -191,27 +193,23 @@
 
 	<!--Allow working memory greater than 1 Gig-->
 	<!--haxedef name="HXCPP_GC_BIG_BLOCKS"-->
-	
+
 	<!-- Show debug traces for hxCodec -->
 	<haxedef name="HXC_DEBUG_TRACE" if="debug" />
-	
+
 	<!--Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode!-->
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 
 	<!--Enable this for Nape release builds for a serious peformance improvement-->
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
-	
+
 	<!--Used for Izzy Engine's crash handler-->
 	<haxedef name="HXCPP_CHECK_POINTER" if="CRASH_HANDLER" />
 	<haxedef name="HXCPP_STACK_LINE" if="CRASH_HANDLER" />
-	
+
 	<!--Allow working memory greater than 1 gig-->
 	<haxedef name="HXCPP_GC_BIG_BLOCKS" if="desktop"/>
-	
-	<haxeflag name="-dce no"/> <!-- this doesnt work lmao -->
-	<haxedef name="queue_experimental_optimization"/>
-	<haxedef name="gl_stats"/>
-	
+
 	<!-- Make git commit hash in the build -->
 	<postbuild cmd="dev/postBuild-win.bat" if="windows" />
 	<postbuild cmd="./dev/postBuild-linux.sh" if="linux" />
