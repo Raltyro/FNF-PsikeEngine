@@ -91,17 +91,17 @@ class FlxSound extends FlxBasic
 	/**
 	 * Stores the average wave amplitude of both stereo channels.
 	 */
-	public var amplitude(get, null):Float;
+	public var amplitude(#if flash default #elseif lime get #end, null):Float;
 
 	/**
 	 * Just the amplitude of the left stereo channel.
 	 */
-	public var amplitudeLeft(get, null):Float;
+	public var amplitudeLeft(#if flash default #elseif lime get #end, null):Float;
 
 	/**
 	 * Just the amplitude of the left stereo channel.
 	 */
-	public var amplitudeRight(get, null):Float;
+	public var amplitudeRight(#if flash default #elseif lime get #end, null):Float;
 
 	/**
 	 * Whether to call `destroy()` when the sound has finished playing.
@@ -358,7 +358,7 @@ class FlxSound extends FlxBasic
 	 */
 	override public function update(elapsed:Float):Void
 	{	
-		if (!playing)
+		if (!playing || _channel == null)
 			return;
 
 		#if FLX_PITCH
@@ -393,6 +393,21 @@ class FlxSound extends FlxBasic
 
 		_volumeAdjust = radialMultiplier;
 		updateTransform();
+
+		#if flash
+		if (_transform.volume > 0)
+		{
+			amplitudeLeft = _channel.leftPeak / _transform.volume;
+			amplitudeRight = _channel.rightPeak / _transform.volume;
+			amplitude = (amplitudeLeft + amplitudeRight) * 0.5;
+		}
+		else
+		{
+			amplitudeLeft = 0;
+			amplitudeRight = 0;
+			amplitude = 0;
+		}
+		#end
 
 		if (endTime != null && _time >= endTime)
 			stopped();
@@ -857,11 +872,11 @@ class FlxSound extends FlxBasic
 	{
 		return channels > 1;
 	}
-	#end
 
-	function update_amplitude():Void
+	#if !flash
+	function update_amplitude():Bool
 	{
-		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return;
+		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return true;
 		@:privateAccess{
 			_channel.__updatePeaks();
 
@@ -871,25 +886,20 @@ class FlxSound extends FlxBasic
 
 		_amplitudeTime = _time;
 		_amplitudeUpdate = false;
+		return true;
 	}
 
-	function get_amplitudeLeft():Float
-	{
-		update_amplitude();
-		return _amplitudeLeft;
-	}
+	inline function get_amplitudeLeft():Float
+		return update_amplitude() ? _amplitudeLeft : 0.0;
 
-	function get_amplitudeRight():Float
-	{
-		update_amplitude();
-		return _amplitudeRight;
-	}
+	inline function get_amplitudeRight():Float
+		return update_amplitude() ? _amplitudeRight : 0.0;
 
-	function get_amplitude():Float
-	{
-		update_amplitude();
-		return channels > 1 ? (_amplitudeLeft + _amplitudeRight) * 0.5 : _amplitudeLeft;
-	}
+	inline function get_amplitude():Float
+		return (update_amplitude() && stereo) ? (_amplitudeLeft + _amplitudeRight) * 0.5 : _amplitudeLeft;
+	#end
+
+	#end
 
 	#if FLX_PITCH
 	inline function get_pitch():Float
@@ -900,9 +910,8 @@ class FlxSound extends FlxBasic
 	function set_pitch(v:Float):Float
 	{
 		var adjusted:Float = FlxMath.bound(v * _timeScaleAdjust, 0);
-		trace(_realPitch, adjusted);
 
-		if (playing && _realPitch != adjusted) {
+		if (_channel != null && _channel.pitch != adjusted) {
 			_channel.pitch = adjusted;
 			if (adjusted > 0 && _realPitch <= 0) time = _time;
 			_realPitch = adjusted;
