@@ -5012,6 +5012,10 @@ class PlayState extends MusicBeatState
 		}
 		luaArray.resize(0);
 
+		#if hscript
+		FunkinLua.hscript = null;
+		#end
+
 		if(!ClientPrefs.controllerMode) {
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
