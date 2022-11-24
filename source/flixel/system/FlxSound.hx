@@ -138,7 +138,7 @@ class FlxSound extends FlxBasic
 	/**
 	 * Alters the pitch of the sound depends on the current FlxG.timeScale. Default is true.
 	 */
-	public var timeScaleBased:Bool;
+	public var timeScaleBased:Bool = true;
 	#end
 
 	/**
@@ -167,7 +167,7 @@ class FlxSound extends FlxBasic
 	 * In case of looping, the point (in milliseconds) from where to restart the sound when it loops back
 	 * @since 4.1.0
 	 */
-	public var loopTime:Float;
+	public var loopTime:Float = 0.0;
 
 	/**
 	 * At which point to stop playing the sound, in milliseconds.
@@ -211,27 +211,27 @@ class FlxSound extends FlxBasic
 	/**
 	 * Internal tracker for amplitudeLeft.
 	 */
-	var _amplitudeLeft:Float;
+	var _amplitudeLeft:Float = 0.0;
 
 	/**
 	 * Internal tracker for amplitudeRight.
 	 */
-	var _amplitudeRight:Float;
+	var _amplitudeRight:Float = 0.0;
 
 	/**
 	 * Internal tracker for sound last position on when amplitude was used.
 	 */
-	var _amplitudeTime:Float;
+	var _amplitudeTime:Float = 0.0;
 
 	/**
 	 * Internal tracker for amplitude update debounce.
 	 */
-	var _amplitudeUpdate:Bool;
+	var _amplitudeUpdate:Bool = false;
 
 	/**
 	 * Internal tracker for sound channel position.
 	 */
-	var _time:Float;
+	var _time:Float = 1.0;
 
 	/**
 	 * Internal tracker for sound length, so that length can still be obtained while a sound is paused, because _sound becomes null.
@@ -242,23 +242,23 @@ class FlxSound extends FlxBasic
 	/**
 	 * Internal tracker for real pitch.
 	 */
-	var _realPitch:Float;
+	var _realPitch:Float = 1.0;
 
 	/**
 	 * Internal tracker for pitch.
 	 */
-	var _pitch:Float;
+	var _pitch:Float = 1.0;
 
 	/**
 	 * Internal tracker for FlxG.timeScale adjustment.
 	 */
-	var _timeScaleAdjust:Float;
+	var _timeScaleAdjust:Float = 1.0;
 	#end
 
 	/**
 	 * Internal tracker for total volume adjustment.
 	 */
-	var _volumeAdjust:Float;
+	var _volumeAdjust:Float = 1.0;
 
 	/**
 	 * Internal tracker for the sound's "target" (for proximity and panning).
@@ -309,7 +309,6 @@ class FlxSound extends FlxBasic
 		_amplitudeLeft = 0.0;
 		_amplitudeRight = 0.0;
 		_amplitudeUpdate = true;
-		timeScaleBased = true;
 		looped = false;
 		loopTime = 0.0;
 		endTime = 0.0;
@@ -317,6 +316,9 @@ class FlxSound extends FlxBasic
 		_radius = 0;
 		_proximityPan = false;
 		visible = false;
+		amplitude = 0;
+		amplitudeLeft = 0;
+		amplitudeRight = 0;
 		autoDestroy = false;
 
 		if (_transform == null)
@@ -355,22 +357,22 @@ class FlxSound extends FlxBasic
 	 * Handles fade out, fade in, panning, proximity, and amplitude operations each frame.
 	 */
 	override public function update(elapsed:Float):Void
-	{
-		#if FLX_PITCH
-		var timeScaleTarget:Float = timeScaleBased ? FlxG.timeScale : 1.0;
-
-		if (_timeScaleAdjust != timeScaleTarget) {
-			_timeScaleAdjust = timeScaleTarget;
-			if (playing) pitch = _pitch;
-		}
-		#end
-		
+	{	
 		if (!playing)
 			return;
 
-		_amplitudeUpdate = true;
-
+		#if FLX_PITCH
+		var timeScaleTarget:Float = timeScaleBased ? FlxG.timeScale : 1.0;
+		if (_timeScaleAdjust != timeScaleTarget) {
+			_timeScaleAdjust = timeScaleTarget;
+			pitch = _pitch;
+		}
 		if (_realPitch > 0) _time = _channel.position;
+		#else
+		_time = _channel.position;
+		#end
+
+		_amplitudeUpdate = true;
 
 		var radialMultiplier:Float = 1.0;
 
@@ -898,10 +900,10 @@ class FlxSound extends FlxBasic
 	function set_pitch(v:Float):Float
 	{
 		var adjusted:Float = FlxMath.bound(v * _timeScaleAdjust, 0);
+		trace(_realPitch, adjusted);
 
-		if (_channel != null && _realPitch != adjusted)
-		{
-			_channel.pitch = _realPitch;
+		if (playing && _realPitch != adjusted) {
+			_channel.pitch = adjusted;
 			if (adjusted > 0 && _realPitch <= 0) time = _time;
 			_realPitch = adjusted;
 		}
@@ -928,7 +930,7 @@ class FlxSound extends FlxBasic
 	function set_time(time:Float):Float
 	{
 		time = FlxMath.bound(time, 0, length - 1);
-		if (playing && _realPitch > 0)
+		if (playing && _channel.pitch > 0)
 		{
 			#if openfl
 			@:privateAccess{
