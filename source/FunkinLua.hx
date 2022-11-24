@@ -976,6 +976,31 @@ class FunkinLua {
 			Reflect.getProperty(getInstance(), group)[index].updateHitbox();
 		});
 
+		//shitass stuff for epic coders like me B)  *image of obama giving himself a medal*
+		Lua_helper.set_static_callback("getObjectOrder", function(l:FunkinLua, obj:String) {
+			var killMe:Array<String> = obj.split('.');
+			var leObj:FlxBasic = getObjectDirectly(killMe[0]);
+			if(killMe.length > 1)
+				leObj = getVarInArray(getPropertyLoopThingWhatever(killMe), killMe[killMe.length-1]);
+
+			if(leObj != null) return getInstance().members.indexOf(leObj);
+			l.luaTrace("getObjectOrder: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
+			return -1;
+		});
+		Lua_helper.set_static_callback("setObjectOrder", function(l:FunkinLua, obj:String, position:Int) {
+			var killMe:Array<String> = obj.split('.');
+			var leObj:FlxBasic = getObjectDirectly(killMe[0]);
+			if(killMe.length > 1)
+				leObj = getVarInArray(getPropertyLoopThingWhatever(killMe), killMe[killMe.length-1]);
+
+			if(leObj != null) {
+				getInstance().remove(leObj, true);
+				getInstance().insert(position, leObj);
+				return;
+			}
+			l.luaTrace("setObjectOrder: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
+		});
+
 		Lua_helper.set_static_callback("screenCenter", function(l:FunkinLua, obj:String, pos:String = 'xy') {
 			var spr:FlxSprite = PlayState.instance.getLuaObject(obj);
 
@@ -2771,7 +2796,7 @@ class FunkinLua {
 
 		if (type != Lua.LUA_TFUNCTION) {
 			if (type > Lua.LUA_TNIL)
-				luaTrace("ERROR ($func)): attempt to call a " + Lua.typename(lua, type) + " value as a callback", false, false, FlxColor.RED);
+				luaTrace('ERROR ($func)): attempt to call a ' + Lua.typename(lua, type) + " value as a callback", false, false, FlxColor.RED);
 
 			Lua.pop(lua, 1);
 			return Function_Continue;
@@ -2781,13 +2806,13 @@ class FunkinLua {
 		var status:Int = Lua.pcall(lua, args != null ? args.length : 0, 1, 0);
 
 		if (status != Lua.LUA_OK) {
-			luaTrace("ERROR ($func)): " + getErrorMessage(status), false, false, FlxColor.RED);
+			luaTrace('ERROR ($func)): ' + getErrorMessage(status), false, false, FlxColor.RED);
 			return Function_Continue;
 		}
 
 		var resultType:Int = Lua.type(lua, -1);
 		if (!resultIsAllowed(resultType)) {
-			luaTrace("WARNING ($func): unsupported returned value type (\"" + Lua.typename(lua, resultType) + "\")", false, false, FlxColor.ORANGE);
+			luaTrace('WARNING ($func): unsupported returned value type ("' + Lua.typename(lua, resultType) + "\")", false, false, FlxColor.ORANGE);
 			Lua.pop(lua, 1);
 			return Function_Continue;
 		}
