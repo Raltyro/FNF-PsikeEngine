@@ -61,7 +61,7 @@ class FunkinLua {
 	public static var Function_StopLua:Dynamic = 2;
 
 	#if hscript
-	public static var allowedHaxeTypes:Array<Dynamic> = [Bool, Int, Float, String, Array];
+	public static var allowedHaxeTypes(default, null):Array<Dynamic> = [Bool, Int, Float, String, Array];
 	public static var hscript:HScript = null;
 	#end
 
@@ -89,7 +89,8 @@ class FunkinLua {
 			#else
 			luaTrace('Error loading lua script: "$script"\n' + error, true, false, FlxColor.RED);
 			#end
-			return stop();
+			stop();
+			return;
 		}
 		trace('lua script "$script" loaded successfully');
 
@@ -99,6 +100,7 @@ class FunkinLua {
 		Lua_helper.link_static_callbacks(lua);
 
 		call('onCreate');
+		if (closed) return stop();
 		#end
 	}
 
@@ -2935,6 +2937,7 @@ class FunkinLua {
 	}
 
 	public function stop() {
+		PlayState.instance.luaArray.remove(this);
 		closed = true;
 
 		#if LUA_ALLOWED
@@ -3051,6 +3054,7 @@ class HScript
 		variables.set('FlxCamera', FlxCamera);
 		variables.set('FlxTimer', FlxTimer);
 		variables.set('FlxTween', FlxTween);
+		//@:noCompletion variables.set('FlxPoint', FlxPoint);
 		variables.set('FlxEase', FlxEase);
 		variables.set('PlayState', PlayState);
 		variables.set('game', PlayState.instance);

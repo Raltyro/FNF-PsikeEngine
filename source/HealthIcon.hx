@@ -1,5 +1,6 @@
 package;
 
+import flixel.graphics.FlxGraphic;
 import flixel.FlxSprite;
 import openfl.utils.Assets as OpenFlAssets;
 
@@ -7,22 +8,36 @@ using StringTools;
 
 class HealthIcon extends FlxSprite
 {
-	public var sprTracker:FlxSprite;
-	private var isOldIcon:Bool = false;
-	private var isPlayer:Bool = false;
-	private var char:String = '';
+	public static var prefix(default, null):String = 'icons/';
+	public static var defaultIcon(default, null):String = 'icon-face';
 
-	public function new(char:String = 'bf', isPlayer:Bool = false)
-	{
-		super();
-		isOldIcon = (char == 'bf-old');
-		this.isPlayer = isPlayer;
-		changeIcon(char);
-		scrollFactor.set();
+	public var sprTracker:FlxSprite;
+	public var isOldIcon(get, null):Bool;
+	public var isPlayer:Bool = false;
+
+	private var char:String = '';
+	private var availableStates:Int = 1;
+	private var state:Int = 0;
+
+	public static function returnGraphic(char:String, ?defaultIfMissing:Bool = false):FlxGraphic {
+		var path:String = prefix + char;
+		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) path = prefix + 'icon-' + char; //Older versions of psych engine's support
+		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) { //Prevents crash from missing icon
+			if (!defaultIfMissing) return null;
+			path = prefix + defaultIcon;
+		}
+		return Paths.image(path);
 	}
 
-	override function update(elapsed:Float)
-	{
+	public function new(char:String = 'bf', isPlayer:Bool = false) {
+		this.isPlayer = isPlayer;
+
+		super();
+		scrollFactor.set();
+		changeIcon(char);
+	}
+
+	override function update(elapsed:Float) {
 		super.update(elapsed);
 
 		if (sprTracker != null)
@@ -30,43 +45,50 @@ class HealthIcon extends FlxSprite
 	}
 
 	public function swapOldIcon() {
-		if(isOldIcon = !isOldIcon) changeIcon('bf-old');
-		else changeIcon('bf');
+		if (isOldIcon) changeIcon(char.substr(0, char.length - 4));
+		else changeIcon(char + '-old');
 	}
 
 	private var iconOffsets:Array<Float> = [0, 0];
 	public function changeIcon(char:String) {
-		if(this.char != char) {
-			var name:String = 'icons/' + char;
-			if(!Paths.fileExists('images/' + name + '.png', IMAGE)) name = 'icons/icon-' + char; //Older versions of psych engine's support
-			if(!Paths.fileExists('images/' + name + '.png', IMAGE)) name = 'icons/icon-face'; //Prevents crash from missing icon
-			var file:Dynamic = Paths.image(name);
+		if (this.char == char) return;
+		var graph:FlxGraphic = returnGraphic(char, true);
 
-			loadGraphic(file); //Load stupidly first for getting the file size
-			loadGraphic(file, true, Math.floor(width / 2), Math.floor(height)); //Then load it fr
-			iconOffsets[0] = (width - 150) / 2;
-			iconOffsets[1] = (width - 150) / 2;
+		if (graph == null) return;
+		var ratio:Float = graph.width / graph.height;
+		availableStates = Math.round(ratio);
+		this.char = char;
+
+		iconOffsets[1] = iconOffsets[0] = 0;
+		if (availableStates <= 1) {
+			loadGraphic(graph);
 			updateHitbox();
-
-			animation.add(char, [0, 1], 0, false, isPlayer);
-			animation.play(char);
-			this.char = char;
-
-			antialiasing = ClientPrefs.globalAntialiasing;
-			if(char.endsWith('-pixel')) {
-				antialiasing = false;
-			}
+			state = 0;
+			return;
 		}
+		loadGraphic(graph, true, Math.floor(graph.width / availableStates), graph.height);
+		updateHitbox();
+
+		animation.add(char, [for (i in 0...availableStates) i], 0, false, isPlayer);
+		animation.play(char);
+
+		antialiasing = !char.endsWith('-pixel');
 	}
 
-	override function updateHitbox()
-	{
+	public function setState(state:Int) {
+		if (state >= availableStates) state = 0;
+		if (this.state == state || animation.curAnim == null) return;
+		animation.curAnim.curFrame = this.state = state;
+	}
+
+	override function updateHitbox() {
 		super.updateHitbox();
-		offset.x = iconOffsets[0];
-		offset.y = iconOffsets[1];
+		offset.set(iconOffsets[0], iconOffsets[1]);
 	}
 
-	public function getCharacter():String {
+	public function getCharacter():String
 		return char;
-	}
+
+	inline function get_isOldIcon():Bool
+		return char.substr(-4, 3) == '-old';
 }

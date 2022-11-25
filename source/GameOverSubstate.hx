@@ -13,7 +13,7 @@ import flixel.tweens.FlxTween;
 class GameOverSubstate extends MusicBeatSubstate
 {
 	public var boyfriend:Boyfriend;
-	
+
 	var bfMidPoint:FlxPoint;
 	var camFollow:FlxPoint;
 	var camFollowPos:FlxObject;
@@ -36,16 +36,24 @@ class GameOverSubstate extends MusicBeatSubstate
 		endSoundName = 'gameOverEnd';
 	}
 
-	override function create()
-	{
+	public static function cache() {
+		Paths.sound(deathSoundName);
+		Paths.music(loopSoundName);
+		Paths.music(endSoundName);
+
+		if (PlayState.instance != null)
+			PlayState.instance.gameOverChar = new Boyfriend(0, 0, characterName);
+	}
+
+	override function create() {
 		instance = this;
 		PlayState.instance.callOnLuas('onGameOverStart', []);
 		Paths.compress();
-		
+
 		FlxG.sound.play(Paths.sound(deathSoundName));
 
 		super.create();
-		
+
 		boyfriend.playAnim('firstDeath');
 		boyfriend.animation.frameIndex = 0;
 	}
@@ -58,7 +66,7 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		Conductor.songPosition = 0;
 
-		boyfriend = new Boyfriend(x, y, characterName);
+		boyfriend = getBoyfriend(x, y);
 		boyfriend.x += boyfriend.positionArray[0];
 		boyfriend.y += boyfriend.positionArray[1];
 		add(boyfriend);
@@ -79,8 +87,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	}
 
 	var isFollowingAlready:Bool = false;
-	override function update(elapsed:Float)
-	{
+	override function update(elapsed:Float) {
 		super.update(elapsed);
 
 		PlayState.instance.callOnLuas('onUpdate', [elapsed]);
@@ -131,10 +138,7 @@ class GameOverSubstate extends MusicBeatSubstate
 					//if(!ClientPrefs.cursing) exclude = [1, 3, 8, 13, 17, 21];
 
 					FlxG.sound.play(Paths.sound('jeffGameover/jeffGameover-' + FlxG.random.int(1, 25, exclude)), 1, false, null, true, function() {
-						if(!isEnding)
-						{
-							FlxG.sound.music.fadeIn(0.2, 1, 4);
-						}
+						if(!isEnding) FlxG.sound.music.fadeIn(0.2, 1, 4);
 					});
 				}
 				else
@@ -184,12 +188,23 @@ class GameOverSubstate extends MusicBeatSubstate
 			PlayState.instance.callOnLuas('onGameOverConfirm', [true]);
 		}
 	}
-	
-	public static function cache() {
-		Paths.sound(deathSoundName);
-		Paths.music(loopSoundName);
-		Paths.music(endSoundName);
-		
-		Character.cacheCharacter(characterName);
+
+	private function getBoyfriend(x:Float, y:Float):Boyfriend {
+		var ins:PlayState = PlayState.instance;
+		if (ins != null) {
+			var bf = ins.gameOverChar;
+			if (bf != null && bf.curCharacter == characterName) {
+				bf.setPosition(x, y);
+				return bf;
+			}
+		}
+
+		var bf = ins.boyfriendMap.get(characterName);
+		if (bf != null) {
+			bf.setPosition(x, y);
+			return bf;
+		}
+
+		return new Boyfriend(x, y, characterName);
 	}
 }

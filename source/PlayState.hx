@@ -144,6 +144,7 @@ class PlayState extends MusicBeatState
 	public var dad:Character = null;
 	public var gf:Character = null;
 	public var boyfriend:Boyfriend = null;
+	public var gameOverChar:Boyfriend = null;
 
 	public var notes:FlxTypedGroup<Note>;
 	public var unspawnNotes:Array<Note> = [];
@@ -304,7 +305,8 @@ class PlayState extends MusicBeatState
 	private var debugKeysCharacter:Array<FlxKey>;
 
 	// Less laggy controls
-	private var keysArray:Array<Dynamic>;
+	private var keysArray(default, set):Array<Dynamic>;
+	private var _keyInputs:Array<Array<FlxKey>>;
 	private var controlArray:Array<String>;
 
 	var precacheList:Map<String, String> = new Map<String, String>();
@@ -1530,8 +1532,8 @@ class PlayState extends MusicBeatState
 					startCharacterPos(newBoyfriend);
 					newBoyfriend.alpha = 0.00001;
 					startCharacterLua(newBoyfriend.curCharacter);
+					HealthIcon.returnGraphic(newBoyfriend.healthIcon);
 				}
-
 			case 1:
 				if(!dadMap.exists(newCharacter)) {
 					var newDad:Character = new Character(0, 0, newCharacter);
@@ -1540,8 +1542,8 @@ class PlayState extends MusicBeatState
 					startCharacterPos(newDad, true);
 					newDad.alpha = 0.00001;
 					startCharacterLua(newDad.curCharacter);
+					HealthIcon.returnGraphic(newDad.healthIcon);
 				}
-
 			case 2:
 				if(gf != null && !gfMap.exists(newCharacter)) {
 					var newGf:Character = new Character(0, 0, newCharacter);
@@ -1551,6 +1553,7 @@ class PlayState extends MusicBeatState
 					startCharacterPos(newGf);
 					newGf.alpha = 0.00001;
 					startCharacterLua(newGf.curCharacter);
+					HealthIcon.returnGraphic(newGf.healthIcon);
 				}
 		}
 	}
@@ -3077,15 +3080,18 @@ class PlayState extends MusicBeatState
 		if (health > 2)
 			health = 2;
 
-		if (healthBar.percent < 20)
-			iconP1.animation.curAnim.curFrame = 1;
-		else
-			iconP1.animation.curAnim.curFrame = 0;
-
-		if (healthBar.percent > 80)
-			iconP2.animation.curAnim.curFrame = 1;
-		else
-			iconP2.animation.curAnim.curFrame = 0;
+		if (healthBar.percent < 20) {
+			iconP1.setState(1);
+			iconP2.setState(2);
+		}
+		else if (healthBar.percent > 80) {
+			iconP1.setState(2);
+			iconP2.setState(1);
+		}
+		else {
+			iconP1.setState(0);
+			iconP2.setState(0);
+		}
 
 		if (FlxG.keys.anyJustPressed(debugKeysCharacter) && !endingSong && !inCutscene) {
 			persistentUpdate = false;
@@ -4334,92 +4340,81 @@ class PlayState extends MusicBeatState
 	}
 
 	public var strumsBlocked:Array<Bool> = [];
-	private function onKeyPress(event:KeyboardEvent):Void
-	{
+	private function onKeyPress(event:KeyboardEvent):Void {
+		if (cpuControlled || !startedCountdown || paused) return;
+
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = getKeyFromEvent(eventKey);
-		//trace('Pressed: ' + eventKey);
+		if (key < 0 || !(ClientPrefs.controllerMode || FlxG.keys.checkStatus(eventKey, JUST_PRESSED))) return;
 
-		if (!cpuControlled && startedCountdown && !paused && key > -1 && (FlxG.keys.checkStatus(eventKey, JUST_PRESSED) || ClientPrefs.controllerMode))
-		{
-			if(!boyfriend.stunned && generatedMusic && !endingSong)
-			{
-				//more accurate hit time for the ratings?
-				var lastTime:Float = Conductor.songPosition;
-				Conductor.songPosition = FlxG.sound.music.time;
+		if(!boyfriend.stunned && generatedMusic && !endingSong) {
+			var lastTime:Float = Conductor.songPosition;
+			Conductor.songPosition = FlxG.sound.music.time;
 
-				var canMiss:Bool = !ClientPrefs.ghostTapping;
+			var sortedNotesList:Array<Note> = [];
+			var delta:Float = Conductor.songPosition - lastTime;
+			var canMiss:Bool = !ClientPrefs.ghostTapping;
+			var notesStopped:Bool = false;
 
-				// heavily based on my own code LOL if it aint broke dont fix it
-				var pressNotes:Array<Note> = [];
-				//var notesDatas:Array<Int> = [];
-				var notesStopped:Bool = false;
-
-				var sortedNotesList:Array<Note> = [];
-				var delta:Float = Conductor.songPosition - lastTime;
-				notes.forEachAlive(function(daNote:Note)
-				{
-					if (strumsBlocked[daNote.noteData] != true && daNote.mustPress && !daNote.wasGoodHit && !daNote.isSustainNote && !daNote.blockHit)
-					{
-						if (!daNote.canBeHit) daNote.update(delta);
-						if (daNote.canBeHit && !daNote.tooLate) {
-							if(daNote.noteData == key)
-							{
-								sortedNotesList.push(daNote);
-								//notesDatas.push(daNote.noteData);
-							}
-							canMiss = true;
+			notes.forEachAlive(function(daNote:Note) {
+				if (!strumsBlocked[daNote.noteData] && daNote.mustPress && !daNote.wasGoodHit && !daNote.isSustainNote && !daNote.blockHit) {
+					if (!daNote.canBeHit && daNote.checkDiff(Conductor.songPosition)) daNote.update(delta);
+					if (daNote.canBeHit && !daNote.tooLate) {
+						if(daNote.noteData == key) {
+							sortedNotesList.push(daNote);
+							//notesDatas.push(daNote.noteData);
 						}
-					}
-				});
-				sortedNotesList.sort(sortHitNotes);
-
-				if (sortedNotesList.length > 0) {
-					for (epicNote in sortedNotesList)
-					{
-						for (doubleNote in pressNotes) {
-							if (Math.abs(doubleNote.strumTime - epicNote.strumTime) < 1) {
-								doubleNote.kill();
-								notes.remove(doubleNote, true);
-								doubleNote.destroy();
-							} else
-								notesStopped = true;
-						}
-
-						// eee jack detection before was not super good
-						if (!notesStopped) {
-							goodNoteHit(epicNote);
-							pressNotes.push(epicNote);
-						}
-
+						canMiss = true;
 					}
 				}
-				else{
-					callOnLuas('onGhostTap', [key]);
-					if (canMiss) {
-						noteMissPress(key);
+			});
+			sortedNotesList.sort(sortHitNotes);
+
+			var pressNotes:Array<Note> = [];
+
+			if (sortedNotesList.length > 0) {
+				for (epicNote in sortedNotesList) {
+					for (doubleNote in pressNotes) {
+						if (Math.abs(doubleNote.strumTime - epicNote.strumTime) < 3) {
+							doubleNote.kill();
+							notes.remove(doubleNote, true);
+							doubleNote.destroy();
+						}
+						else
+							notesStopped = true;
+					}
+
+					// eee jack detection before was not super good
+					if (!notesStopped) {
+						goodNoteHit(epicNote);
+						pressNotes.push(epicNote);
 					}
 				}
-
-				// I dunno what you need this for but here you go
-				//									- Shubs
-
-				// Shubs, this is for the "Just the Two of Us" achievement lol
-				//									- Shadow Mario
-				keysPressed[key] = true;
-
-				//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
-				//Conductor.songPosition = lastTime;
+			}
+			else {
+				callOnLuas('onGhostTap', [key]);
+				if (canMiss) {
+					noteMissPress(key);
+				}
 			}
 
-			var spr:StrumNote = playerStrums.members[key];
-			if(strumsBlocked[key] != true && spr != null && spr.animation.curAnim.name != 'confirm')
-			{
-				spr.playAnim('pressed');
-				spr.resetAnim = 0;
-			}
-			callOnLuas('onKeyPress', [key]);
+			// I dunno what you need this for but here you go
+			//									- Shubs
+
+			// Shubs, this is for the "Just the Two of Us" achievement lol
+			//									- Shadow Mario
+			keysPressed[key] = true;
+
+			//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
+			//Conductor.songPosition = lastTime;
 		}
+
+		var spr:StrumNote = playerStrums.members[key];
+		if(strumsBlocked[key] != true && spr != null && spr.animation.curAnim.name != 'confirm') {
+			spr.playAnim('pressed');
+			spr.resetAnim = 0;
+		}
+		callOnLuas('onKeyPress', [key]);
 		//trace('pressed: ' + controlArray);
 	}
 
@@ -4452,22 +4447,24 @@ class PlayState extends MusicBeatState
 		//trace('released: ' + controlArray);
 	}
 
-	private function getKeyFromEvent(key:FlxKey):Int
-	{
-		if(key != NONE)
-		{
-			for (i in 0...keysArray.length)
-			{
-				for (j in 0...keysArray[i].length)
-				{
-					if(key == keysArray[i][j])
-					{
-						return i;
-					}
-				}
-			}
+	private function getKeyFromEvent(key:FlxKey):Int {
+		if (key != NONE) {
+			for (i in 0..._keyInputs.length) if (_keyInputs[i].contains(key)) return i;
 		}
 		return -1;
+	}
+
+	function set_keysArray(v:Array<Dynamic>):Array<Dynamic> {
+		if (_keyInputs == null) _keyInputs = [];
+		else _keyInputs.resize(v.length);
+
+		for (i in 0...v.length) {
+			if (_keyInputs[i] == null) _keyInputs[i] = [];
+			else _keyInputs[i].resize(v[i].length);
+			for (v in 0...v[i]) _keyInputs[i].push(v);
+		}
+
+		return keysArray = v;
 	}
 
 	// Hold notes
