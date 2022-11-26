@@ -4360,10 +4360,7 @@ class PlayState extends MusicBeatState
 				if (!strumsBlocked[daNote.noteData] && daNote.mustPress && !daNote.wasGoodHit && !daNote.isSustainNote && !daNote.blockHit) {
 					if (!daNote.canBeHit && daNote.checkDiff(Conductor.songPosition)) daNote.update(delta);
 					if (daNote.canBeHit && !daNote.tooLate) {
-						if(daNote.noteData == key) {
-							sortedNotesList.push(daNote);
-							//notesDatas.push(daNote.noteData);
-						}
+						if (daNote.noteData == key) sortedNotesList.push(daNote);
 						canMiss = true;
 					}
 				}
@@ -4458,12 +4455,7 @@ class PlayState extends MusicBeatState
 		if (_keyInputs == null) _keyInputs = [];
 		else _keyInputs.resize(v.length);
 
-		for (i in 0...v.length) {
-			if (_keyInputs[i] == null) _keyInputs[i] = [];
-			else _keyInputs[i].resize(v[i].length);
-			for (v in 0...v[i]) _keyInputs[i].push(v);
-		}
-
+		for (i in 0...v.length) _keyInputs[i] = v[i];
 		return keysArray = v;
 	}
 
