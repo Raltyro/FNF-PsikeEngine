@@ -43,6 +43,7 @@ import lime.utils.Assets;
 import openfl.Lib;
 import openfl.display.BlendMode;
 import openfl.display.StageQuality;
+import openfl.display.BitmapData;
 import openfl.filters.BitmapFilter;
 import openfl.utils.Assets as OpenFlAssets;
 import editors.ChartingState;
@@ -1309,10 +1310,9 @@ class PlayState extends MusicBeatState
 
 		var music:FlxSound = FlxG.sound.music;
 		if (music == null) music = FlxG.sound.music = new FlxSound();
-		music.loadEmbedded(Paths.inst(PlayState.SONG.song), false);
-		music.pitch = playbackRate;
-		music.volume = 1;
+		Paths.inst(PlayState.SONG.song);
 		music.persist = true;
+		music.volume = 1;
 
 		Paths.clearUnusedMemory();
 		Paths.compress(4);
@@ -2379,8 +2379,11 @@ class PlayState extends MusicBeatState
 		lastReportedPlayheadPosition = 0;
 		
 		var music:FlxSound = FlxG.sound.music;
-		
+		music.loadEmbedded(Paths.inst(PlayState.SONG.song), false);
 		music.onComplete = finishSong.bind();
+		music.pitch = playbackRate;
+		music.volume = 1;
+		music.play();
 		vocals.play();
 		
 		if (startOnTime > 0) setSongTime(startOnTime - 500);
@@ -4995,9 +4998,12 @@ class PlayState extends MusicBeatState
 		if (!Std.isOfType(FlxG.game._requestedState, PlayState))
 			Paths.clearStoredMemory();
 
-		for (lua in luaArray) {
+		var i:Int = luaArray.length - 1;
+		while (i >= 0) {
+			var lua:FunkinLua = luaArray[i];
 			lua.call('onDestroy');
 			lua.stop();
+			i--;
 		}
 		luaArray.resize(0);
 

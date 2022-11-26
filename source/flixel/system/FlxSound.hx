@@ -358,7 +358,7 @@ class FlxSound extends FlxBasic
 	 */
 	override public function update(elapsed:Float):Void
 	{	
-		if (!playing || _channel == null)
+		if (!playing)
 			return;
 
 		#if FLX_PITCH
@@ -366,6 +366,7 @@ class FlxSound extends FlxBasic
 		if (_timeScaleAdjust != timeScaleTarget) {
 			_timeScaleAdjust = timeScaleTarget;
 			pitch = _pitch;
+			if (_channel == null) return;
 		}
 		if (_realPitch > 0) _time = _channel.position;
 		#else

@@ -83,8 +83,8 @@ class FunkinLua {
 		var result:Int = LuaL.dofile(lua, script);
 		if (result != 0) {
 			var error:String = getErrorMessage();
-			#if windows
 			trace('Error on lua script "$script"! ' + error);
+			#if windows
 			lime.app.Application.current.window.alert(error, 'Error on lua script! "$script"');
 			#else
 			luaTrace('Error loading lua script: "$script"\n' + error, true, false, FlxColor.RED);

@@ -65,7 +65,6 @@ class PauseSubState extends MusicBeatSubstate
 		}
 		difficultyChoices.push('BACK');
 
-
 		pauseMusic = new FlxSound();
 		if(songName != null) {
 			pauseMusic.loadEmbedded(Paths.music(songName), true, true);
@@ -73,7 +72,6 @@ class PauseSubState extends MusicBeatSubstate
 			pauseMusic.loadEmbedded(Paths.music(Paths.formatToSongPath(ClientPrefs.pauseMusic)), true, true);
 		}
 		pauseMusic.volume = 0;
-		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length / 2)));
 
 		FlxG.sound.list.add(pauseMusic);
 
@@ -147,6 +145,7 @@ class PauseSubState extends MusicBeatSubstate
 			FlxG.sound.music.pause();
 			PlayState.instance.vocals.pause();
 		}
+		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length / 2)));
 	}
 
 	var holdTime:Float = 0;

@@ -155,7 +155,7 @@ class Paths
 		// run the garbage collector for good measure lmfao
 		//System.gc();
 
-		compress();
+		compress(3);
 	}
 
 	// define the locally tracked assets
@@ -179,7 +179,7 @@ class Paths
 		// flags everything to be cleared out next unused memory clear
 		localTrackedAssets = [];
 		openfl.Assets.cache.clear("songs");
-		compress();
+		compress(3);
 	}
 
 	static public var currentModDirectory:String = '';
