@@ -3,8 +3,7 @@ package;
 // STOLEN FROM HAXEFLIXEL DEMO LOL
 import flixel.system.FlxAssets.FlxShader;
 
-enum WiggleEffectType
-{
+enum WiggleEffectType {
 	DREAMY;
 	WAVY;
 	HEAT_WAVE_HORIZONTAL;
@@ -12,60 +11,51 @@ enum WiggleEffectType
 	FLAG;
 }
 
-class WiggleEffect
-{
+class WiggleEffect {
 	public var shader(default, null):WiggleShader = new WiggleShader();
 	public var effectType(default, set):WiggleEffectType = DREAMY;
 	public var waveSpeed(default, set):Float = 0;
 	public var waveFrequency(default, set):Float = 0;
 	public var waveAmplitude(default, set):Float = 0;
 
-	public function new():Void
-	{
+	public function new():Void {
 		shader.uTime.value = [0];
 	}
 
-	public function update(elapsed:Float):Void
-	{
+	public function update(elapsed:Float):Void {
 		shader.uTime.value[0] += elapsed;
 	}
 
-	public function setValue(value:Float):Void
-	{
+	public function setValue(value:Float):Void {
 		shader.uTime.value[0] = value;
 	}
 
-	function set_effectType(v:WiggleEffectType):WiggleEffectType
-	{
+	function set_effectType(v:WiggleEffectType):WiggleEffectType {
 		effectType = v;
 		shader.effectType.value = [WiggleEffectType.getConstructors().indexOf(Std.string(v))];
 		return v;
 	}
 
-	function set_waveSpeed(v:Float):Float
-	{
+	function set_waveSpeed(v:Float):Float {
 		waveSpeed = v;
 		shader.uSpeed.value = [waveSpeed];
 		return v;
 	}
 
-	function set_waveFrequency(v:Float):Float
-	{
+	function set_waveFrequency(v:Float):Float {
 		waveFrequency = v;
 		shader.uFrequency.value = [waveFrequency];
 		return v;
 	}
 
-	function set_waveAmplitude(v:Float):Float
-	{
+	function set_waveAmplitude(v:Float):Float {
 		waveAmplitude = v;
 		shader.uWaveAmplitude.value = [waveAmplitude];
 		return v;
 	}
 }
 
-class WiggleShader extends FlxShader
-{
+class WiggleShader extends FlxShader {
 	@:glFragmentSource('
 		#pragma header
 		//uniform float tx, ty; // x,y waves phase
@@ -126,13 +116,13 @@ class WiggleShader extends FlxShader
 			return vec2(pt.x + x, pt.y + y);
 		}
 
-		void main()
-		{
+		void main() {
 			vec2 uv = sineWave(openfl_TextureCoordv);
-			gl_FragColor = texture2D(bitmap, uv);
-		}')
-	public function new()
-	{
+			gl_FragColor = flixel_texture2D(bitmap, uv);
+		}
+	')
+
+	public function new() {
 		super();
 	}
 }

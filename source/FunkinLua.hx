@@ -805,6 +805,19 @@ class FunkinLua {
 			return false;
 		});
 
+		Lua_helper.set_static_callback("removeFromGroup", function(_, obj:String, index:Int, dontDestroy:Bool = false) {
+			if(Std.isOfType(Reflect.getProperty(getInstance(), obj), FlxTypedGroup)) {
+				var sex = Reflect.getProperty(getInstance(), obj).members[index];
+				if(!dontDestroy)
+					sex.kill();
+				Reflect.getProperty(getInstance(), obj).remove(sex, true);
+				if(!dontDestroy)
+					sex.destroy();
+				return;
+			}
+			Reflect.getProperty(getInstance(), obj).remove(Reflect.getProperty(getInstance(), obj)[index]);
+		});
+
 		Lua_helper.set_static_callback("getPropertyFromClass", function(_, classVar:String, variable:String) {
 			@:privateAccess
 			var killMe:Array<String> = variable.split('.');
@@ -2533,10 +2546,16 @@ class FunkinLua {
 
 
 		// Other stuff
-		Lua_helper.set_static_callback("debugPrint", function(l:FunkinLua, ...texts:String) {
-			var text:String = '';
-			for (s in texts) text += s;
-			l.luaTrace(text, true, false);
+		Lua_helper.set_static_callback("debugPrint", true, function(lua:State, fl:FunkinLua) {
+			var texts:Array<Dynamic> = Lua_helper.getarguments(lua);
+			if (texts.length <= 0) return 0;
+			var text:String = Std.isOfType(texts[0], String) ? texts[0] : '';
+			for (i in 1...texts.length) {
+				var s:String = texts[i];
+				if (Std.isOfType(s, String)) text += ", " + s;
+			}
+			fl.luaTrace(text, true, false);
+			return 0;
 		});
 
 		Lua_helper.set_static_callback("changePresence", function(l:FunkinLua, details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float) {

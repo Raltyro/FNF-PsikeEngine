@@ -117,7 +117,7 @@ class Main extends Sprite
 	
 	var woah:Int = 0;
 	private function onFocusLost() {
-		woah = 8;
+		woah = 3;
 		focused = false;
 	}
 	

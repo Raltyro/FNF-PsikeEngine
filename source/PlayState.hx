@@ -277,7 +277,7 @@ class PlayState extends MusicBeatState
 
 	public var inCutscene:Bool = false;
 	public var skipCountdown:Bool = false;
-	var songLength:Float = 0;
+	public var songLength:Float = 0;
 
 	public var boyfriendCameraOffset:Array<Float> = null;
 	public var opponentCameraOffset:Array<Float> = null;
@@ -306,8 +306,7 @@ class PlayState extends MusicBeatState
 	private var debugKeysCharacter:Array<FlxKey>;
 
 	// Less laggy controls
-	private var keysArray(default, set):Array<Dynamic>;
-	private var _keyInputs:Array<Array<FlxKey>>;
+	private var keysArray:Array<Dynamic>;
 	private var controlArray:Array<String>;
 
 	var precacheList:Map<String, String> = new Map<String, String>();
@@ -2383,6 +2382,7 @@ class PlayState extends MusicBeatState
 		music.onComplete = finishSong.bind();
 		music.pitch = playbackRate;
 		music.volume = 1;
+		music.time = 0;
 		music.play();
 		vocals.play();
 		
@@ -4449,17 +4449,9 @@ class PlayState extends MusicBeatState
 
 	private function getKeyFromEvent(key:FlxKey):Int {
 		if (key != NONE) {
-			for (i in 0..._keyInputs.length) if (_keyInputs[i].contains(key)) return i;
+			for (i in 0...keysArray.length) if (keysArray[i].contains(key)) return i;
 		}
 		return -1;
-	}
-
-	function set_keysArray(v:Array<Dynamic>):Array<Dynamic> {
-		if (_keyInputs == null) _keyInputs = [];
-		else _keyInputs.resize(v.length);
-
-		for (i in 0...v.length) _keyInputs[i] = v[i];
-		return keysArray = v;
 	}
 
 	// Hold notes

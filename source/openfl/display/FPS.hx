@@ -1,6 +1,7 @@
 package openfl.display;
 
 import haxe.Timer;
+import openfl.display.BlendMode;
 import openfl.events.Event;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
@@ -51,18 +52,14 @@ import neko.vm.Gc;
 @:fileXml('tags="haxe,release"')
 @:noDebug
 #end
-class FPS extends TextField
-{
-	/**
-		The current frame rate, expressed using frames-per-second
-	**/
+class FPS extends TextField {
 	public var currentFPS(default, null):Int;
 	public var currentMem(default, null):Float;
 	public var currentMemPeak(default, null):Float;
-	
+
 	public var currentGcMem(default, null):Float;
 	public var currentGcMemPeak(default, null):Float;
-	
+
 	public var showFPS:Bool = true;
 	public var showMem:Bool = false;
 	public var showMemPeak:Bool = false;
@@ -74,58 +71,65 @@ class FPS extends TextField
 	@:noCompletion private var currentTime:Float;
 	@:noCompletion private var times:Array<Float>;
 
-	public function new(x:Float = 3, y:Float = 3, color:Int = 0x000000, showFPS:Bool = true, showMem:Bool = false)
-	{
+	public function new(x:Float = 3, y:Float = 3, color:Int = 0x000000, showFPS:Bool = true, showMem:Bool = false) {
 		super();
+		this.x = x;
+		this.y = y;
+
+		selectable = false;
+		mouseEnabled = false;
+
+		defaultTextFormat = new TextFormat('assets/fonts/vcr.ttf', 14, color);
+		//blendMode = BlendMode.INVERT;
+		autoSize = LEFT;
+		multiline = true;
+		//alpha = .8;
+		width = 400;
+		height = 70;
 
 		currentFPS = 0;
 		currentMem = 0;
 		currentMemPeak = 0;
-		
-		this.x = x;
-		this.y = y;
-		selectable = false;
-		mouseEnabled = false;
-		defaultTextFormat = new TextFormat('assets/fonts/vcr.ttf', 14, color);
-
-		width = 400;
-		height = 70;
-		
-		autoSize = LEFT;
-		multiline = true;
 
 		cacheCount = 0;
 		currentTime = 0;
 		times = [];
 
 		#if flash
-		addEventListener(Event.ENTER_FRAME, function(e)
-		{
-			var time = Lib.getTimer();
-			__enterFrame(time - currentTime);
+		addEventListener(Event.ENTER_FRAME, function(_) {
+			__enterFrame(Lib.getTimer());
 		});
 		#end
 	}
 
-	// Event Handlers
 	@:noCompletion
-	private #if !flash override #end function __enterFrame(deltaTime:Float):Void
-	{
-		var canRender:Bool = visible && (showFPS || showMem || showMemPeak);
-		
-		currentTime += deltaTime;
+	#if flash
+	private function __enterFrame(time:Float):Void {
+		currentTime = time;
+	#else
+	private override function __enterFrame(_):Void {
+		currentTime = Timer.stamp();
+	#end
 		times.push(currentTime);
 
-		while (times[0] < currentTime - 1000)
-		{
+		while (times[0] < currentTime - #if flash 1000 #else 1 #end) {
 			times.shift();
 		}
 
 		var currentCount = times.length;
-		var fps = (currentCount + cacheCount) / 2;
+		var fps = currentCount;//(currentCount + cacheCount) / 2;
 		currentFPS = Math.round(fps);
-		//if (currentFPS > ClientPrefs.framerate) currentFPS = ClientPrefs.framerate;
-		
+
+		if (!visible || !(showFPS || showMem || showMemPeak)) {
+			if (text != '') text = '';
+			cacheCount = currentCount;
+			return;
+		}
+		if (currentCount == cacheCount) {
+			cacheCount = currentCount;
+			return;
+		}
+
 		currentGcMem = Math.abs((get_gcMemory() / 1024) / 1000);
 		if (currentGcMem > currentGcMemPeak) currentGcMemPeak = currentGcMem;
 		#if (windows || linux || mac)
@@ -138,68 +142,55 @@ class FPS extends TextField
 		currentMemPeak = currentGcMemPeak;
 		#end
 
-		if (canRender) {
-			if (currentCount != cacheCount) {
-				if (currentMem > 3000 || fps <= ClientPrefs.framerate / 2)
-					textColor = 0xFFFF0000;
-				else
-					textColor = 0xFFFFFFFF;
-				
-				text = (
-					(showFPS ? ("FPS: " + currentFPS + " (" + CoolUtil.truncateFloat((1 / fps) * 1000) + "ms)\n") : "") +
-					(
-						(
-							showMem && showMemPeak ? ("MEM / PEAK: " + CoolUtil.truncateFloat(currentMem) + " MB / " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
-							showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
-							showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
-							""
-						)
-						#if (windows || linux || mac) + (
-							showGc ? (
-								showMem && showMemPeak ? ("GC MEM / PEAK: " + CoolUtil.truncateFloat(currentGcMem) + " MB / " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
-								showMem ? ("GC MEM: " + CoolUtil.truncateFloat(currentGcMem) + " MB\n") :
-								showMemPeak ? ("GC MEM PEAK: " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
-								""
-							) :
-							""
-						)
-						#end
-					) +
-					(
-						showGLStats ?
-						(
-							#if (gl_stats && !disable_cffi && (!html5 || !canvas))
-							"DRAWS: " + Context3DStats.totalDrawCalls() + "\n"
-							#else
-							"DRAWS: 0\n"
-							#end
-						)
-						: ""
-					)
-				);
+		if (currentMem > 3000 || fps <= ClientPrefs.framerate / 2) textColor = 0xFFFF0000;
+		else textColor = 0xFFFFFFFF;
 
-				text += "\n";
-			}
-			
-			if (inEditor) {
-				y = (Lib.current.stage.stageHeight - 3) - (
-					16 *
-					(
-						(showFPS ? 1 : 0) +
-						((showMem || showMemPeak) ? 1 : 0) +
-						#if (windows || linux || mac) (showGc ? 1 : 0) + #end
-						(showGLStats ? 1 : 0)
-					)
-				);
-			}
-			else {
-				y = 3;
-			}
+		text = (
+			(showFPS ? ("FPS: " + currentFPS + " (" + CoolUtil.truncateFloat((1 / currentCount) * 1000) + "ms)\n") : "") +
+			(
+				(
+					showMem && showMemPeak ? ("MEM / PEAK: " + CoolUtil.truncateFloat(currentMem) + " MB / " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+					showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
+					showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+					""
+				)
+				#if (windows || linux || mac) + (
+					showGc ? (
+						showMem && showMemPeak ? ("GC MEM / PEAK: " + CoolUtil.truncateFloat(currentGcMem) + " MB / " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+						showMem ? ("GC MEM: " + CoolUtil.truncateFloat(currentGcMem) + " MB\n") :
+						showMemPeak ? ("GC MEM PEAK: " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+						""
+					) :
+					""
+				)
+				#end
+			) +
+			(
+				showGLStats ?
+				(
+					#if (gl_stats && !disable_cffi && (!html5 || !canvas))
+					"DRAWS: " + Context3DStats.totalDrawCalls() + "\n"
+					#else
+					"DRAWS: unknown\n"
+					#end
+				)
+				: ""
+			)
+		);
+		text += "\n";
+
+		if (inEditor) {
+			y = (Lib.current.stage.stageHeight - 3) - (
+				16 *
+				(
+					(showFPS ? 1 : 0) +
+					((showMem || showMemPeak) ? (#if (windows || linux || mac)showGc ? 2 :#end 1) : 0) +
+					(showGLStats ? 1 : 0)
+				)
+			);
 		}
 		else
-			text = "\n";
-
-		cacheCount = currentCount;
+			y = 3;
 	}
 	
 	public static function get_gcMemory():Int {

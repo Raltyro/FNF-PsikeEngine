@@ -125,11 +125,11 @@ class MusicBeatState extends FlxUIState
 
 	public static function switchState(nextState:FlxState) {
 		// Custom made Trans in
-		var curState:Dynamic = FlxG.state;
-		var leState:MusicBeatState = curState;
+		var curState:FlxState = FlxG.state;
+		var leState:MusicBeatState = cast curState;
 		if(!FlxTransitionableState.skipNextTransIn) {
 			leState.openSubState(new CustomFadeTransition(0.6, false));
-			if(nextState == FlxG.state) {
+			if(nextState == curState) {
 				CustomFadeTransition.finishCallback = function() {
 					FlxG.resetState();
 				};
@@ -143,7 +143,8 @@ class MusicBeatState extends FlxUIState
 			return;
 		}
 		FlxTransitionableState.skipNextTransIn = false;
-		FlxG.switchState(nextState);
+		if (nextState == curState) FlxG.resetState();
+		else FlxG.switchState(nextState);
 	}
 
 	public static function resetState() {
