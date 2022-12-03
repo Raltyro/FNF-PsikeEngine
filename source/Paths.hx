@@ -61,20 +61,37 @@ class Paths
 	];
 	#end
 
-	public static function excludeAsset(key:String) {
-		if (!dumpExclusions.contains(key))
-			dumpExclusions.push(key);
+	public static function excludeAsset(asset:Dynamic) {
+		if ((asset is String)) {
+			var key:String = asset;
+			for (v in keyExclusions) if (key.endsWith(v)) return;
+			keyExclusions.push(key);
+			return;
+		}
+		if (!dumpExclusions.contains(asset)) dumpExclusions.push(asset);
 	}
 
-	public static function assetExcluded(key:String):Bool {
-		for (v in dumpExclusions) {
-			if (key.endsWith(v)) return true;
+	public static function unexcludeAsset(asset:Dynamic) {
+		if ((asset is String)) {
+			var key:String = asset;
+			for (v in keyExclusions) if (key.endsWith(v)) keyExclusions.remove(v);
+			return;
 		}
+		dumpExclusions.remove(asset);
+	}
+
+	public static function assetExcluded(asset:Dynamic):Bool {
+		if ((asset is String)) {
+			var key:String = asset;
+			for (v in keyExclusions) if (key.endsWith(v)) return true;
+			return false;
+		}
+		for (v in dumpExclusions) if (v == asset) return true;
 		return false;
 	}
 
-	public static var dumpExclusions:Array<String> =
-	[
+	public static var dumpExclusions:Array<Dynamic> = [];
+	public static var keyExclusions:Array<String> = [
 		'music/freakyMenu.$SOUND_EXT',
 		'music/breakfast.$SOUND_EXT',
 		'music/tea-time.$SOUND_EXT',
@@ -106,6 +123,8 @@ class Paths
 		@:privateAccess{
 			if (obj == null) obj = FlxG.bitmap._cache.get(key);
 			if (obj != null) {
+				if (assetExcluded(obj)) return;
+
 				OpenFlAssets.cache.removeBitmapData(key);
 				FlxG.bitmap._cache.remove(key);
 
@@ -124,6 +143,7 @@ class Paths
 	public static function decacheSound(key:String) {
 		var obj = currentTrackedSounds.get(key);
 		if (obj == null && OpenFlAssets.cache.hasSound(key)) obj = OpenFlAssets.cache.getSound(key);
+		if (assetExcluded(obj)) return;
 
 		OpenFlAssets.cache.removeSound(key);
 		Assets.cache.clear(key);
@@ -153,26 +173,24 @@ class Paths
 		}
 
 		// run the garbage collector for good measure lmfao
-		//System.gc();
-
 		compress(3);
 	}
 
 	// define the locally tracked assets
 	public static var localTrackedAssets:Array<String> = [];
-	public static function clearStoredMemory(?cleanUnused:Bool = false) {
+	public static function clearStoredMemory(cleanUnused:Bool = false) {
 		// clear anything not in the tracked assets list
 		@:privateAccess
 		for (key in FlxG.bitmap._cache.keys())
 		{
-			if (!currentTrackedAssets.exists(key))
+			if (key != null && !currentTrackedAssets.exists(key) && !assetExcluded(key))
 				decacheGraphic(key);
 		}
 
 		// clear all sounds that are cached
 		for (key in currentTrackedSounds.keys()) {
-			if (!localTrackedAssets.contains(key) 
-			&& !assetExcluded(key) && key != null)
+			if (key != null && !localTrackedAssets.contains(key) 
+			&& !assetExcluded(key))
 				decacheSound(key);
 		}
 
@@ -264,17 +282,14 @@ class Paths
 	{
 		#if MODS_ALLOWED
 		var file:String = modsVideo(key);
-		if(FileSystem.exists(file)) {
-			return file;
-		}
+		if (FileSystem.exists(file)) return file;
 		#end
 		return 'assets/videos/$key.$VIDEO_EXT';
 	}
 
 	static public function sound(key:String, ?library:String):Sound
 	{
-		var sound:Sound = returnSound('sounds', key, library);
-		return sound;
+		return returnSound('sounds', key, library);
 	}
 
 	inline static public function soundRandom(key:String, min:Int, max:Int, ?library:String)
@@ -283,9 +298,11 @@ class Paths
 	}
 
 	public static var streamMusic:Bool = false;
-	static public function music(key:String, ?library:String):Sound
+	static public function music(key:String, ?library:String, ?stream:Bool):Sound
 	{
-		var file:Sound = returnSound('music', key, library, streamMusic);
+		var file:Sound = returnSound('music', key, library,
+			stream != null ? stream : (!MusicBeatState.inState(PlayState) || streamMusic)
+		);
 		return file;
 	}
 
@@ -303,11 +320,10 @@ class Paths
 		return inst;
 	}
 
+	// streamlined the assets process more
 	inline static public function image(key:String, ?library:String):FlxGraphic
 	{
-		// streamlined the assets process more
-		var returnAsset:FlxGraphic = returnGraphic(key, library);
-		return returnAsset;
+		return returnGraphic(key, library);
 	}
 
 	static public function getTextFromFile(key:String, ?ignoreMods:Bool = false):String
@@ -338,13 +354,11 @@ class Paths
 		return Assets.getText(getPath(key, TEXT));
 	}
 
-	inline static public function font(key:String)
+	inline static public function font(key:String):String
 	{
 		#if MODS_ALLOWED
 		var file:String = modsFont(key);
-		if(FileSystem.exists(file)) {
-			return file;
-		}
+		if (FileSystem.exists(file)) return file;
 		#end
 		return 'assets/fonts/$key';
 	}
@@ -352,23 +366,18 @@ class Paths
 	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String):Bool
 	{
 		#if MODS_ALLOWED
-		if(FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key)))
+		if (!ignoreMods && (FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key))))
 			return true;
 		#end
-		if(OpenFlAssets.exists(getPath(key, type)))
-			return true;
-		
-		return false;
+
+		return OpenFlAssets.exists(getPath(key, type, library), type);
 	}
 
 	inline static public function getSparrowAtlas(key:String, ?library:String):FlxAtlasFrames
 	{
 		#if MODS_ALLOWED
 		var imageLoaded:FlxGraphic = returnGraphic(key);
-		var xmlExists:Bool = false;
-		if(FileSystem.exists(modsXml(key))) {
-			xmlExists = true;
-		}
+		var xmlExists:Bool = FileSystem.exists(modsXml(key));
 
 		return FlxAtlasFrames.fromSparrow((imageLoaded != null ? imageLoaded : image(key, library)), (xmlExists ? File.getContent(modsXml(key)) : file('images/$key.xml', library)));
 		#else
@@ -381,10 +390,7 @@ class Paths
 	{
 		#if MODS_ALLOWED
 		var imageLoaded:FlxGraphic = returnGraphic(key);
-		var txtExists:Bool = false;
-		if(FileSystem.exists(modsTxt(key))) {
-			txtExists = true;
-		}
+		var txtExists:Bool = FileSystem.exists(modsTxt(key));
 
 		return FlxAtlasFrames.fromSpriteSheetPacker((imageLoaded != null ? imageLoaded : image(key, library)), (txtExists ? File.getContent(modsTxt(key)) : file('images/$key.txt', library)));
 		#else
@@ -392,30 +398,12 @@ class Paths
 		#end
 	}
 
-	inline static public function formatToSongPath(path:String) {
+	inline static public function formatToSongPath(path:String):String {
 		var invalidChars = ~/[~&\\;:<>#]+/g;
 		var hideChars = ~/[.,'"%?!]+/g;
 
-		var path = invalidChars.split(path.replace(' ', '-')).join("-");
+		var path:String = invalidChars.split(path.replace(' ', '-')).join("-");
 		return hideChars.split(path).join("").toLowerCase();
-	}
-
-	private static function regBitmap(key:String, ?hardware:Bool):BitmapData {
-		hardware = hardware == null ? hardwareCache : hardware;
-		
-		if (OpenFlAssets.exists(key, IMAGE))
-			return OpenFlAssets.getBitmapData(key, false, hardware);
-		
-		#if MODS_ALLOWED
-		if(FileSystem.exists(key)) {
-			var newBitmap:BitmapData = BitmapData.fromFile(key);
-			
-			if (newBitmap != null)
-				return OpenFlAssets.registerBitmapData(newBitmap, key, false, hardware);
-		}
-		#end
-		
-		return null;
 	}
 
 	// completely rewritten asset loading? fuck!
@@ -449,13 +437,31 @@ class Paths
 		}
 		trace('oh no its returning null NOOOO: ' + path);
 		return null;
-	};
+	}
+
+	private static function regBitmap(key:String, ?hardware:Bool):BitmapData {
+		hardware = hardware == null ? hardwareCache : hardware;
+		
+		if (OpenFlAssets.exists(key, IMAGE))
+			return OpenFlAssets.getBitmapData(key, false, hardware);
+		
+		#if MODS_ALLOWED
+		if(FileSystem.exists(key)) {
+			var newBitmap:BitmapData = BitmapData.fromFile(key);
+			
+			if (newBitmap != null)
+				return OpenFlAssets.registerBitmapData(newBitmap, key, false, hardware);
+		}
+		#end
+		
+		return null;
+	}
 
 	public static var streamSounds:Bool = false;
 	public static var currentTrackedSounds:Map<String, Sound> = [];
 	public static function returnSound(path:String, key:String, ?library:String, ?stream:Bool) {
 		stream = stream == null ? streamSounds : stream;
-		
+
 		#if MODS_ALLOWED
 		var file:String = modsSounds(path, key);
 		if(FileSystem.exists(file)) {

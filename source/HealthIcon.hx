@@ -1,26 +1,52 @@
 package;
 
-import flixel.graphics.FlxGraphic;
-import flixel.FlxSprite;
 import openfl.utils.Assets as OpenFlAssets;
+
+import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.graphics.FlxGraphic;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 
 using StringTools;
 
 class HealthIcon extends FlxSprite
 {
 	public static var prefix(default, null):String = 'icons/';
-	public static var defaultIcon(default, null):String = 'icon-face';
+	public static var credits(default, null):String = 'credits/';
+	public static var defaultIcon(default, null):String = 'icon-unknown';
 
+	public var iconOffsets:Array<Float> = [0, 0];
 	public var sprTracker:FlxSprite;
 	public var isOldIcon(get, null):Bool;
-	public var isPlayer:Bool = false;
+	public var isPlayer:Bool;
+	public var isCredit:Bool;
 
 	private var char:String = '';
 	private var availableStates:Int = 1;
 	private var state:Int = 0;
 
-	public static function returnGraphic(char:String, ?defaultIfMissing:Bool = false):FlxGraphic {
-		var path:String = prefix + char;
+	public static function iconExists(char:String, ?folder:String, creditIcon:Bool = false):Bool {
+		var path:String;
+		if (creditIcon) {
+			path = credits + ((folder != null || folder == '') ? folder + '/' : '') + char;
+			if ((folder != null || folder == '') && !Paths.fileExists('images/' + path + '.png', IMAGE)) path = credits + char;
+			if (Paths.fileExists('images/' + path + '.png', IMAGE)) return true;
+		}
+		path = prefix + char;
+		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) path = prefix + 'icon-' + char; //Older versions of psych engine's support
+		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) return false;
+		return true;
+	}
+
+	public static function returnGraphic(char:String, ?folder:String, defaultIfMissing:Bool = false, creditIcon:Bool = false):FlxGraphic {
+		var path:String;
+		if (creditIcon) {
+			path = credits + ((folder != null || folder == '') ? folder + '/' : '') + char;
+			if ((folder != null || folder == '') && !Paths.fileExists('images/' + path + '.png', IMAGE)) path = credits + char;
+			if (Paths.fileExists('images/' + path + '.png', IMAGE)) return Paths.image(path);
+		}
+		path = prefix + char;
 		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) path = prefix + 'icon-' + char; //Older versions of psych engine's support
 		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) { //Prevents crash from missing icon
 			if (!defaultIfMissing) return null;
@@ -29,32 +55,44 @@ class HealthIcon extends FlxSprite
 		return Paths.image(path);
 	}
 
-	public function new(char:String = 'bf', isPlayer:Bool = false) {
+	public function new(?char:String, ?folder:String, isPlayer:Bool = false, isCredit:Bool = false) {
 		this.isPlayer = isPlayer;
+		this.isCredit = isCredit;
 
 		super();
 		scrollFactor.set();
-		changeIcon(char);
+		changeIcon(char == null ? (isCredit ? defaultIcon : 'bf') : char, folder);
 	}
 
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if (sprTracker != null)
-			setPosition(sprTracker.x + sprTracker.width + 12, sprTracker.y - 30);
+		if (sprTracker != null) setPosition(sprTracker.x + sprTracker.width + 12, sprTracker.y - 30);
 	}
 
 	public function swapOldIcon() {
-		if (isOldIcon) changeIcon(char.substr(0, char.length - 4));
+		if (isOldIcon) changeIcon(char.substr(0, -4));
 		else changeIcon(char + '-old');
 	}
 
-	private var iconOffsets:Array<Float> = [0, 0];
-	public function changeIcon(char:String) {
-		if (this.char == char) return;
-		var graph:FlxGraphic = returnGraphic(char, true);
+	public function changeIcon(char:String, ?folder:String):Bool {
+		if (this.char == char) return false;
+		var graph:FlxGraphic = null;
 
-		if (graph == null) return;
+		if (isCredit) graph = returnGraphic(char, folder, false, true);
+		if (graph == null) graph = returnGraphic(char, true);
+		else {
+			this.char = char;
+
+			iconOffsets[1] = iconOffsets[0] = 0;
+			loadGraphic(graph);
+			updateHitbox();
+			state = 0;
+
+			antialiasing = !char.endsWith('-pixel');
+		}
+
+		if (graph == null) return false;
 		var ratio:Float = graph.width / graph.height;
 		availableStates = Math.round(ratio);
 		this.char = char;
@@ -64,7 +102,7 @@ class HealthIcon extends FlxSprite
 			loadGraphic(graph);
 			updateHitbox();
 			state = 0;
-			return;
+			return true;
 		}
 		loadGraphic(graph, true, Math.floor(graph.width / availableStates), graph.height);
 		updateHitbox();
@@ -73,6 +111,7 @@ class HealthIcon extends FlxSprite
 		animation.play(char);
 
 		antialiasing = !char.endsWith('-pixel');
+		return true;
 	}
 
 	public function setState(state:Int) {
@@ -90,5 +129,27 @@ class HealthIcon extends FlxSprite
 		return char;
 
 	inline function get_isOldIcon():Bool
-		return char.substr(-4, 3) == '-old';
+		return char.substr(-4, 4) == '-old';
+
+	// funs
+	private var squished:Bool = false;
+	private var squishtweens:Array<FlxTween> = [];
+	public function squish(squash:Bool) {
+		if (squished == squash) return;
+		FlxG.sound.play(Paths.soundRandom("squish" + (squash ? "in" : "out"), 1, 3), .7);
+		setState(squash ? 1 : 0);
+		squished = squash;
+
+		for (v in squishtweens) if (v != null) v.cancel();
+		squishtweens.resize(0);
+
+		squishtweens.push(FlxTween.tween(scale,
+			{y: squash ? .7 : 1, x: squash ? 1.2 : 1}, .85,
+			{ease: FlxEase.elasticOut}
+		));
+		squishtweens.push(FlxTween.tween(offset,
+			{y: iconOffsets[1] - (squash ? 8 : 0)}, .7,
+			{ease: FlxEase.backOut}
+		));
+	}
 }

@@ -37,9 +37,7 @@ class MusicBeatState extends FlxUIState
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		super.create();
 
-		if(!skip) {
-			openSubState(new CustomFadeTransition(0.7, true));
-		}
+		if (!skip) openSubState(new CustomFadeTransition(0.7, true));
 		FlxTransitionableState.skipNextTransOut = false;
 	}
 
@@ -124,37 +122,37 @@ class MusicBeatState extends FlxUIState
 	}
 
 	public static function switchState(nextState:FlxState) {
+		if (FlxTransitionableState.skipNextTransIn) return postSwitchState();
+
 		// Custom made Trans in
-		var curState:FlxState = FlxG.state;
-		var leState:MusicBeatState = cast curState;
-		if(!FlxTransitionableState.skipNextTransIn) {
-			leState.openSubState(new CustomFadeTransition(0.6, false));
-			if(nextState == curState) {
-				CustomFadeTransition.finishCallback = function() {
-					FlxG.resetState();
-				};
-				//trace('resetted');
-			} else {
-				CustomFadeTransition.finishCallback = function() {
-					FlxG.switchState(nextState);
-				};
-				//trace('changed state');
-			}
-			return;
-		}
+		var state:MusicBeatState = getState();
+		MusicBeatState.nextState = nextState;
+		CustomFadeTransition.finishCallback = postSwitchState;
+		state.openSubState(new CustomFadeTransition(0.6, false));
+	}
+
+	private static var nextState:FlxState;
+	private static function postSwitchState() {
 		FlxTransitionableState.skipNextTransIn = false;
-		if (nextState == curState) FlxG.resetState();
+		CustomFadeTransition.finishCallback = null;
+
+		var curState:FlxState = FlxG.state;
+		if (nextState == null || nextState == curState) FlxG.resetState();
 		else FlxG.switchState(nextState);
+
+		nextState = null;
 	}
 
 	public static function resetState() {
-		MusicBeatState.switchState(FlxG.state);
+		MusicBeatState.switchState(null);
 	}
 
-	public static function getState():MusicBeatState {
-		var curState:Dynamic = FlxG.state;
-		var leState:MusicBeatState = curState;
-		return leState;
+	public static function getState(?state:FlxState):MusicBeatState {
+		return cast(state != null ? state : FlxG.state);
+	}
+
+	public static function inState(state:Class<FlxState>):Bool {
+		return Std.isOfType(FlxG.state, state);
 	}
 
 	public function stepHit():Void

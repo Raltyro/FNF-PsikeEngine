@@ -28,11 +28,11 @@ class CreditsState extends MusicBeatState
 	private static var titles(default, never):Array<Array<String>> = [
 		['Credits Sections'],
 		['Psych Engine Team',				'psych',			'Developers of Psych Engine',																	'D662EB'],
-		["Raltyro's Psych Fork",			'raltfork',			'Developer"s" of Raltyro\'s Psych Fork',														'D7CBFD'],
+		["Psike Engine Contributors",		'raltfork',			'Contributors of Psike Engine (Psych Engine Fork)',												'D7CBFD'],
 		["Funkin' Crew",					'funkin',			'The only cool kickers of Friday Night Funkin\'',												'FD40AB'],
 		['']
 	];
-	
+
 	// Name - Icon name - Description - Link - BG Color
 	private static var psych(default, never):Array<Array<String>> = [
 		['Psych Engine Team'],
@@ -53,12 +53,22 @@ class CreditsState extends MusicBeatState
 		['Nebula the Zorua',	'nebula',			'LUA JIT Fork and some Lua reworks',							'https://twitter.com/Nebula_Zorua',			'7D40B2'],
 		['Smokey',				'smokey',			'Sprite Atlas Support',											'https://twitter.com/Smokey_5_',			'483D92']
 	];
-	
+
 	private static var raltfork(default, never):Array<Array<String>> = [
-		['Literal Furry'],
-		['Raltyro',				'raltyro',			'Self Explanatory',												'https://gamebanana.com/members/1777465',	'F3F3F3']
+		['Maintainer'],
+		['Raltyro',				'raltyro',			'Maintainer of Psike Engine',									'https://twitter.com/raltyro',				'F3F3F3'],
+		[''],
+		['Fork Contributors'],
+		['Eventretta',			'eventy',			'Health Icons on Credits Sections',								'https://twitter.com/Eventretta',			'6B7D94'],
+		['EyeDaleHim',			'eyedale',			'Programming Help and Emotional Support',						'https://twitter.com/him_dale',				'FF9300'],
+		[''],
+		['Special Thanks'],
+		['UnholyWanderer',		'unholy',			'Game Over Quotes',												'https://gamebanana.com/members/1908754',	'566ECE'],
+		['happyforever/cutzye',	'cutzye',			'Game Over Quotes',												'https://twitter.com/happyisntfunny',		'F3F3F3'],
+		['Betopia',				'betpowo',			'Game Over Quotes',												'https://twitter.com/betpowo',				'F3F3F3'],
+		['shrimpsketti#7483',	'unknown',			'Game Over Quotes',												'',											'F3F3F3'],
 	];
-	
+
 	private static var funkin(default, never):Array<Array<String>> = [
 		["Funkin' Crew"],
 		['ninjamuffin99',		'ninjamuffin99',	"Programmer of Friday Night Funkin'",							'https://twitter.com/ninja_muffin99',		'F73838'],
@@ -69,41 +79,41 @@ class CreditsState extends MusicBeatState
 	
 	public static var prevSelected:Int = 0;
 	public var curSelected:Int = -1;
-	
+
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private var sections:Array<Array<String>> = [];
-	
+
 	var bg:FlxSprite;
 	var descText:FlxText;
 	var descBox:AttachedSprite;
 	var intendedColor:Int;
 	var colorTween:FlxTween;
-	
+
 	var offsetThing:Float = -75;
-	
+
 	override function create() {
 		#if desktop
 		DiscordClient.changePresence("In the Menus", null);
 		#end
 
 		persistentUpdate = true;
-		
+
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		add(bg);
 		bg.screenCenter();
-		
+
 		grpOptions = new FlxTypedGroup<Alphabet>();
 		add(grpOptions);
-		
+
 		for (title in titles)
 			sections.push(title);
-		
+
 		#if MODS_ALLOWED
 		var activeMods = Paths.getActiveModDirectories(true);
 		pushModCredits();
 		for (mod in activeMods)
 			pushModCredits(mod);
-		
+
 		if (modCredits.length > 0) {
 			sections.push(['Modpack Credits Sections']);
 			modSectionsBound = sections.length;
@@ -114,7 +124,7 @@ class CreditsState extends MusicBeatState
 
 		if (curSelected > sections.length || curSelected < 0)
 			curSelected = -1;
-		
+
 		for (i in 0...sections.length)
 		{
 			var isSelectable:Bool = !unselectableCheck(i);
@@ -135,7 +145,7 @@ class CreditsState extends MusicBeatState
 			if(isSelectable && curSelected == -1)
 				curSelected = i;
 		}
-		
+
 		descBox = new AttachedSprite();
 		descBox.makeGraphic(1, 1, FlxColor.BLACK);
 		descBox.xAdd = -10;
@@ -156,7 +166,7 @@ class CreditsState extends MusicBeatState
 		changeSelection();
 		super.create();
 	}
-	
+
 	var quitting:Bool = false;
 	var holdTime:Float = 0;
 	override function update(elapsed:Float)
@@ -214,18 +224,18 @@ class CreditsState extends MusicBeatState
 				MusicBeatState.switchState(new CreditSectionState());
 				quitting = true;
 			}
-			
+
 			if (controls.BACK)
 			{
 				if(colorTween != null)
 					colorTween.cancel();
-				
+
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				MusicBeatState.switchState(new MainMenuState());
 				quitting = true;
 			}
 		}
-		
+
 		/*
 		var lerpVal:Float = CoolUtil.boundTo(elapsed * 12, 0, 1);
 		for (item in grpOptions.members) {
@@ -235,10 +245,10 @@ class CreditsState extends MusicBeatState
 			item.forceX = item.x;
 		}
 		*/
-		
+
 		super.update(elapsed);
 	}
-	
+
 	var moveTween:FlxTween = null;
 	function changeSelection(change:Int = 0)
 	{
@@ -288,16 +298,16 @@ class CreditsState extends MusicBeatState
 		descBox.setGraphicSize(Std.int(descText.width + 20), Std.int(descText.height + 25));
 		descBox.updateHitbox();
 	}
-	
+
 	#if MODS_ALLOWED
 	private static var modDescription = 'Credits Section for the mod "%s"';
 	private var modSectionsBound:Int = -1;
-	
+
 	private var modCredits:Array<Array<String>> = [];
 	function pushModCredits(?folder:String = null):Void {
 		var creditsFile:String = Paths.mods((folder != null ? folder + '/' : '') + 'data/credits.txt');
 		if (!FileSystem.exists(creditsFile)) return;
-		
+
 		var arr:Array<String> = File.getContent(creditsFile).split('\n');
 		if (arr.length > 0) {
 			var metadata = new ModsMenuState.ModMetadata(folder);
@@ -308,8 +318,9 @@ class CreditsState extends MusicBeatState
 		}
 	}
 	#end
-	
+
 	function getCurrentBGColor() {
+		if (sections.length <= 0 || sections[curSelected] == null || sections[curSelected][3] == null) return 0x0;
 		var bgColor:String = sections[curSelected][3];
 		if(!bgColor.startsWith('0x')) {
 			bgColor = '0xFF' + bgColor;
@@ -327,9 +338,10 @@ class CreditSectionState extends MusicBeatState {
 	public static var CSectionisMod:Bool = false;
 	
 	var curSelected:Int = -1;
+	var prevModDir:String;
 
 	private var grpOptions:FlxTypedGroup<Alphabet>;
-	private var iconArray:Array<AttachedSprite> = [];
+	private var iconArray:Array<HealthIcon> = [];
 	private var creditsStuff:Array<Array<String>> = [];
 
 	var bg:FlxSprite;
@@ -345,17 +357,19 @@ class CreditSectionState extends MusicBeatState {
 		#if desktop
 		DiscordClient.changePresence("In the Menus", null);
 		#end
-
+		prevModDir = Paths.currentModDirectory;
 		persistentUpdate = true;
+
+		initializeList();
+		if (CSectionisMod) Paths.currentModDirectory = curCSection;
+
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
-		add(bg);
 		bg.screenCenter();
-		
+		add(bg);
+
 		grpOptions = new FlxTypedGroup<Alphabet>();
 		add(grpOptions);
-		
-		initializeList();
-	
+
 		var prefix:String = CSectionisMod ? '' : curCSection + '/';
 		for (i in 0...creditsStuff.length)
 		{
@@ -371,15 +385,19 @@ class CreditSectionState extends MusicBeatState {
 				if(creditsStuff[i][5] != null)
 					Paths.currentModDirectory = creditsStuff[i][5];
 
-				var icon:AttachedSprite = new AttachedSprite('credits/' + prefix + creditsStuff[i][1]);
-				if (icon.frames == null) icon.loadGraphic(getDefaultIcon(creditsStuff[i][1]));
-				icon.xAdd = optionText.width + 10;
+				var icon:HealthIcon = new HealthIcon();
+				if (!icon.changeIcon(creditsStuff[i][1], curCSection))
+					icon.changeIcon(creditsStuff[i][1], getSimilarIcon(creditsStuff[i][1]));
+
+				icon.iconOffsets[1] = -30;
+				icon.updateHitbox();
 				icon.sprTracker = optionText;
-	
+				icon.ID = i;
+
 				// using a FlxGroup is too much fuss!
 				iconArray.push(icon);
 				add(icon);
-				Paths.currentModDirectory = '';
+				Paths.currentModDirectory = CSectionisMod ? curCSection : '';
 
 				if(curSelected == -1) curSelected = i;
 			}
@@ -389,7 +407,7 @@ class CreditSectionState extends MusicBeatState {
 			}
 			optionText.snapToPosition();
 		}
-		
+
 		descBox = new AttachedSprite();
 		descBox.makeGraphic(1, 1, FlxColor.BLACK);
 		descBox.xAdd = -10;
@@ -455,7 +473,11 @@ class CreditSectionState extends MusicBeatState {
 			if(controls.ACCEPT && (creditsStuff[curSelected][3] == null || creditsStuff[curSelected][3].length > 4)) {
 				CoolUtil.browserLoad(creditsStuff[curSelected][3]);
 			}
-			if (controls.BACK)
+
+			if(FlxG.keys.justPressed.E) squish();
+			if(FlxG.keys.justReleased.E) squish();
+
+			if(controls.BACK)
 			{
 				if(colorTween != null) {
 					colorTween.cancel();
@@ -468,7 +490,7 @@ class CreditSectionState extends MusicBeatState {
 				quitting = true;
 			}
 		}
-		
+
 		for (item in grpOptions.members)
 		{
 			if(!item.bold)
@@ -486,7 +508,7 @@ class CreditSectionState extends MusicBeatState {
 				}
 			}
 		}
-		
+
 		/*
 		var lerpVal:Float = CoolUtil.boundTo(elapsed * 12, 0, 1);
 		for (item in grpOptions.members) {
@@ -496,8 +518,13 @@ class CreditSectionState extends MusicBeatState {
 			item.forceX = item.x;
 		}
 		*/
-		
+
 		super.update(elapsed);
+	}
+
+	override function destroy() {
+		Paths.currentModDirectory = prevModDir;
+		super.destroy();
 	}
 
 	var moveTween:FlxTween = null;
@@ -550,11 +577,23 @@ class CreditSectionState extends MusicBeatState {
 		descBox.updateHitbox();
 	}
 
+	var squished:Bool = false;
+	function squish() {
+		squished = !squished;
+
+		for (v in iconArray) {
+			if (v.ID == curSelected) {
+				v.squish(squished);
+				break;
+			}
+		}
+	}
+
 	function initializeList() {
 		#if MODS_ALLOWED
 		if (CSectionisMod) initializeModList(curCSection);
 		#end
-		
+
 		if (!CSectionisMod) {
 			var dyn:Dynamic = Reflect.field(CreditsState, curCSection);
 			var field:Array<Array<String>> = null;
@@ -573,12 +612,12 @@ class CreditSectionState extends MusicBeatState {
 				creditsStuff.push(v);
 		}
 	}
-	
+
 	#if MODS_ALLOWED
 	function initializeModList(?folder:String = null) {
 		var creditsFile:String = Paths.mods((folder != null ? folder + '/' : '') + 'data/credits.txt');
 		if (!FileSystem.exists(creditsFile)) return switchToDefaultSection();
-		
+
 		var firstarray:Array<String> = File.getContent(creditsFile).split('\n');
 		for (v in firstarray) {
 			var arr:Array<String> = v.replace('\\n', '\n').split("::");
@@ -588,18 +627,17 @@ class CreditSectionState extends MusicBeatState {
 		if (creditsStuff.length <= 0) return switchToDefaultSection();
 	}
 	#end
-	
+
 	function switchToDefaultSection() {
 		curCSection = 'psych';
 		CSectionisMod = false;
 	}
-	
-	function getDefaultIcon(icon:String):FlxGraphic {
+
+	function getSimilarIcon(icon:String):String {
 		@:privateAccess var titles = CreditsState.titles;
-		
+
 		var section:Array<String>;
 		var v:String;
-		var graphic:FlxGraphic = null;
 		for (i in 0...titles.length) {
 			section = titles[i];
 			if (section.length <= 1 || section[1] == 'mod') continue;
@@ -615,16 +653,11 @@ class CreditSectionState extends MusicBeatState {
 			}
 			if (field == null || field.length <= 0) continue;
 
-			for (i in 0...field.length) {
-				if (icon == field[i][1])
-					graphic = Paths.image('credits/' + v + '/' + icon);
-				
-				if (graphic != null) break;
-			}
-			if (graphic != null) break;
+			for (i in 0...field.length)
+				if (icon == field[i][1] && HealthIcon.iconExists(icon, v, true)) return v;
 		}
-		
-		return graphic != null ? graphic : Paths.image('credits/' + icon);
+
+		return null;
 	}
 
 	function getCurrentBGColor() {

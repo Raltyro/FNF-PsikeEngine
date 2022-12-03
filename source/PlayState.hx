@@ -320,7 +320,6 @@ class PlayState extends MusicBeatState
 
 	override public function create()
 	{
-		//trace('Playback Rate: ' + playbackRate);
 		Paths.clearStoredMemory();
 
 		// for lua
@@ -4352,7 +4351,8 @@ class PlayState extends MusicBeatState
 
 		if(!boyfriend.stunned && generatedMusic && !endingSong) {
 			var lastTime:Float = Conductor.songPosition;
-			Conductor.songPosition = FlxG.sound.music.time;
+			if (FlxG.sound.music != null && FlxG.sound.music.playing && !startingSong)
+				Conductor.songPosition = FlxG.sound.music.time;
 
 			var sortedNotesList:Array<Note> = [];
 			var delta:Float = Conductor.songPosition - lastTime;
@@ -4406,7 +4406,7 @@ class PlayState extends MusicBeatState
 			keysPressed[key] = true;
 
 			//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
-			//Conductor.songPosition = lastTime;
+			Conductor.songPosition = lastTime;
 		}
 
 		var spr:StrumNote = playerStrums.members[key];

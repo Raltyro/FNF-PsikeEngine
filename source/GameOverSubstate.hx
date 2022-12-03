@@ -28,7 +28,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 
 	var wiggleLose:WiggleEffect;
 	var texts:FlxTypedGroup<FlxText>;
-	var hintTexts:FlxTypedGroup<FlxText>;
+	var quoteTexts:FlxTypedGroup<FlxText>;
 	var inputText:FlxText;
 	var loseSprite:FlxSprite;
 	var bfMidPoint:FlxPoint;
@@ -37,16 +37,16 @@ class GameOverSubstate extends MusicBeatSubstate {
 	var updateCamera:Bool = false;
 	var playingDeathSound:Bool = false;
 
-	var hints:Array<String> = DEFAULT_HINTS;
+	var quotes:Array<String> = DEFAULT_QUOTES;
 	var stageSuffix:String = "";
 
 	public static var characterName:String = 'bf-dead';
 	public static var deathSoundName:String = 'fnf_loss_sfx';
 	public static var loopSoundName:String = 'gameOver';
 	public static var endSoundName:String = 'gameOverEnd';
-	public static var hintMessages:String = '';
-	public static var hintAlignmentX:String = 'left';
-	public static var hintAlignmentY:String = 'bottom';
+	public static var quoteMessages:String = '';
+	public static var quoteAlignmentX:String = 'left';
+	public static var quoteAlignmentY:String = 'bottom';
 	public static var loseImageName:String = 'lose';
 	public static var loseAlignmentX:String = 'left';
 	public static var loseAlignmentY:String = 'top';
@@ -60,9 +60,9 @@ class GameOverSubstate extends MusicBeatSubstate {
 		deathSoundName = 'fnf_loss_sfx';
 		loopSoundName = 'gameOver';
 		endSoundName = 'gameOverEnd';
-		hintMessages = '';
-		hintAlignmentX = 'left';
-		hintAlignmentY = 'bottom';
+		quoteMessages = '';
+		quoteAlignmentX = 'left';
+		quoteAlignmentY = 'bottom';
 		loseImageName = 'lose';
 		loseAlignmentX = 'left';
 		loseAlignmentY = 'top';
@@ -103,7 +103,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 		});
 
 		doTweenTexts(texts, loseAlignmentY);
-		doTweenTexts(hintTexts, hintAlignmentY);
+		doTweenTexts(quoteTexts, quoteAlignmentY);
 	}
 
 	public function new(x:Float, y:Float, camX:Float, camY:Float) {
@@ -125,10 +125,10 @@ class GameOverSubstate extends MusicBeatSubstate {
 		texts.cameras = [camHUD];
 		add(texts);
 
-		hintTexts = new FlxTypedGroup<FlxText>();
-		hintTexts.visible = !ClientPrefs.hideHud;
-		hintTexts.cameras = [camHUD];
-		add(hintTexts);
+		quoteTexts = new FlxTypedGroup<FlxText>();
+		quoteTexts.visible = !ClientPrefs.hideHud;
+		quoteTexts.cameras = [camHUD];
+		add(quoteTexts);
 
 		loseSprite = new FlxSprite(losePosX, losePosY);
 		loseSprite.frames = Paths.getSparrowAtlas(loseImageName);
@@ -138,6 +138,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 		loseSprite.animation.frameIndex = anim.frames[anim.numFrames - 1];
 		loseSprite.offset.set(loseSprite.frame.offset.x, loseSprite.frame.offset.y);
 
+		/*
 		if (!ClientPrefs.lowQuality) {
 			wiggleLose = new WiggleEffect();
 			wiggleLose.effectType = HEAT_WAVE_VERTICAL;
@@ -147,6 +148,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 
 			loseSprite.shader = wiggleLose.shader;
 		}
+		*/
 
 		loseSprite.antialiasing = ClientPrefs.globalAntialiasing;
 		loseSprite.cameras = [camHUD];
@@ -162,8 +164,8 @@ class GameOverSubstate extends MusicBeatSubstate {
 		makeText(PlayState.instance.scoreTxt.text, loseAlignmentX, loseAlignmentY);
 		makeText(info, loseAlignmentX, loseAlignmentY);
 
-		inputText = makeText("Press ACCEPT key to Restart | Press BACK key to Quit Gameplay", hintAlignmentX, hintAlignmentY, hintTexts);
-		makeText(FlxG.random.getObject(hints), hintAlignmentX, hintAlignmentY, hintTexts);
+		inputText = makeText("Press ACCEPT key to Restart | Press BACK key to Quit Gameplay", quoteAlignmentX, quoteAlignmentY, quoteTexts);
+		makeText(FlxG.random.getObject(quotes), quoteAlignmentX, quoteAlignmentY, quoteTexts);
 
 		boyfriend = getBoyfriend(x, y);
 		boyfriend.x += boyfriend.positionArray[0];
@@ -236,7 +238,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if (!ClientPrefs.lowQuality) wiggleLose.update(elapsed);
+		if (wiggleLose != null) wiggleLose.update(elapsed);
 
 		PlayState.instance.callOnLuas('onUpdate', [elapsed]);
 		if (updateCamera) {
@@ -381,7 +383,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 		return new Boyfriend(x, y, characterName);
 	}
 
-	private static var DEFAULT_HINTS:Array<String> = [
+	private static var DEFAULT_QUOTES:Array<String> = [
 		"You need to get basics right first or you'll end up like this again",
 		"Maybe if you aren't bad enough, you wouldn't be here",
 		"Hit the notes precisely to not lose!",
@@ -394,6 +396,6 @@ class GameOverSubstate extends MusicBeatSubstate {
 		//discord/Unholywanderer04#1468
 		"guh",
 		//github/probablynotbetopia
-		"The notes keep you alive, why are you afraid of them theyre not gonna kill you or anything",
+		"The notes keep you alive, why are you afraid of them they're not gonna kill you or anything",
 	];
 }
