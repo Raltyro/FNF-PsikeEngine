@@ -123,10 +123,10 @@ class Main extends Sprite
 	
 	private function onEnterFrame(_) {
 		// CLEVER WAY TO SECRETLY GC LMAO
-		if (!focused && woah > 0) {
-			Paths.compress(8);
-			woah--;
-		}
+		//if (!focused && woah > 0) {
+		//	Paths.compress(8);
+		//	woah--;
+		//}
 	}
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
