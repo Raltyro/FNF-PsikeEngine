@@ -415,7 +415,7 @@ class Paths
 		if(FileSystem.exists(modKey)) {
 			if(!currentTrackedAssets.exists(modKey)) {
 				var newGraphic:FlxGraphic = FlxGraphic.fromBitmapData(regBitmap(modKey), false, modKey);
-				
+
 				newGraphic.persist = true;
 				currentTrackedAssets.set(modKey, newGraphic);
 			}
@@ -428,7 +428,7 @@ class Paths
 		if (OpenFlAssets.exists(path, IMAGE)) {
 			if(!currentTrackedAssets.exists(path)) {
 				var newGraphic:FlxGraphic = FlxGraphic.fromBitmapData(regBitmap(path), false, path);
-				
+
 				newGraphic.persist = true;
 				currentTrackedAssets.set(path, newGraphic);
 			}
