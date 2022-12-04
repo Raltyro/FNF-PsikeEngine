@@ -32,6 +32,8 @@ class HealthIcon extends FlxSprite
 			path = credits + ((folder != null || folder == '') ? folder + '/' : '') + char;
 			if ((folder != null || folder == '') && !Paths.fileExists('images/' + path + '.png', IMAGE)) path = credits + char;
 			if (Paths.fileExists('images/' + path + '.png', IMAGE)) return Paths.image(path);
+			if (defaultIfMissing) return Paths.image(prefix + defaultIcon);
+			return null;
 		}
 		path = prefix + char;
 		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) path = prefix + 'icon-' + char; //Older versions of psych engine's support
