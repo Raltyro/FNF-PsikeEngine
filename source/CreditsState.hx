@@ -530,6 +530,9 @@ class CreditSectionState extends MusicBeatState {
 	var moveTween:FlxTween = null;
 	function changeSelection(change:Int = 0)
 	{
+		var squash:Bool = squished;
+		if (squash) squish();
+
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 		do {
 			curSelected += change;
@@ -566,6 +569,8 @@ class CreditSectionState extends MusicBeatState {
 				}
 			}
 		}
+
+		if (squash) squish();
 
 		descText.text = creditsStuff[curSelected][2];
 		descText.y = FlxG.height - descText.height + offsetThing - 30;
@@ -654,7 +659,7 @@ class CreditSectionState extends MusicBeatState {
 			if (field == null || field.length <= 0) continue;
 
 			for (i in 0...field.length)
-				if (icon == field[i][1] && HealthIcon.iconExists(icon, v, true)) return v;
+				if (icon == field[i][1] && HealthIcon.returnGraphic(icon, v, false, true) != null) return v;
 		}
 
 		return null;

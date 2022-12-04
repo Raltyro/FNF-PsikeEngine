@@ -26,19 +26,6 @@ class HealthIcon extends FlxSprite
 	private var availableStates:Int = 1;
 	private var state:Int = 0;
 
-	public static function iconExists(char:String, ?folder:String, creditIcon:Bool = false):Bool {
-		var path:String;
-		if (creditIcon) {
-			path = credits + ((folder != null || folder == '') ? folder + '/' : '') + char;
-			if ((folder != null || folder == '') && !Paths.fileExists('images/' + path + '.png', IMAGE)) path = credits + char;
-			if (Paths.fileExists('images/' + path + '.png', IMAGE)) return true;
-		}
-		path = prefix + char;
-		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) path = prefix + 'icon-' + char; //Older versions of psych engine's support
-		if (!Paths.fileExists('images/' + path + '.png', IMAGE)) return false;
-		return true;
-	}
-
 	public static function returnGraphic(char:String, ?folder:String, defaultIfMissing:Bool = false, creditIcon:Bool = false):FlxGraphic {
 		var path:String;
 		if (creditIcon) {
@@ -90,6 +77,7 @@ class HealthIcon extends FlxSprite
 			state = 0;
 
 			antialiasing = !char.endsWith('-pixel');
+			return true;
 		}
 
 		if (graph == null) return false;
