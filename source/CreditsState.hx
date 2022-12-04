@@ -386,7 +386,7 @@ class CreditSectionState extends MusicBeatState {
 					Paths.currentModDirectory = creditsStuff[i][5];
 
 				var icon:HealthIcon = new HealthIcon(false, true);
-				if (!icon.changeIcon(creditsStuff[i][1], curCSection))
+				if (!icon.changeIcon(creditsStuff[i][1], curCSection, false))
 					icon.changeIcon(creditsStuff[i][1], getSimilarIcon(creditsStuff[i][1]));
 
 				icon.iconOffsets[1] = -30;
@@ -666,6 +666,7 @@ class CreditSectionState extends MusicBeatState {
 	}
 
 	function getCurrentBGColor() {
+		if (creditsStuff.length <= 0 || creditsStuff[curSelected] == null || creditsStuff[curSelected][4] == null) return 0x0;
 		var bgColor:String = creditsStuff[curSelected][4];
 		if(!bgColor.startsWith('0x')) {
 			bgColor = '0xFF' + bgColor;

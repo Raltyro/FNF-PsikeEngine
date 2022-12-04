@@ -64,12 +64,12 @@ class HealthIcon extends FlxSprite
 		else changeIcon(char + '-old');
 	}
 
-	public function changeIcon(char:String, ?folder:String):Bool {
+	public function changeIcon(char:String, ?folder:String, defaultIfMissing:Bool = true):Bool {
 		if (this.char == char) return false;
 		var graph:FlxGraphic = null;
 
 		if (isCredit) graph = returnGraphic(char, folder, false, true);
-		if (graph == null) graph = returnGraphic(char, true);
+		if (graph == null) graph = returnGraphic(char, defaultIfMissing);
 		else {
 			this.char = char;
 
