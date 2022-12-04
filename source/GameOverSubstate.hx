@@ -36,6 +36,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 	var camFollowPos:FlxObject;
 	var updateCamera:Bool = false;
 	var playingDeathSound:Bool = false;
+	var closed:Bool = false;
 
 	var quotes:Array<String> = DEFAULT_QUOTES;
 	var stageSuffix:String = "";
@@ -95,6 +96,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 		boyfriend.animation.frameIndex = anim.frames[0];
 
 		new FlxTimer().start(1, function(tmr:FlxTimer) {
+			if (closed) return;
 			loseSprite.alpha = 1;
 
 			var anim = loseSprite.animation.getByName('lose');
@@ -302,6 +304,11 @@ class GameOverSubstate extends MusicBeatSubstate {
 		super.beatHit();
 
 		//FlxG.log.add('beat');
+	}
+
+	override function destroy() {
+		closed = true;
+		super.destroy();
 	}
 
 	var isEnding:Bool = false;
