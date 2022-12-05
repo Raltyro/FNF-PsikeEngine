@@ -2249,7 +2249,8 @@ class FunkinLua {
 				return;
 			}
 			var save:FlxSave = new FlxSave();
-			save.bind(name, folder);
+			// folder goes unused for flixel 5 users. @BeastlyGhost
+			save.bind(name #if (flixel < "5.0.0"), folder #end);
 			PlayState.instance.modchartSaves.set(name, save);
 		});
 		Lua_helper.set_static_callback("flushSaveData", function(l:FunkinLua, name:String) {
