@@ -94,6 +94,7 @@ class TitleState extends MusicBeatState
 		//trace(path, FileSystem.exists(path));
 
 		FlxG.fixedTimestep = false;
+		FlxG.mouse.visible = false;
 		FlxG.game.focusLostFramerate = 8;
 		FlxG.sound.muteKeys = muteKeys;
 		FlxG.sound.volumeDownKeys = volumeDownKeys;
@@ -118,7 +119,7 @@ class TitleState extends MusicBeatState
 
 		Highscore.load();
 
-		// DEBUG BULLSHIT
+		FlxTransitionableState.skipNextTransOut = true;
 
 		swagShader = new ColorSwap();
 		super.create();
@@ -161,7 +162,6 @@ class TitleState extends MusicBeatState
 			StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 		}
 
-		FlxG.mouse.visible = false;
 		#if FREEPLAY
 		MusicBeatState.switchState(new FreeplayState());
 		#elseif CHARTING

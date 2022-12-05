@@ -122,11 +122,11 @@ class MusicBeatState extends FlxUIState
 	}
 
 	public static function switchState(nextState:FlxState) {
+		MusicBeatState.nextState = nextState;
 		if (FlxTransitionableState.skipNextTransIn) return postSwitchState();
 
 		// Custom made Trans in
 		var state:MusicBeatState = getState();
-		MusicBeatState.nextState = nextState;
 		CustomFadeTransition.finishCallback = postSwitchState;
 		state.openSubState(new CustomFadeTransition(0.6, false));
 	}
