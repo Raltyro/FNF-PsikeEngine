@@ -59,7 +59,7 @@ class CreditsState extends MusicBeatState
 		['Raltyro',				'raltyro',			'Maintainer of Psike Engine',									'https://twitter.com/raltyro',				'F3F3F3'],
 		[''],
 		['Fork Contributors'],
-		['Eventretta',			'eventy',			'Health Icons on Credits Sections',								'https://twitter.com/Eventretta',			'6B7D94'],
+		['Eventretta',			'eventy',			'Clean-up Codes & Coool Stuff',									'https://twitter.com/Eventretta',			'6B7D94'],
 		['EyeDaleHim',			'eyedale',			'Programming Help and Emotional Support',						'https://twitter.com/him_dale',				'FF9300'],
 		[''],
 		['Special Thanks'],

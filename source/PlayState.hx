@@ -347,6 +347,8 @@ class PlayState extends MusicBeatState
 			'NOTE_RIGHT'
 		];
 
+		fillKeysPressed();
+
 		//Ratings
 		ratingsData.push(new Rating('sick')); //default rating
 
@@ -367,12 +369,6 @@ class PlayState extends MusicBeatState
 		rating.score = 50;
 		rating.noteSplash = false;
 		ratingsData.push(rating);
-
-		// For the "Just the Two of Us" achievement
-		for (i in 0...keysArray.length)
-		{
-			keysPressed.push(false);
-		}
 
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -3349,8 +3345,11 @@ class PlayState extends MusicBeatState
 		callOnLuas('onUpdatePost', [elapsed]);
 	}
 
-	function openPauseMenu()
-	{
+	function openPauseMenu() {
+		for (i in 0...strumsPressed.length) {
+			if (strumsPressed[i]) onKeyRelease(new KeyboardEvent(KeyboardEvent.KEY_UP, true, true, -1, keysArray[i][0]));
+		}
+
 		persistentUpdate = false;
 		persistentDraw = true;
 		paused = true;
@@ -4342,12 +4341,15 @@ class PlayState extends MusicBeatState
 	}
 
 	public var strumsBlocked:Array<Bool> = [];
+	public var strumsPressed:Array<Bool> = [];
 	private function onKeyPress(event:KeyboardEvent):Void {
 		if (cpuControlled || !startedCountdown || paused) return;
 
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = getKeyFromEvent(eventKey);
 		if (key < 0 || !(ClientPrefs.controllerMode || FlxG.keys.checkStatus(eventKey, JUST_PRESSED))) return;
+		fillKeysPressed();
+		strumsPressed[key] = true;
 
 		if(!boyfriend.stunned && generatedMusic && !endingSong) {
 			var lastTime:Float = Conductor.songPosition;
@@ -4418,8 +4420,7 @@ class PlayState extends MusicBeatState
 		//trace('pressed: ' + controlArray);
 	}
 
-	function sortHitNotes(a:Note, b:Note):Int
-	{
+	function sortHitNotes(a:Note, b:Note):Int {
 		if (a.lowPriority && !b.lowPriority)
 			return 1;
 		else if (!a.lowPriority && b.lowPriority)
@@ -4428,23 +4429,30 @@ class PlayState extends MusicBeatState
 		return FlxSort.byValues(FlxSort.ASCENDING, a.strumTime, b.strumTime);
 	}
 
-	private function onKeyRelease(event:KeyboardEvent):Void
-	{
-		if (cpuControlled) return;
+	private function onKeyRelease(event:KeyboardEvent):Void {
+		if (cpuControlled || !startedCountdown || paused) return;
+
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = getKeyFromEvent(eventKey);
-		
-		if(startedCountdown && !paused && key > -1)
-		{
-			var spr:StrumNote = playerStrums.members[key];
-			if(spr != null)
-			{
-				spr.playAnim('static');
-				spr.resetAnim = 0;
-			}
-			callOnLuas('onKeyRelease', [key]);
+		if (key < 0 || !strumsPressed[key]) return;
+		fillKeysPressed();
+		strumsPressed[key] = false;
+
+		var spr:StrumNote = playerStrums.members[key];
+		if (spr != null) {
+			spr.playAnim('static');
+			spr.resetAnim = 0;
 		}
+		callOnLuas('onKeyRelease', [key]);
 		//trace('released: ' + controlArray);
+	}
+
+	private function fillKeysPressed() {
+		for (i in 0...keysArray.length-keysPressed.length) {
+			strumsPressed.push(false);
+			// For the "Just the Two of Us" achievement
+			keysPressed.push(false);
+		}
 	}
 
 	private function getKeyFromEvent(key:FlxKey):Int {

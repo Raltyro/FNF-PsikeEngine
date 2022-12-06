@@ -36,13 +36,13 @@ class OutdatedState extends MusicBeatState
 	static function getOutdatedText(upstream:Bool):String {
 		if (upstream)
 			return outdatedUpstreamText.replace(
-				"%curVer", MainMenuState.psychEngineVersion.trim() + "-" + CoolUtil.getGitCommitHash()
+				"%curVer", MainMenuState.psychEngineVersion.trim() + "-" + CoolUtil.gitCommitHash
 			).replace(
 				"%updateVer", CoolUtil.upstreamVersion
 			);
 		
 		return outdatedForkText.replace(
-			"%curVer", MainMenuState.psychEngineVersion.trim() + "-" + CoolUtil.getGitCommitHash()
+			"%curVer", MainMenuState.psychEngineVersion.trim() + "-" + CoolUtil.gitCommitHash
 		).replace(
 			"%updateVer", CoolUtil.updateVersion
 		);

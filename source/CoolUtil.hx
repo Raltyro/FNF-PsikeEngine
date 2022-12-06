@@ -14,10 +14,11 @@ import sys.FileSystem;
 import openfl.utils.Assets;
 #end
 
+import psike.PsikeHash;
+
 using StringTools;
 
-class CoolUtil
-{
+class CoolUtil {
 	public static var defaultDifficulties:Array<String> = [
 		'Easy',
 		'Normal',
@@ -155,13 +156,13 @@ class CoolUtil
 		FlxG.openURL(site);
 		#end
 	}
-	
+
 	public static var mustUpdate:Bool = false;
 	public static var realUpdateVersion:String = null;
 	public static var updateVersion(get, null):String;
 	static function get_updateVersion():String
 		return realUpdateVersion != null ? realUpdateVersion : MainMenuState.psychEngineVersion.trim();
-	
+
 	public static function getUpdateVersion(?onComplete:String->Void) {
 		var http = new haxe.Http("https://raw.githubusercontent.com/Raltyro/FNF-PsychEngine/main/gitVersion.txt");
 
@@ -177,18 +178,18 @@ class CoolUtil
 
 		http.request();
 	}
-	
+
 	public static var realUpstreamVersion:String = null;
 	public static var upstreamVersion(get, null):String;
-	static function get_upstreamVersion():String
+	@:noCompletion inline static function get_upstreamVersion():String
 		return realUpstreamVersion != null ? realUpstreamVersion : MainMenuState.psychEngineVersion.trim();
-	
+
 	public static function getUpstreamVersion(?onComplete:String->Void) {
 		if (realUpstreamVersion != null) {
 			onComplete(realUpstreamVersion);
 			return;
 		}
-		
+
 		var http = new haxe.Http("https://raw.githubusercontent.com/ShadowMario/FNF-PsychEngine/main/gitVersion.txt");
 
 		http.onData = function(data:String) {
@@ -203,52 +204,15 @@ class CoolUtil
 
 		http.request();
 	}
-	
-	private static var cantGit:Bool = false;
-	private static var realGitCommitHash:String = null;
-	public static function tryGetGitCommitHash():String {
-		#if sys
-		if (cantGit && realGitCommitHash == null) return null;
-		var commitHash:String = null;
-		try {
-			var process = new Process('git', ['rev-parse', 'HEAD']);
-			commitHash = process.stdout.readLine();
-			process.kill();
-			process.close();
-		}
-		catch(e) {cantGit = true;}
-		
-		cantGit = commitHash == null;
-		if (!cantGit) {
-			commitHash = commitHash.substr(0, 7);
-			realGitCommitHash = commitHash;
-		}
-		return commitHash;
-		#else
-		cantGit = true;
-		return null;
-		#end
-	}
-	
-	private static var gitCommitHash:String = null;
-	public static function getGitCommitHash():String {
-		if (gitCommitHash != null) return gitCommitHash;
 
-		#if sys
-		var commitHash:String = tryGetGitCommitHash();
-		if (commitHash != null) {
-			File.saveContent("manifest/hash.dat", commitHash);
-			gitCommitHash = commitHash;
-			return commitHash;
-		}
+	public static var realGitCommitHash(get, null):String;
+	@:noCompletion inline static function get_realGitCommitHash():String
+		return PsikeHash.sha;
 
-		if (FileSystem.exists("manifest/hash.dat"))
-			gitCommitHash = File.getContent("manifest/hash.dat").split('\n')[0].trim().substr(0, 7);
+	public static var gitCommitHash(get, null):String;
+	@:noCompletion inline static function get_gitCommitHash():String
+		return realGitCommitHash.substr(0, 7);
 
-		return gitCommitHash;
-		#end
-	}
-	
 	public static function checkForUpdates(?onComplete:Bool->Void):Void {
 		if (!mustUpdate && realUpdateVersion != null) mustUpdate = updateVersion != MainMenuState.psychEngineVersion.trim();
 		if (mustUpdate) {

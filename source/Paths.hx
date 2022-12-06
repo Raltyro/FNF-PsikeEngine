@@ -363,14 +363,14 @@ class Paths
 		return 'assets/fonts/$key';
 	}
 
-	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String):Bool
+	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?onlyMods:Bool = false, ?library:String):Bool
 	{
 		#if MODS_ALLOWED
 		if (!ignoreMods && (FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key))))
 			return true;
 		#end
 
-		return OpenFlAssets.exists(getPath(key, type, library), type);
+		return !onlyMods && OpenFlAssets.exists(getPath(key, type, library), type);
 	}
 
 	inline static public function getSparrowAtlas(key:String, ?library:String):FlxAtlasFrames
