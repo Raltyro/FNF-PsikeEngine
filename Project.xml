@@ -210,11 +210,6 @@
 	<haxedef name="queue_experimental_optimization"/>
 	<haxedef name="gl_stats"/>
 
-	<!-- Make git commit hash in the build -->
-	<postbuild cmd="dev/postBuild-win.bat" if="windows" />
-	<postbuild cmd="./dev/postBuild-linux.sh" if="linux" />
-	<postbuild cmd="./dev/postBuild-mac.sh" if="mac" />
-
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
