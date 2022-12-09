@@ -47,11 +47,14 @@ class CreditsState extends MusicBeatState
 		['iFlicky',				'flicky',			'Composer of Psync and Tea Time\nMade the Dialogue Sounds',		'https://twitter.com/flicky_i',				'9E29CF'],
 		['SqirraRNG',			'sqirra',			'Crash Handler and Base code for\nChart Editor\'s Waveform',	'https://twitter.com/gedehari',				'E1843A'],
 		['EliteMasterEric',		'mastereric',		'Runtime Shaders support',										'https://twitter.com/EliteMasterEric',		'FFBD40'],
+		['Gabriela',			'gabby',			'Playback Rate Modifier\nand other PRs',						'https://twitter.com/BeastlyGabi',			'5E99DF'],
 		['PolybiusProxy',		'proxy',			'MP4 Video Loader Library (hxCodec)',							'https://twitter.com/polybiusproxy',		'DCD294'],
 		['KadeDev',				'kade',				'Fixed some cool stuff on Chart Editor\nand other PRs',			'https://twitter.com/kade0912',				'64A250'],
 		['Keoiki',				'keoiki',			'Note Splash Animations',										'https://twitter.com/Keoiki_',				'D2D2D2'],
 		['Nebula the Zorua',	'nebula',			'LUA JIT Fork and some Lua reworks',							'https://twitter.com/Nebula_Zorua',			'7D40B2'],
-		['Smokey',				'smokey',			'Sprite Atlas Support',											'https://twitter.com/Smokey_5_',			'483D92']
+		['Smokey',				'smokey',			'Sprite Atlas Support',											'https://twitter.com/Smokey_5_',			'483D92'],
+		['UncertainProd',		'prod',				'Sampler2D in Runtime Shaders',									'https://github.com/UncertainProd',			'D2D2D2'],
+		['ACrazyTown',			'acrazytown',		'Optimized PNGs',												'https://twitter.com/acrazytown',			'A03E3D'],
 	];
 
 	private static var raltfork(default, never):Array<Array<String>> = [
@@ -63,6 +66,7 @@ class CreditsState extends MusicBeatState
 		['EyeDaleHim',			'eyedale',			'Programming Help and Emotional Support',						'https://twitter.com/him_dale',				'FF9300'],
 		[''],
 		['Special Thanks'],
+		['TheWorldMachinima',	'twmniko',			'Softcoded ClientPrefs',										'https://github.com/TheWorldMachinima',		'F3F3F3'],
 		['UnholyWanderer',		'unholy',			'Game Over Quotes',												'https://gamebanana.com/members/1908754',	'566ECE'],
 		['happyforever/cutzye',	'cutzye',			'Game Over Quotes',												'https://twitter.com/happyisntfunny',		'F3F3F3'],
 		['Betopia',				'betpowo',			'Game Over Quotes',												'https://twitter.com/betpowo',				'F3F3F3'],

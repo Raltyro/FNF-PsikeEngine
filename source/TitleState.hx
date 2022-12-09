@@ -105,8 +105,6 @@ class TitleState extends MusicBeatState
 
 		PlayerSettings.init();
 
-		FlxG.save.bind('funkin' #if (flixel < "5.0.0"), 'ninjamuffin99' #end);
-
 		ClientPrefs.loadPrefs();
 
 		#if CHECK_FOR_UPDATES

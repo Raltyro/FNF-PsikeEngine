@@ -99,6 +99,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 			if (closed) return;
 			loseSprite.alpha = 1;
 
+			if (loseSprite.animation == null) return;
 			var anim = loseSprite.animation.getByName('lose');
 			loseSprite.animation.play('lose');
 			loseSprite.animation.frameIndex = anim.frames[0];
@@ -133,41 +134,44 @@ class GameOverSubstate extends MusicBeatSubstate {
 		add(quoteTexts);
 
 		loseSprite = new FlxSprite(losePosX, losePosY);
-		loseSprite.frames = Paths.getSparrowAtlas(loseImageName);
-		loseSprite.animation.addByPrefix('lose', 'lose', 24, false);
 
-		var anim = loseSprite.animation.getByName('lose');
-		loseSprite.animation.frameIndex = anim.frames[anim.numFrames - 1];
-		loseSprite.offset.set(loseSprite.frame.offset.x, loseSprite.frame.offset.y);
+		if (ClientPrefs.gameOverInfos) {
+			loseSprite.frames = Paths.getSparrowAtlas(loseImageName);
+			loseSprite.animation.addByPrefix('lose', 'lose', 24, false);
 
-		/*
-		if (!ClientPrefs.lowQuality) {
-			wiggleLose = new WiggleEffect();
-			wiggleLose.effectType = HEAT_WAVE_VERTICAL;
-			wiggleLose.waveAmplitude = 0.002;
-			wiggleLose.waveFrequency = 60;
-			wiggleLose.waveSpeed = 4;
+			var anim = loseSprite.animation.getByName('lose');
+			loseSprite.animation.frameIndex = anim.frames[anim.numFrames - 1];
+			loseSprite.offset.set(loseSprite.frame.offset.x, loseSprite.frame.offset.y);
 
-			loseSprite.shader = wiggleLose.shader;
+			/*
+			if (!ClientPrefs.lowQuality) {
+				wiggleLose = new WiggleEffect();
+				wiggleLose.effectType = HEAT_WAVE_VERTICAL;
+				wiggleLose.waveAmplitude = 0.002;
+				wiggleLose.waveFrequency = 60;
+				wiggleLose.waveSpeed = 4;
+
+				loseSprite.shader = wiggleLose.shader;
+			}
+			*/
+
+			loseSprite.antialiasing = ClientPrefs.globalAntialiasing;
+			loseSprite.cameras = [camHUD];
+			loseSprite.alpha = 0.00001;
+			add(loseSprite);
+
+			var info:String = "On " + PlayState.SONG.song;
+			if (lastTime > 0) {
+				info += " at " + FlxStringUtil.formatTime(lastTime, false) + " - " + FlxStringUtil.formatTime(lengthTime, false);
+				info += " (" + FlxStringUtil.formatTime(secondsTotal, false) + ")";
+			}
+
+			makeText(PlayState.instance.scoreTxt.text, loseAlignmentX, loseAlignmentY);
+			makeText(info, loseAlignmentX, loseAlignmentY);
+
+			inputText = makeText("Press ACCEPT key to Restart | Press BACK key to Quit Gameplay", quoteAlignmentX, quoteAlignmentY, quoteTexts);
+			makeText(FlxG.random.getObject(quotes), quoteAlignmentX, quoteAlignmentY, quoteTexts);
 		}
-		*/
-
-		loseSprite.antialiasing = ClientPrefs.globalAntialiasing;
-		loseSprite.cameras = [camHUD];
-		loseSprite.alpha = 0.00001;
-		add(loseSprite);
-
-		var info:String = "On " + PlayState.SONG.song;
-		if (lastTime > 0) {
-			info += " at " + FlxStringUtil.formatTime(lastTime, false) + " - " + FlxStringUtil.formatTime(lengthTime, false);
-			info += " (" + FlxStringUtil.formatTime(secondsTotal, false) + ")";
-		}
-
-		makeText(PlayState.instance.scoreTxt.text, loseAlignmentX, loseAlignmentY);
-		makeText(info, loseAlignmentX, loseAlignmentY);
-
-		inputText = makeText("Press ACCEPT key to Restart | Press BACK key to Quit Gameplay", quoteAlignmentX, quoteAlignmentY, quoteTexts);
-		makeText(FlxG.random.getObject(quotes), quoteAlignmentX, quoteAlignmentY, quoteTexts);
 
 		boyfriend = getBoyfriend(x, y);
 		boyfriend.x += boyfriend.positionArray[0];
@@ -225,6 +229,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 	}
 
 	function doTweenTexts(grp:FlxTypedGroup<FlxText>, alignY:String):Void {
+		if (grp == null || grp.members.length <= 0) return;
 		var isTop:Bool = alignY != 'bottom';
 
 		var delay:Float = 1.3 + (isTop ? 0 : grp.members.length * .2);

@@ -102,7 +102,7 @@ class Main extends Sprite
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-		
+
 		fpsVar.showFPS = ClientPrefs.showFPS;
 		fpsVar.showMem = ClientPrefs.showMem;
 		fpsVar.showMemPeak = ClientPrefs.showMemPeak;

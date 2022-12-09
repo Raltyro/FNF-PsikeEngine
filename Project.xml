@@ -11,8 +11,6 @@
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
 
-	<haxeflag name="-dce" value="no" />
-
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 		or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"-->
 	<!-- <app preloader="Preloader" resizable="true" /> -->
@@ -50,10 +48,10 @@
 	<define name="MODS_ALLOWED" if="desktop" />
 	<define name="LUA_ALLOWED" if="desktop" />
 	<define name="ACHIEVEMENTS_ALLOWED" />
-	<define name="VIDEOS_ALLOWED" if="web || windows" unless="32bits"/>
-	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE WATERMARKS/DEV NAMES ON TITLE SCREEN -->
-	<define name="TITLE_SCREEN_EASTER_EGG" if="officialBuild"/> <!-- DELETE THE if="officialBuild" for enabling this on an unofficial build -->
-	<define name="CRASH_HANDLER" if="desktop release" />
+	<define name="VIDEOS_ALLOWED" if="web || desktop || mobile" />
+	<define name="PSYCH_WATERMARKS" /> <!-- DELETE THIS TO REMOVE WATERMARKS/DEV NAMES ON TITLE SCREEN -->
+	<define name="TITLE_SCREEN_EASTER_EGG" /> <!-- DELETE THE if="officialBuild" for enabling this on an unofficial build -->
+	<define name="CRASH_HANDLER" if="desktop" />
 
 	<!-- DONT ENABLE THIS -->
 	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
@@ -125,7 +123,7 @@
 	</section>
 	
 	<section if="MODS_ALLOWED">
-		<assets path='example_mods' rename='mods' embed='false'/>
+		<assets path='example_mods' rename='mods' embed='false' type="template"/>
 	</section>
 	<assets path='art/readme.txt' rename='do NOT readme.txt' />
 	<!-- <template path='mods' /> -->
@@ -151,10 +149,12 @@
 
 	<!--In case you want to use the ui package-->
 	<haxelib name="flixel-ui" />
+
+	<!--Others-->
 	<haxelib name="linc_luajit-ralt" rename="linc_luajit" if="LUA_ALLOWED"/>
 	<haxelib name="hxCodec" version="git" if="VIDEOS_ALLOWED"/>
 	<haxelib name="faxe" if='switch'/>
-	<!--<haxelib name="polymod"/> -->
+	<!--<haxelib name="haxe-concurrent"/>-->
 	<haxelib name="discord_rpc" if="desktop"/>
 
 	<!-- Enables a terminal log prompt on debug builds -->
@@ -210,6 +210,8 @@
 
 	<haxedef name="queue_experimental_optimization"/>
 	<haxedef name="gl_stats"/>
+
+	<haxeflag name="--dce" value="no" />
 
 	<!-- _________________________________ Custom _______________________________ -->
 
