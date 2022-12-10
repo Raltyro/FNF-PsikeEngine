@@ -671,8 +671,8 @@ class FunkinLua {
 				var retVal:Dynamic;
 				if (Std.isOfType(codeToRun, Int))
 					retVal = hscript.execute(hscript.getExpr(codeToRun));
-				else 
-					retVal = hscript.execute(hscript.getExpr(hscript.parse(codeToRun)));
+				else
+					retVal = hscript.immediateExecute(codeToRun);
 
 				if (retVal != null && isOfTypes(retVal, allowedHaxeTypes)) return retVal;
 			}
@@ -2851,11 +2851,10 @@ class FunkinLua {
 	public function luaTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, color:FlxColor = FlxColor.WHITE) {
 		#if LUA_ALLOWED
 		if(ignoreCheck || getBool('luaDebugMode')) {
-			if(deprecated && !getBool('luaDeprecatedWarnings')) {
-				return;
-			}
+			if(deprecated && !getBool('luaDeprecatedWarnings')) return;
 			PlayState.instance.addTextToDebug(text, color);
-			trace(text);
+
+			haxe.Log.trace(text, cast {fileName: scriptName, lineNumber: 0});
 		}
 		#end
 	}
@@ -2957,6 +2956,7 @@ class FunkinLua {
 	}
 
 	public function stop() {
+		trace('closing lua script $scriptName');
 		PlayState.instance.luaArray.remove(this);
 		closed = true;
 
@@ -3056,10 +3056,16 @@ class CustomSubstate extends MusicBeatSubstate
 #if hscript
 class HScript
 {
+	private static var MAX_POOL(default, null):Int = 255;
+
 	public static var parser:Parser = new Parser();
 	public var idEnumerator:Int = 0;
-	public var exprs:Map<Int, Expr> = new Map();
-	private var cache:Map<String, Int> = new Map();
+
+	public var exprs:Map<Int, Expr> = new Map(); // safe cache
+	private var pool:Map<Int, Expr> = new Map(); // unsafe immediate cache
+	private var keys:Map<String, Int> = new Map(); // indices
+	private var syek:Map<Int, String> = new Map(); // secidni (for pool)
+	private var poolarr:Array<Int> = [];
 
 	public var interp:Interp;
 
@@ -3069,6 +3075,7 @@ class HScript
 
 	public function new() {
 		interp = new Interp();
+
 		variables.set('FlxG', FlxG);
 		variables.set('FlxSprite', FlxSprite);
 		variables.set('FlxCamera', FlxCamera);
@@ -3109,10 +3116,10 @@ class HScript
 	}
 
 	public function parse(code:String):Int {
-		if (cache.exists(code)) return cache.get(code);
+		if (keys.exists(code)) return keys.get(code);
 		var expr:Expr = parser.parseString(code);
 		exprs.set(idEnumerator, expr);
-		cache.set(code, idEnumerator);
+		keys.set(code, idEnumerator);
 		return idEnumerator++;
 	}
 
@@ -3124,6 +3131,41 @@ class HScript
 		parser.line = 1;
 		parser.allowTypes = true;
 		return interp.execute(expr);
+	}
+
+	public function immediateExecute(code:String):Dynamic {
+		var expr:Expr;
+		if (keys.exists(code)) expr = pool.get(keys.get(code));
+		else {
+			expr = parser.parseString(code);
+			pool.set(idEnumerator, expr);
+			keys.set(code, idEnumerator);
+			syek.set(idEnumerator, code);
+			poolarr.push(idEnumerator);
+			idEnumerator++;
+			while (poolarr.length > MAX_POOL) {
+				var id:Int = poolarr.shift();
+				var code:String = syek.get(id);
+				syek.remove(id);
+				keys.remove(code);
+				pool.remove(id);
+			}
+		}
+		return inline execute(expr);
+	}
+
+	public function destroy() {
+		//idEnumerator = 0;
+		//variables.clear();
+		exprs.clear();
+		pool.clear();
+		keys.clear();
+		syek.clear();
+		var i:Int = poolarr.length - 1;
+		while (i >= 0) {
+			poolarr.shift();
+			--i;
+		}
 	}
 }
 #end

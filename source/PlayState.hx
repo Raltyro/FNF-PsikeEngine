@@ -4998,18 +4998,13 @@ class PlayState extends MusicBeatState
 		if (!Std.isOfType(FlxG.game._requestedState, PlayState))
 			Paths.clearStoredMemory();
 
-		var i:Int = luaArray.length - 1;
-		while (i >= 0) {
+		var i:Int = luaArray.length;
+		while (--i >= 0) {
 			var lua:FunkinLua = luaArray[i];
 			lua.call('onDestroy');
 			lua.stop();
-			i--;
 		}
 		luaArray.resize(0);
-
-		#if hscript
-		FunkinLua.hscript = null;
-		#end
 
 		if(!ClientPrefs.controllerMode) {
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
@@ -5018,6 +5013,11 @@ class PlayState extends MusicBeatState
 
 		FlxAnimationController.globalSpeed = 1;
 		FlxG.sound.music.pitch = 1;
+
+		#if hscript
+		FunkinLua.hscript.destroy();
+		FunkinLua.hscript = null;
+		#end
 
 		super.destroy();
 	}

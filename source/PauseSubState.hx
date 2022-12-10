@@ -304,15 +304,11 @@ class PauseSubState extends MusicBeatSubstate
 		FlxG.sound.music.volume = 0;
 		PlayState.instance.vocals.volume = 0;
 
-		if(noTrans)
-		{
+		if (noTrans) {
 			FlxTransitionableState.skipNextTransOut = true;
-			FlxG.resetState();
+			FlxTransitionableState.skipNextTransIn = true;
 		}
-		else
-		{
-			MusicBeatState.resetState();
-		}
+		MusicBeatState.resetState();
 	}
 
 	override function destroy()
