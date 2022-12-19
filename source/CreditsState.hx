@@ -62,7 +62,7 @@ class CreditsState extends MusicBeatState
 		['Raltyro',				'raltyro',			'Maintainer of Psike Engine',									'https://twitter.com/raltyro',				'F3F3F3'],
 		[''],
 		['Fork Contributors'],
-		['Eventretta',			'eventy',			'Clean-up Codes & Coool Stuff',									'https://twitter.com/Eventretta',			'6B7D94'],
+		['Eventretta',			'eventy',			'Clean-up Codes and Cool Stuff',								'https://twitter.com/Eventretta',			'6B7D94'],
 		['EyeDaleHim',			'eyedale',			'Programming Help and Emotional Support',						'https://twitter.com/him_dale',				'FF9300'],
 		[''],
 		['Special Thanks'],
@@ -71,6 +71,7 @@ class CreditsState extends MusicBeatState
 		['happyforever/cutzye',	'cutzye',			'Game Over Quotes',												'https://twitter.com/happyisntfunny',		'F3F3F3'],
 		['Betopia',				'betpowo',			'Game Over Quotes',												'https://twitter.com/betpowo',				'F3F3F3'],
 		['shrimpsketti#7483',	'unknown',			'Game Over Quotes',												'',											'F3F3F3'],
+		['Kirbitus',			'kirbitus',			'Cool Artist Friend',											'https://gamebanana.com/members/1853621',	'FFFFFF'],
 	];
 
 	private static var funkin(default, never):Array<Array<String>> = [

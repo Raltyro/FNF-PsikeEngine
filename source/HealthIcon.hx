@@ -7,6 +7,8 @@ import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
+import flixel.math.FlxPoint;
+import flixel.util.FlxDestroyUtil;
 
 using StringTools;
 
@@ -18,14 +20,17 @@ class HealthIcon extends FlxSprite
 	public static var altDefaultIcon(default, null):String = 'icon-face';
 
 	public var iconOffsets:Array<Float> = [0, 0];
+	public var iconZoom:Float = 1;
 	public var sprTracker:FlxSprite;
 	public var isOldIcon(get, null):Bool;
+	public var isPixelIcon(get, null):Bool;
 	public var isPlayer:Bool;
 	public var isCredit:Bool;
 
 	private var char:String = '';
 	private var availableStates:Int = 1;
 	private var state:Int = 0;
+	private var _scale:FlxPoint;
 
 	public static function returnGraphic(char:String, ?folder:String, defaultIfMissing:Bool = false, creditIcon:Bool = false):FlxGraphic {
 		var path:String;
@@ -55,10 +60,29 @@ class HealthIcon extends FlxSprite
 		changeIcon(char == null ? (isCredit ? defaultIcon : 'bf') : char, folder);
 	}
 
+	@:noCompletion
+	override function initVars():Void {
+		super.initVars();
+		_scale = FlxPoint.get();
+	}
+
+	override function destroy():Void {
+		super.destroy();
+		_scale = FlxDestroyUtil.put(_scale);
+	}
+
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
 		if (sprTracker != null) setPosition(sprTracker.x + sprTracker.width + 12, sprTracker.y - 30);
+	}
+
+	override function draw() {
+		if (iconZoom == 1) return super.draw();
+		_scale.copyFrom(scale);
+		scale.scale(iconZoom);
+		super.draw();
+		_scale.copyTo(scale);
 	}
 
 	public function swapOldIcon() {
@@ -73,14 +97,19 @@ class HealthIcon extends FlxSprite
 		if (isCredit) graph = returnGraphic(char, folder, false, true);
 		if (graph == null) graph = returnGraphic(char, defaultIfMissing);
 		else {
+			availableStates = 1;
 			this.char = char;
-
-			iconOffsets[1] = iconOffsets[0] = 0;
-			loadGraphic(graph);
-			updateHitbox();
 			state = 0;
 
-			antialiasing = !char.endsWith('-pixel');
+			iconOffsets[1] = iconOffsets[0] = 0;
+			loadGraphic(graph, true, graph.width, graph.height);
+			iconZoom = isPixelIcon ? 150 / graph.height : 1;
+
+			animation.add(char, [0], 0, false, isPlayer);
+			animation.play(char);
+
+			updateHitbox();
+			antialiasing = iconZoom < 2.5 && ClientPrefs.globalAntialiasing;
 			return true;
 		}
 
@@ -88,21 +117,17 @@ class HealthIcon extends FlxSprite
 		var ratio:Float = graph.width / graph.height;
 		availableStates = Math.round(ratio);
 		this.char = char;
+		state = 0;
 
 		iconOffsets[1] = iconOffsets[0] = 0;
-		if (availableStates <= 1) {
-			loadGraphic(graph);
-			updateHitbox();
-			state = 0;
-			return true;
-		}
 		loadGraphic(graph, true, Math.floor(graph.width / availableStates), graph.height);
-		updateHitbox();
+		iconZoom = isPixelIcon ? 150 / graph.height : 1;
 
 		animation.add(char, [for (i in 0...availableStates) i], 0, false, isPlayer);
 		animation.play(char);
 
-		antialiasing = !char.endsWith('-pixel');
+		updateHitbox();
+		antialiasing = iconZoom < 2.5 && ClientPrefs.globalAntialiasing;
 		return true;
 	}
 
@@ -114,12 +139,22 @@ class HealthIcon extends FlxSprite
 
 	override function updateHitbox() {
 		super.updateHitbox();
-		offset.set(iconOffsets[0], iconOffsets[1]);
+		width *= iconZoom;
+		height *= iconZoom;
+		offset.set(
+			-0.5 * (frameWidth * iconZoom - frameWidth) + iconOffsets[0],
+			-0.5 * (frameHeight * iconZoom - frameHeight) + iconOffsets[1]
+		);
 	}
 
 	public function getCharacter():String
 		return char;
 
+	@:noCompletion
+	inline function get_isPixelIcon():Bool
+		return char.substr(-6, 6) == '-pixel';
+
+	@:noCompletion
 	inline function get_isOldIcon():Bool
 		return char.substr(-4, 4) == '-old';
 

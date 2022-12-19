@@ -84,6 +84,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 	override function create() {
 		instance = this;
 		camOther.zoom = camHUD.zoom = 1;
+		camOther.x = camOther.y = camOther.angle = camHUD.x = camHUD.y = camHUD.angle = 0;
 		PlayState.instance.callOnLuas('onGameOverStart', []);
 		Paths.compress();
 

@@ -120,7 +120,7 @@ class FunkinLua {
 		set('scrollSpeed', PlayState.SONG.speed);
 		set('crochet', Conductor.crochet);
 		set('stepCrochet', Conductor.stepCrochet);
-		set('songLength', FlxG.sound.music.length);
+		set('songLength', PlayState.instance.songLength);
 		set('songName', PlayState.SONG.song);
 		set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
 		set('startedCountdown', false);
@@ -226,6 +226,7 @@ class FunkinLua {
 	}
 
 	public static function initStatics() {
+		Convert.traceUnsupported = false;
 		#if hscript
 		hscript = new HScript();
 		#end
@@ -2870,23 +2871,27 @@ class FunkinLua {
 
 		if (type != Lua.LUA_TFUNCTION) {
 			if (type > Lua.LUA_TNIL)
-				luaTrace('ERROR ($func)): attempt to call a ' + Lua.typename(lua, type) + " value as a callback", false, false, FlxColor.RED);
+				luaTrace('ERROR ($func)): attempt to call a ${Lua.typename(lua, type)} value as a callback', false, false, FlxColor.RED);
 
 			Lua.pop(lua, 1);
 			return Function_Continue;
 		}
 
-		if (args != null) for (arg in args) Convert.toLua(lua, arg);
-		var status:Int = Lua.pcall(lua, args != null ? args.length : 0, 1, 0);
+		var nargs:Int = 0;
+		if (args != null) for (arg in args) {
+			if (Convert.toLua(lua, arg)) nargs++;
+			else luaTrace('WARNING ($func)): attempt to insert ${Type.typeof(arg)} (unsupported value type) as a argument', false, false, FlxColor.ORANGE);
+		}
+		var status:Int = Lua.pcall(lua, nargs, 1, 0);
 
 		if (status != Lua.LUA_OK) {
-			luaTrace('ERROR ($func)): ' + getErrorMessage(status), false, false, FlxColor.RED);
+			luaTrace('ERROR ($func)): ${getErrorMessage(status)}', false, false, FlxColor.RED);
 			return Function_Continue;
 		}
 
 		var resultType:Int = Lua.type(lua, -1);
 		if (!resultIsAllowed(resultType)) {
-			luaTrace('WARNING ($func): unsupported returned value type ("' + Lua.typename(lua, resultType) + "\")", false, false, FlxColor.ORANGE);
+			luaTrace('WARNING ($func): unsupported returned value type ("${Lua.typename(lua, resultType)}")', false, false, FlxColor.ORANGE);
 			Lua.pop(lua, 1);
 			return Function_Continue;
 		}

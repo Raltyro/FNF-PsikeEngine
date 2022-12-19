@@ -306,14 +306,14 @@ class Paths
 		return file;
 	}
 
-	static public function voices(song:String):Any
+	static public function voices(song:String):Sound
 	{
 		var songKey:String = '${formatToSongPath(song)}/Voices';
 		var voices = returnSound('songs', songKey, streamMusic);
 		return voices;
 	}
 
-	static public function inst(song:String):Any
+	static public function inst(song:String):Sound
 	{
 		var songKey:String = '${formatToSongPath(song)}/Inst';
 		var inst = returnSound('songs', songKey, streamMusic);
