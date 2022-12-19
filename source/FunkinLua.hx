@@ -65,6 +65,13 @@ class FunkinLua {
 	public static var hscript:HScript = null;
 	#end
 
+	public static function execute(script:String):FunkinLua {
+		if (PlayState.instance == null || FlxG.state != PlayState.instance) return null;
+		var lua:FunkinLua = new FunkinLua(script);
+		if (!lua.closed) PlayState.instance.luaArray.push(lua);
+		return lua;
+	}
+
 	#if LUA_ALLOWED
 	public var lua:State;
 	#end
@@ -618,7 +625,7 @@ class FunkinLua {
 					}
 				}
 			}
-			PlayState.instance.luaArray.push(new FunkinLua(cervix));
+			FunkinLua.execute(cervix);
 		});
 
 		Lua_helper.set_static_callback("removeLuaScript", function(flua:FunkinLua, luaFile:String) {
@@ -3000,6 +3007,7 @@ class ModchartText extends FlxText
 		cameras = [PlayState.instance.camHUD];
 		scrollFactor.set();
 		borderSize = 2;
+		antialiasing = ClientPrefs.globalAntialiasing;
 	}
 }
 
@@ -3013,6 +3021,7 @@ class DebugLuaText extends FlxText
 		setFormat(Paths.font("vcr.ttf"), 16, color, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		scrollFactor.set();
 		borderSize = 1;
+		antialiasing = ClientPrefs.globalAntialiasing;
 	}
 
 	override function update(elapsed:Float) {

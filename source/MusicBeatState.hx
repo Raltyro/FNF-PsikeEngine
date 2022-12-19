@@ -27,6 +27,8 @@ class MusicBeatState extends FlxUIState
 	private var curDecBeat:Float = 0;
 	private var controls(get, never):Controls;
 
+	private static var previousClassState:Class<FlxState>;
+
 	public static var camBeat:FlxCamera;
 
 	inline function get_controls():Controls
@@ -43,6 +45,7 @@ class MusicBeatState extends FlxUIState
 
 	override function destroy() {
 		Paths.compress(2);
+		previousClassState = cast Type.getClass(this);
 		super.destroy();
 	}
 
@@ -153,6 +156,10 @@ class MusicBeatState extends FlxUIState
 
 	public static function inState(state:Class<FlxState>):Bool {
 		return Std.isOfType(FlxG.state, state);
+	}
+
+	public static function previousStateIs(state:Class<FlxState>):Bool {
+		return previousClassState != null && Std.isOfType(previousClassState, state);
 	}
 
 	public function stepHit():Void

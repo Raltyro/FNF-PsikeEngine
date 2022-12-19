@@ -6,6 +6,8 @@ import flixel.FlxCamera;
 import flixel.FlxSprite;
 import flixel.FlxG;
 
+import Conductor.Rating;
+
 class NoteOffsetState extends MusicBeatState {
 	public static var daPixelZoom:Float = PlayState.daPixelZoom;
 	public var isPixelStage:Bool = false;
@@ -26,9 +28,7 @@ class NoteOffsetState extends MusicBeatState {
 	public var camOther:FlxCamera;
 	public var cameraSpeed:Float = 1;
 
-	public var rating:FlxSprite;
-	public var comboSpr:FlxSprite;
-	public var comboNums:FlxSpriteGroup;
+	public var ratingSpr:RatingSpr;
 
 	var defaultCamZoom:Float = 1;
 
@@ -73,7 +73,16 @@ class NoteOffsetState extends MusicBeatState {
 
 		makeForeStage();
 
-		makeCombo();
+		ratingSpr = new RatingSpr(this, {
+			showRating: true,
+			showCombo: false,
+			showComboNum: true,
+			isPixel: isPixelStage,
+
+			rating: new Rating('sick'),
+			diff: FlxG.random.float(-600, 600),
+			combo: FlxG.random.int(50, 500)
+		}, camHUD, false);
 
 		Conductor.changeBPM(128.0);
 		FlxG.sound.playMusic(Paths.music('offsetSong'), 1, true);
@@ -113,87 +122,10 @@ class NoteOffsetState extends MusicBeatState {
 		}
 	}
 
-	inline function makeCombo():Void {
-		var showRating:Bool = true;
-		var showCombo:Bool = true;
-		var showComboNum:Bool = true;
-
-		if (rating != null && rating.exists) {
-			showRating = rating.visible;
-			remove(rating);
-			rating.destroy();
-		}
-		if (comboSpr != null && comboSpr.exists) {
-			showCombo = comboSpr.visible;
-			remove(comboSpr);
-			comboSpr.destroy();
-		}
-		if (comboNums != null && comboNums.exists) {
-			showComboNum = comboNums.visible;
-			remove(comboNums);
-			comboNums.destroy();
-		}
-
-		var seperatedScore:Array<Int> = [for (i in 0...3) FlxG.random.int(0, 9)];
-
-		var p1:String = '';
-		var p2:String = '';
-		if (isPixelStage) {
-			p1 = 'pixelUI/';
-			p2 = '-pixel';
-		}
-
-		rating = new FlxSprite().loadGraphic(Paths.image(p1 + 'sick' + p2));
-		rating.visible = showRating;
-
-		comboSpr = new FlxSprite().loadGraphic(Paths.image(p1 + 'combo' + p2));
-		comboSpr.visible = showCombo;
-
-		comboNums = new FlxSpriteGroup();
-		comboNums.visible = showComboNum;
-
-		if (isPixelStage) {
-			rating.scale.set(daPixelZoom * 0.8, daPixelZoom * 0.8);
-			comboSpr.scale.set(daPixelZoom * 0.56, daPixelZoom * 0.56);
-		}
-		else {
-			rating.antialiasing = comboSpr.antialiasing = ClientPrefs.globalAntialiasing;
-			rating.scale.set(0.7, 0.7);
-			comboSpr.scale.set(0.5, 0.5);
-		}
-		rating.updateHitbox();
-		comboSpr.updateHitbox();
-
-		var daLoop:Int = 0;
-		var numScore:FlxSprite;
-
-		for (i in seperatedScore) {
-			numScore = new FlxSprite(43 * daLoop).loadGraphic(Paths.image(p1 + 'num$i' + p2));
-
-			if (isPixelStage)
-				numScore.scale.set(daPixelZoom * 0.8, daPixelZoom * 0.8);
-			else {
-				numScore.antialiasing = ClientPrefs.globalAntialiasing;
-				numScore.scale.set(0.5, 0.5);
-			}
-			numScore.updateHitbox();
-
-			comboNums.add(numScore);
-			daLoop++;
-		}
-
-		comboNums.cameras = rating.cameras = comboSpr.cameras = [camHUD];
-		add(rating);
-		add(comboSpr);
-		add(comboNums);
-
-		repositionCombo();
-	}
-
 	override function update(elapsed:Float) {
-		Conductor.songPosition = FlxG.sound.music.time;
 		super.update(elapsed);
 
+		Conductor.songPosition = FlxG.sound.music.time;
 		camGame.zoom = FlxMath.lerp(camGame.zoom, defaultCamZoom, CoolUtil.boundTo(elapsed * 3.125, 0, 1));
 
 		if (controls.BACK) {
@@ -210,22 +142,5 @@ class NoteOffsetState extends MusicBeatState {
 
 		if (camGame.zoom < 1.35)
 			camGame.zoom += 0.015;
-	}
-
-	function repositionCombo():Void {
-		var coolX:Float = FlxG.width * 0.35;
-
-		rating.setPosition(
-			(FlxG.width - rating.frameWidth) / 2 * 0.9 - 20 + ClientPrefs.comboOffset[0],
-			(FlxG.width - rating.frameHeight) / 2 - 60 - ClientPrefs.comboOffset[1]
-		);
-		comboNums.setPosition(
-			coolX - 90 + ClientPrefs.comboOffset[2],
-			(FlxG.width - (comboNums.height / .5)) / 2 + 80 - ClientPrefs.comboOffset[3]
-		);
-		comboSpr.setPosition(
-			comboNums.members[comboNums.length - 1].x + 50,
-			(FlxG.height - comboSpr.frameHeight) / 2 + 80 - ClientPrefs.comboOffset[3]
-		);
 	}
 }

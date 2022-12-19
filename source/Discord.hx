@@ -3,11 +3,6 @@ package;
 import Sys.sleep;
 import discord_rpc.DiscordRpc;
 
-#if LUA_ALLOWED
-import llua.Lua;
-import llua.State;
-#end
-
 using StringTools;
 
 class DiscordClient
@@ -33,12 +28,12 @@ class DiscordClient
 
 		DiscordRpc.shutdown();
 	}
-	
+
 	public static function shutdown()
 	{
 		DiscordRpc.shutdown();
 	}
-	
+
 	static function onReady()
 	{
 		DiscordRpc.presence({
@@ -82,7 +77,7 @@ class DiscordClient
 			details: details,
 			state: state,
 			largeImageKey: 'icon',
-			largeImageText: "Engine Version: " + MainMenuState.psychEngineVersion,
+			largeImageText: 'Engine/Psike Version: ${MainMenuState.psychEngineVersion}-${CoolUtil.gitCommitHash}',
 			smallImageKey : smallImageKey,
 			// Obtained times are in milliseconds so they are divided so Discord can use it
 			startTimestamp : Std.int(startTimestamp / 1000),

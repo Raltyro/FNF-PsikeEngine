@@ -318,7 +318,7 @@ class PlayState extends MusicBeatState
 	{
 		instance = this;
 		Paths.clearStoredMemory();
-		FlxG.sound.destroy(true);
+		if (!MusicBeatState.previousStateIs(PlayState)) FlxG.sound.destroy(true);
 
 		var music:FlxSound = FlxG.sound.music = new FlxSound();
 		music.persist = true;
@@ -381,8 +381,9 @@ class PlayState extends MusicBeatState
 		camGame = new FlxCamera();
 		camHUD = new FlxCamera();
 		camOther = new FlxCamera();
-		camHUD.bgColor.alpha = 0;
-		camOther.bgColor.alpha = 0;
+		camGame.bgColor = 0xFF000000;
+		camHUD.bgColor = 0x00000000;
+		camOther.bgColor = 0x00000000;
 
 		FlxG.cameras.reset(camGame);
 		FlxG.cameras.add(camHUD, false);
@@ -876,7 +877,7 @@ class PlayState extends MusicBeatState
 				{
 					if(file.endsWith('.lua') && !filesPushed.contains(file))
 					{
-						luaArray.push(new FunkinLua(folder + file));
+						FunkinLua.execute(folder + file);
 						filesPushed.push(file);
 					}
 				}
@@ -900,7 +901,7 @@ class PlayState extends MusicBeatState
 		}
 
 		if(doPush)
-			luaArray.push(new FunkinLua(luaFile));
+			FunkinLua.execute(luaFile);
 		#end
 
 		var gfVersion:String = SONG.gfVersion;
@@ -1022,6 +1023,7 @@ class PlayState extends MusicBeatState
 		timeTxt.alpha = 0;
 		timeTxt.borderSize = 2;
 		timeTxt.visible = showTime;
+		timeTxt.antialiasing = ClientPrefs.globalAntialiasing;
 		if(ClientPrefs.downScroll) timeTxt.y = FlxG.height - 44;
 
 		if(ClientPrefs.timeBarType == 'Song Name')
@@ -1039,6 +1041,7 @@ class PlayState extends MusicBeatState
 		timeBarBG.color = FlxColor.BLACK;
 		timeBarBG.xAdd = -4;
 		timeBarBG.yAdd = -4;
+		timeBarBG.antialiasing = ClientPrefs.globalAntialiasing;
 		add(timeBarBG);
 
 		timeBar = new FlxBar(timeBarBG.x + 4, timeBarBG.y + 4, LEFT_TO_RIGHT, Std.int(timeBarBG.width - 8), Std.int(timeBarBG.height - 8), this,
@@ -1048,6 +1051,7 @@ class PlayState extends MusicBeatState
 		timeBar.numDivisions = 800; //How much lag this causes?? Should i tone it down to idk, 400 or 200?
 		timeBar.alpha = 0;
 		timeBar.visible = showTime;
+		timeBar.antialiasing = ClientPrefs.globalAntialiasing;
 		add(timeBar);
 		add(timeTxt);
 		timeBarBG.sprTracker = timeBar;
@@ -1109,6 +1113,7 @@ class PlayState extends MusicBeatState
 		healthBarBG.visible = !ClientPrefs.hideHud;
 		healthBarBG.xAdd = -4;
 		healthBarBG.yAdd = -4;
+		healthBarBG.antialiasing = ClientPrefs.globalAntialiasing;
 		add(healthBarBG);
 		if(ClientPrefs.downScroll) healthBarBG.y = 0.11 * FlxG.height;
 
@@ -1118,6 +1123,7 @@ class PlayState extends MusicBeatState
 		// healthBar
 		healthBar.visible = !ClientPrefs.hideHud;
 		healthBar.alpha = ClientPrefs.healthBarAlpha;
+		healthBar.antialiasing = ClientPrefs.globalAntialiasing;
 		add(healthBar);
 		healthBarBG.sprTracker = healthBar;
 
@@ -1139,6 +1145,7 @@ class PlayState extends MusicBeatState
 		scoreTxt.scrollFactor.set();
 		scoreTxt.borderSize = 1.25;
 		scoreTxt.visible = !ClientPrefs.hideHud;
+		scoreTxt.antialiasing = ClientPrefs.globalAntialiasing;
 		add(scoreTxt);
 
 		botplayTxt = new FlxText(400, timeBarBG.y + 55, FlxG.width - 800, "BOTPLAY", 32);
@@ -1146,6 +1153,7 @@ class PlayState extends MusicBeatState
 		botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
 		botplayTxt.visible = cpuControlled;
+		botplayTxt.antialiasing = ClientPrefs.globalAntialiasing;
 		add(botplayTxt);
 		if(ClientPrefs.downScroll) {
 			botplayTxt.y = timeBarBG.y - 78;
@@ -1179,21 +1187,21 @@ class PlayState extends MusicBeatState
 			var luaToLoad:String = Paths.modFolders('custom_notetypes/' + notetype + '.lua');
 			if(FileSystem.exists(luaToLoad))
 			{
-				luaArray.push(new FunkinLua(luaToLoad));
+				FunkinLua.execute(luaToLoad);
 			}
 			else
 			{
 				luaToLoad = Paths.getPreloadPath('custom_notetypes/' + notetype + '.lua');
 				if(FileSystem.exists(luaToLoad))
 				{
-					luaArray.push(new FunkinLua(luaToLoad));
+					FunkinLua.execute(luaToLoad);
 				}
 			}
 			#elseif sys
 			var luaToLoad:String = Paths.getPreloadPath('custom_notetypes/' + notetype + '.lua');
 			if(OpenFlAssets.exists(luaToLoad))
 			{
-				luaArray.push(new FunkinLua(luaToLoad));
+				FunkinLua.execute(luaToLoad);
 			}
 			#end
 		}
@@ -1203,21 +1211,21 @@ class PlayState extends MusicBeatState
 			var luaToLoad:String = Paths.modFolders('custom_events/' + event + '.lua');
 			if(FileSystem.exists(luaToLoad))
 			{
-				luaArray.push(new FunkinLua(luaToLoad));
+				FunkinLua.execute(luaToLoad);
 			}
 			else
 			{
 				luaToLoad = Paths.getPreloadPath('custom_events/' + event + '.lua');
 				if(FileSystem.exists(luaToLoad))
 				{
-					luaArray.push(new FunkinLua(luaToLoad));
+					FunkinLua.execute(luaToLoad);
 				}
 			}
 			#elseif sys
 			var luaToLoad:String = Paths.getPreloadPath('custom_events/' + event + '.lua');
 			if(OpenFlAssets.exists(luaToLoad))
 			{
-				luaArray.push(new FunkinLua(luaToLoad));
+				FunkinLua.execute(luaToLoad);
 			}
 			#end
 		}
@@ -1249,7 +1257,7 @@ class PlayState extends MusicBeatState
 				{
 					if(file.endsWith('.lua') && !filesPushed.contains(file))
 					{
-						luaArray.push(new FunkinLua(folder + file));
+						FunkinLua.execute(folder + file);
 						filesPushed.push(file);
 					}
 				}
@@ -1565,7 +1573,7 @@ class PlayState extends MusicBeatState
 			{
 				if(script.scriptName == luaFile) return;
 			}
-			luaArray.push(new FunkinLua(luaFile));
+			FunkinLua.execute(luaFile);
 		}
 		#end
 	}
@@ -4080,6 +4088,7 @@ class PlayState extends MusicBeatState
 	public var showComboNum:Bool = true;
 	public var showRating:Bool = true;
 
+	public static var lastRatingSpr:RatingSpr;
 	public static var lastRating:FlxSprite;
 	public static var lastCombo:FlxSprite;
 	public static var lastScore:Array<FlxSprite> = [];
@@ -4100,6 +4109,7 @@ class PlayState extends MusicBeatState
 		Paths.image(p1 + 'combo' + p2, 'shared');
 
 		for (i in 0...10) Paths.image(p1 + 'num$i' + p2);
+		Paths.image(p1 + 'numnegative' + p2);
 	}
 
 	private function popUpScore(note:Note):Void
@@ -4107,9 +4117,6 @@ class PlayState extends MusicBeatState
 		if (note == null) return;
 
 		var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.ratingOffset);
-		var placement:String = Std.string(combo);
-		var coolX:Float = FlxG.width * 0.35;
-
 		var daRating:Rating = Conductor.judgeNote(note, noteDiff / playbackRate);
 		note.ratingMod = daRating.ratingMod;
 		note.rating = daRating.name;
@@ -4129,133 +4136,26 @@ class PlayState extends MusicBeatState
 			}
 		}
 
+		if (!ClientPrefs.comboStacking && lastRatingSpr != null) lastRatingSpr.destroy();
+		var ratingSpr:RatingSpr = new RatingSpr(this, {
+			showRating: showRating,
+			showCombo: showCombo,
+			showComboNum: showComboNum,
+			isPixel: isPixelStage,
+			speedRate: playbackRate,
+
+			rating: daRating,
+			diff: noteDiff,
+			combo: combo
+		}, camHUD, members.indexOf(strumLineNotes));
+
+		lastRatingSpr = ratingSpr;
+		lastRating = ratingSpr.rating;
+		lastCombo = ratingSpr.combo;
 		if (lastScore == null) lastScore = [];
-		if (!ClientPrefs.comboStacking) {
-			if (lastRating != null && lastRating.exists) {
-				remove(lastRating);
-				lastRating.destroy();
-			}
-			if (lastCombo != null && lastCombo.exists) {
-				remove(lastCombo);
-				lastCombo.destroy();
-			}
 
-			var i:Int = lastScore.length;
-			while (--i >= 0) {
-				remove(lastScore[i]);
-				lastScore[i].destroy();
-			}
-		}
 		lastScore.resize(0);
-
-		var seperatedScore:Array<Int> = [];
-		for (i in 0...(3-placement.length)) seperatedScore.push(0);
-		for (i in 0...placement.length) seperatedScore.push(Std.parseInt(placement.charAt(i)));
-
-		var p1:String = '';
-		var p2:String = '';
-		if (isPixelStage) {
-			p1 = 'pixelUI/';
-			p2 = '-pixel';
-		}
-
-		var rating:FlxSprite = new FlxSprite().loadGraphic(Paths.image(p1 + daRating.image + p2));
-		rating.visible = !ClientPrefs.hideHud && showRating;
-		rating.velocity.set(-FlxG.random.int(0, 10) * playbackRate, -FlxG.random.int(140, 175) * playbackRate);
-		rating.acceleration.y = 550 * playbackRate * playbackRate;
-
-		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(p1 + 'combo' + p2));
-		comboSpr.visible = (!ClientPrefs.hideHud && showCombo);
-		comboSpr.velocity.set(FlxG.random.int(1, 10) * playbackRate, -FlxG.random.int(140, 160) * playbackRate);
-		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-
-		if (isPixelStage) {
-			rating.scale.set(daPixelZoom * 0.8, daPixelZoom * 0.8);
-			comboSpr.scale.set(daPixelZoom * 0.56, daPixelZoom * 0.56);
-		}
-		else {
-			rating.antialiasing = comboSpr.antialiasing = ClientPrefs.globalAntialiasing;
-			rating.scale.set(0.7, 0.7);
-			comboSpr.scale.set(0.5, 0.5);
-		}
-		rating.updateHitbox();
-		comboSpr.updateHitbox();
-
-		rating.screenCenter();
-		rating.setPosition(rating.x * 0.9 - 40, rating.y - 60);
-		rating.x += ClientPrefs.comboOffset[0];
-		rating.y -= ClientPrefs.comboOffset[1];
-
-		comboSpr.screenCenter(Y);
-		comboSpr.setPosition(coolX, comboSpr.y + 50);
-		comboSpr.y -= ClientPrefs.comboOffset[3];
-
-		if (showRating) insert(members.indexOf(strumLineNotes), rating);
-		if (showCombo) insert(members.indexOf(strumLineNotes), comboSpr);
-		rating.cameras = comboSpr.cameras = [camHUD];
-		lastRating = rating;
-		lastCombo = comboSpr;
-
-		var daLoop:Int = 0;
-		var xThing:Float = 0;
-		var numScore:FlxSprite;
-
-		for (i in seperatedScore) {
-			numScore = new FlxSprite().loadGraphic(Paths.image(p1 + 'num$i' + p2));
-			numScore.screenCenter(Y);
-			numScore.setPosition(coolX + (43 * daLoop) - 90, numScore.y + 80);
-			numScore.x += ClientPrefs.comboOffset[2];
-			numScore.y -= ClientPrefs.comboOffset[3];
-			numScore.visible = !ClientPrefs.hideHud && showComboNum;
-			numScore.cameras = [camHUD];
-
-			numScore.velocity.set(FlxG.random.float(-5, 5) * playbackRate, -FlxG.random.int(140, 160) * playbackRate);
-			numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-
-			if (isPixelStage)
-				numScore.scale.set(daPixelZoom * 0.8, daPixelZoom * 0.8);
-			else {
-				numScore.antialiasing = ClientPrefs.globalAntialiasing;
-				numScore.scale.set(0.5, 0.5);
-			}
-			numScore.updateHitbox();
-
-			//if (combo >= 10 || combo == 0)
-			if (showComboNum) insert(members.indexOf(strumLineNotes), numScore);
-			lastScore.push(numScore);
-
-			FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
-				startDelay: Conductor.crochet * 0.002 / playbackRate,
-				onComplete: removeObject
-			});
-
-			daLoop++;
-			if (numScore.x > xThing) xThing = numScore.x;
-		}
-
-		comboSpr.x = xThing + 50;
-
-		FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
-			startDelay: Conductor.crochet * 0.001 / playbackRate,
-			onComplete: removeObject
-		});
-
-		FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
-			startDelay: Conductor.crochet * 0.002 / playbackRate,
-			onComplete: removeObject
-		});
-	}
-
-	private function removeObject(tween:FlxTween) {
-		if (!(tween is VarTween)) return;
-		tween.destroy();
-
-		var varTw:VarTween = cast tween;
-		var spr:FlxSprite = @:privateAccess varTw._object;
-		if (spr != null && spr.exists) {
-			remove(spr);
-			spr.destroy();
-		}
+		for (v in ratingSpr.comboNums) lastScore.push(v);
 	}
 
 	private var controllerModeFirst:Bool = true;
