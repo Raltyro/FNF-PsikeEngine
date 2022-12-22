@@ -64,6 +64,7 @@ class CreditsState extends MusicBeatState
 		['Fork Contributors'],
 		['Eventretta',			'eventy',			'Clean-up Codes and Cool Stuff',								'https://twitter.com/Eventretta',			'6B7D94'],
 		['EyeDaleHim',			'eyedale',			'Programming Help and Emotional Support',						'https://twitter.com/him_dale',				'FF9300'],
+		['Stilic',				'stilic',			'Sustains Length Fix',											'https://twitter.com/stilic_dev',			'E7A13F'],
 		[''],
 		['Special Thanks'],
 		['TheWorldMachinima',	'twmniko',			'Softcoded ClientPrefs',										'https://github.com/TheWorldMachinima',		'F3F3F3'],

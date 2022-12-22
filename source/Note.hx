@@ -348,6 +348,11 @@ class Note extends FlxSprite
 				&& strumTime < songPos + (Conductor.safeZoneOffset * earlyHitMult));
 	}
 
+	inline public function checkHit(songPos:Float):Bool {
+		return strumTime <= songPos + (Conductor.safeZoneOffset * earlyHitMult)
+				&& ((isSustainNote && prevNote.wasGoodHit) || strumTime <= songPos);
+	}
+
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
@@ -357,13 +362,7 @@ class Note extends FlxSprite
 			if (strumTime < Conductor.songPosition - Conductor.safeZoneOffset && !wasGoodHit)
 				tooLate = true;
 		}
-		else {
+		else
 			canBeHit = false;
-
-			if (strumTime < Conductor.songPosition + (Conductor.safeZoneOffset * earlyHitMult)) {
-				if((isSustainNote && prevNote.wasGoodHit) || strumTime <= Conductor.songPosition)
-					wasGoodHit = true;
-			}
-		}
 	}
 }

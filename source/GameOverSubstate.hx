@@ -244,6 +244,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 
 	var isFollowingAlready:Bool = false;
 	override function update(elapsed:Float) {
+		PlayState.instance.cleanupLuas();
 		super.update(elapsed);
 
 		if (wiggleLose != null) wiggleLose.update(elapsed);

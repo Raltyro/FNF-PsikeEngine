@@ -155,12 +155,13 @@ class Character extends FlxSprite
 		}
 		originalFlipX = flipX;
 
-		if(animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss')) hasMissAnimations = true;
+		if (animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss'))
+			hasMissAnimations = true;
+
 		recalculateDanceIdle();
 		dance();
 
-		if (isPlayer)
-		{
+		if (isPlayer) {
 			flipX = !flipX;
 
 			/*// Doesn't flip for BF, since his are already in the right place???
@@ -258,33 +259,30 @@ class Character extends FlxSprite
 		if (cacheIcon) HealthIcon.returnGraphic(file.healthicon);
 	}
 
-	override function update(elapsed:Float)
-	{
-		if(!debugMode && animation.curAnim != null)
-		{
-			if(heyTimer > 0)
-			{
+	override function update(elapsed:Float) {
+		if (!debugMode && animation.curAnim != null) {
+			if (animation.curAnim.name.endsWith('miss') && animation.curAnim.finished) {
+				dance(true, false, 10);
+			}
+
+			if (heyTimer > 0) {
 				heyTimer -= elapsed * PlayState.instance.playbackRate;
-				if(heyTimer <= 0)
-				{
-					if(specialAnim && animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer')
-					{
+				if (heyTimer <= 0) {
+					if (specialAnim && animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer') {
 						specialAnim = false;
 						dance();
 					}
 					heyTimer = 0;
 				}
-			} else if(specialAnim && animation.curAnim.finished)
-			{
+			}
+			else if (specialAnim && animation.curAnim.finished) {
 				specialAnim = false;
 				dance();
 			}
-			
-			switch(curCharacter)
-			{
+
+			switch(curCharacter) {
 				case 'pico-speaker':
-					if(animationNotes.length > 0 && Conductor.songPosition > animationNotes[0][0])
-					{
+					if (animationNotes.length > 0 && Conductor.songPosition > animationNotes[0][0]) {
 						var noteData:Int = 1;
 						if(animationNotes[0][1] > 2) noteData = 3;
 
@@ -292,88 +290,59 @@ class Character extends FlxSprite
 						playAnim('shoot' + noteData, true);
 						animationNotes.shift();
 					}
-					if(animation.curAnim.finished) playAnim(animation.curAnim.name, false, false, animation.curAnim.frames.length - 3);
+					if (animation.curAnim.finished) playAnim(animation.curAnim.name, false, false, animation.curAnim.frames.length - 3);
 			}
 
-			if (!isPlayer)
-			{
-				if (animation.curAnim.name.startsWith('sing'))
-				{
-					holdTimer += elapsed;
-				}
+			if (!isPlayer) {
+				if (animation.curAnim.name.startsWith('sing')) holdTimer += elapsed;
 
-				if (holdTimer >= Conductor.stepCrochet * (0.0011 / (FlxG.sound.music != null ? FlxG.sound.music.pitch : 1)) * singDuration)
-				{
+				var pitch = PlayState.instance != null ? PlayState.instance.playbackRate : FlxG.sound.music != null ? FlxG.sound.music.pitch : 1;
+				if (holdTimer >= Conductor.stepCrochet * (0.0011 / pitch) * singDuration) {
 					dance();
 					holdTimer = 0;
 				}
 			}
 
-			if(animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
-			{
+			if (animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
 				playAnim(animation.curAnim.name + '-loop');
-			}
 		}
 		super.update(elapsed);
 	}
 
-	public var danced:Bool = false;
-
 	/**
 	 * FOR GF DANCING SHIT
 	 */
-	public function dance()
-	{
-		if (!debugMode && !skipDance && !specialAnim)
-		{
-			if(danceIdle)
-			{
+	public var danced:Bool = false;
+	public function dance(force:Bool = false, reversed:Bool = false, frame:Int = 0) {
+		if (!debugMode && !skipDance && !specialAnim) {
+			var anim = 'idle';
+			if (danceIdle) {
 				danced = !danced;
-
-				if (danced)
-					playAnim('danceRight' + idleSuffix);
-				else
-					playAnim('danceLeft' + idleSuffix);
+				anim = danced ? 'danceRight' : 'danceLeft';
 			}
-			else if(animation.getByName('idle' + idleSuffix) != null) {
-					playAnim('idle' + idleSuffix);
-			}
+			playAnim(anim + idleSuffix, force, reversed, frame);
 		}
 	}
 
-	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
-	{
-		specialAnim = false;
+	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void {
 		animation.play(AnimName, Force, Reversed, Frame);
+		specialAnim = false;
 
 		var daOffset = animOffsets.get(AnimName);
-		if (animOffsets.exists(AnimName))
-		{
+		if (daOffset != null)
 			offset.set(daOffset[0], daOffset[1]);
-		}
 		else
 			offset.set(0, 0);
 
-		if (curCharacter.startsWith('gf'))
-		{
-			if (AnimName == 'singLEFT')
-			{
-				danced = true;
-			}
-			else if (AnimName == 'singRIGHT')
-			{
-				danced = false;
-			}
-
+		if (danceIdle) {
 			if (AnimName == 'singUP' || AnimName == 'singDOWN')
-			{
 				danced = !danced;
-			}
+			else if (AnimName.startsWith('sing'))
+				danced = AnimName == 'singLEFT';
 		}
 	}
 	
-	function loadMappedAnims():Void
-	{
+	function loadMappedAnims():Void {
 		var noteData:Array<SwagSection> = Song.loadFromJson('picospeaker', Paths.formatToSongPath(PlayState.SONG.song)).notes;
 		for (section in noteData) {
 			for (songNotes in section.sectionNotes) {
@@ -384,41 +353,33 @@ class Character extends FlxSprite
 		animationNotes.sort(sortAnims);
 	}
 
-	function sortAnims(Obj1:Array<Dynamic>, Obj2:Array<Dynamic>):Int
-	{
+	function sortAnims(Obj1:Array<Dynamic>, Obj2:Array<Dynamic>):Int {
 		return FlxSort.byValues(FlxSort.ASCENDING, Obj1[0], Obj2[0]);
 	}
 
-	public var danceEveryNumBeats:Int = 2;
 	private var settingCharacterUp:Bool = true;
+	public var danceEveryNumBeats:Int = 2;
 	public function recalculateDanceIdle() {
 		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
 
-		if(settingCharacterUp)
-		{
-			danceEveryNumBeats = (danceIdle ? 1 : 2);
-		}
-		else if(lastDanceIdle != danceIdle)
-		{
+		if (settingCharacterUp) danceEveryNumBeats = danceIdle ? 1 : 2;
+		else if(lastDanceIdle != danceIdle) {
 			var calc:Float = danceEveryNumBeats;
-			if(danceIdle)
-				calc /= 2;
-			else
-				calc *= 2;
+			if (danceIdle) calc /= 2;
+			else calc *= 2;
 
 			danceEveryNumBeats = Math.round(Math.max(calc, 1));
 		}
+
 		settingCharacterUp = false;
 	}
 
-	public function addOffset(name:String, x:Float = 0, y:Float = 0)
-	{
+	public function addOffset(name:String, x:Float = 0, y:Float = 0) {
 		animOffsets[name] = [x, y];
 	}
 
-	public function quickAnimAdd(name:String, anim:String)
-	{
+	public function quickAnimAdd(name:String, anim:String) {
 		animation.addByPrefix(name, anim, 24, false);
 	}
 }

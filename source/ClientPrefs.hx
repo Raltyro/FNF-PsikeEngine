@@ -72,10 +72,8 @@ class ClientPrefs {
 	public static var safeFrames:Float = 10;
 	
 	public static var hardwareCache:Bool = true;
-	public static var fakeHardC:Bool = true;
 	public static var isHardCInited:Bool = false;
 	public static var streamMusic:Bool = true;
-	public static var fakeStreM:Bool = true;
 	public static var isStreMInited:Bool = false;
 
 	//Every key has two binds, add your key bind down here and then add your control on options/ControlsSubState.hx and Controls.hx
@@ -124,6 +122,7 @@ class ClientPrefs {
 		"pauseMusic", "checkForUpdates", "comboStacking",
 		"autoPausePlayState", "gameOverInfos",
 		"scoresOnSustains", "missSustainsOnce",
+		"hardwareCache", "streamMusic",
 		//"cursing", "violence",
 		#if !html5
 		"autoPause",
@@ -140,9 +139,6 @@ class ClientPrefs {
 
 		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
 		FlxG.save.data.henchmenDeath = Achievements.henchmenDeath;
-
-		FlxG.save.data.hardwareCache = fakeHardC;
-		FlxG.save.data.streamMusic = fakeStreM;
 
 		FlxG.save.flush();
 
@@ -188,9 +184,15 @@ class ClientPrefs {
 						}
 						catch (exception)trace("Gameplay Settings are null!");
 					case "hardwareCache":
-						fakeHardC = FlxG.save.data.hardwareCache;
+						if (!isHardCInited) {
+							Paths.hardwareCache = hardwareCache;
+							isHardCInited = true;
+						}
 					case "streamMusic":
-						fakeStreM = FlxG.save.data.streamMusic;
+						if (!isStreMInited) {
+							Paths.streamMusic = streamMusic;
+							isStreMInited = true;
+						}
 				}
 			}
 		}
@@ -208,15 +210,6 @@ class ClientPrefs {
 			}
 		}
 		#end
-
-		if (!isHardCInited) {
-			Paths.hardwareCache = hardwareCache;
-			isHardCInited = true;
-		}
-		if (!isStreMInited) {
-			Paths.streamMusic = streamMusic;
-			isStreMInited = true;
-		}
 
 		var save:FlxSave = new FlxSave();
 		save.bind('controls_v2' #if (flixel < "5.0.0"), 'ninjamuffin99' #end);
@@ -243,6 +236,7 @@ class ClientPrefs {
 		FlxG.sound.volumeDownKeys = TitleState.volumeDownKeys;
 		FlxG.sound.volumeUpKeys = TitleState.volumeUpKeys;
 	}
+
 	public static function copyKey(arrayToCopy:Array<FlxKey>):Array<FlxKey> {
 		var copiedArray:Array<FlxKey> = arrayToCopy.copy();
 		var i:Int = 0;

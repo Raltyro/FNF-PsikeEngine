@@ -33,15 +33,15 @@ class AdvancedSubstate extends BaseOptionsMenu
 		
 		var option:Option = new Option('Hardware Caching',
 			'If checked, the game will uploads images to GPU, useful for lowering MEM usage.\nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
-			'fakeHardC',
+			'hardwareCache',
 			'bool',
 			false);
 		addOption(option);
-		
+
 		#if desktop
 		var option:Option = new Option('Streaming Music',
 			'If checked, the game will simultaneously load music data on playbacks, useful for lowering MEM usage.\nRestart your game in order for this to work.\n[UNCHECK THIS IF GAME IS CRASHING]',
-			'fakeStreM',
+			'streamMusic',
 			'bool',
 			false);
 		addOption(option);
