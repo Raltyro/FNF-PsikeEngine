@@ -2531,9 +2531,8 @@ class PlayState extends MusicBeatState
 				unspawnNotes.push(swagNote);
 
 				var roundSus:Int = Math.round(swagNote.sustainLength / Conductor.stepCrochet);
-				if(roundSus > 0) {
-					for (susNote in 0...Math.max(roundSus, 2))
-					{
+				if (roundSus > 0) {
+					for (susNote in 0...Math.floor(Math.max(roundSus, 1))) {
 						oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
 
 						var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * roundSus) + (Conductor.stepCrochet / FlxMath.roundDecimal(songSpeed, 2)), daNoteData, oldNote, true);
@@ -2546,16 +2545,11 @@ class PlayState extends MusicBeatState
 						unspawnNotes.push(sustainNote);
 
 						if (sustainNote.mustPress)
-						{
 							sustainNote.x += FlxG.width / 2; // general offset
-						}
-						else if(ClientPrefs.middleScroll)
-						{
+						else if (ClientPrefs.middleScroll) {
 							sustainNote.x += 310;
-							if(daNoteData > 1) //Up and Right
-							{
+							if (daNoteData > 1) //Up and Right
 								sustainNote.x += FlxG.width / 2 + 25;
-							}
 						}
 					}
 				}
