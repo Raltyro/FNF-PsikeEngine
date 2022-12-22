@@ -4559,7 +4559,8 @@ class PlayState extends MusicBeatState
 	public function charactersDance():Void {
 		var chars = [gf, boyfriend, dad];
 		for (char in chars) {
-			var speed = char == gf ? gfSpeed : 1;
+			if (char == null) continue;
+			var speed = (gf != null && char == gf) ? gfSpeed : 1;
 			var curAnim = char.animation.curAnim;
 			if ((curAnim == null || !curAnim.name.startsWith('sing')) && !char.stunned
 			&& curBeat % Math.round(speed * char.danceEveryNumBeats) == 0)
