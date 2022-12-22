@@ -539,29 +539,24 @@ class Paths
 	}*/
 
 	static public function modFolders(key:String) {
-		if(currentModDirectory != null && currentModDirectory.length > 0) {
-			var fileToCheck:String = mods(currentModDirectory + '/' + key);
-			if(FileSystem.exists(fileToCheck)) {
-				return fileToCheck;
-			}
+		var file;
+		if (currentModDirectory != null && currentModDirectory.length > 0) {
+			file = mods(currentModDirectory + '/' + key);
+			if (FileSystem.exists(file)) return file;
 		}
 
-		for(mod in getGlobalMods()){
-			var fileToCheck:String = mods(mod + '/' + key);
-			if(FileSystem.exists(fileToCheck))
-				return fileToCheck;
-
+		for (mod in getGlobalMods()) {
+			file = mods(mod + '/' + key);
+			if (FileSystem.exists(file)) return file;
 		}
-		return 'mods/' + key;
+		return mods(key);
 	}
 
 	public static var globalMods:Array<String> = [];
-
 	static public function getGlobalMods()
 		return globalMods;
 
-	static public function pushGlobalMods() // prob a better way to do this but idc
-	{
+	static public function pushGlobalMods() { // prob a better way to do this but idc
 		globalMods = [];
 		var path:String = 'modsList.txt';
 		if(FileSystem.exists(path))
@@ -592,6 +587,10 @@ class Paths
 		return globalMods;
 	}
 
+	static public function isValidModDir(dir:String):Bool {
+		return FileSystem.isDirectory(haxe.io.Path.join([mods(), dir])) && !ignoreModFolders.contains(dir.toLowerCase());
+	}
+
 	static public function getModDirectories(lowercase:Bool = false):Array<String> {
 		var list:Array<String> = [];
 		var modsFolder:String = mods();
@@ -601,7 +600,7 @@ class Paths
 		for (folder in FileSystem.readDirectory(modsFolder)) {
 			var path:String = haxe.io.Path.join([modsFolder, folder]);
 			var lower:String = folder.toLowerCase();
-			
+
 			if (FileSystem.isDirectory(path) && !ignoreModFolders.contains(lower) && !list.contains(lower))
 				list.push(lowercase ? lower : folder);
 		}

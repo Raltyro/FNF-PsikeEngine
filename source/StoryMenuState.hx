@@ -51,7 +51,7 @@ class StoryMenuState extends MusicBeatState
 
 	override function create()
 	{
-		Paths.clearUnusedMemory();
+		if (PlayState.SONG == null) Paths.clearUnusedMemory();
 		Main.fpsVar.inEditor = true;
 
 		PlayState.isStoryMode = true;

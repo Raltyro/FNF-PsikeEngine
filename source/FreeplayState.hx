@@ -54,7 +54,7 @@ class FreeplayState extends MusicBeatState
 	override function create()
 	{
 		//Paths.clearStoredMemory();
-		//Paths.clearUnusedMemory();
+		if (PlayState.SONG == null) Paths.clearUnusedMemory();
 		
 		persistentUpdate = true;
 		PlayState.isStoryMode = false;

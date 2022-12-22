@@ -80,18 +80,32 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			true);
 		addOption(option);
 
+		var option:Option = new Option('Add Scores on Sustains',
+			'If checked, whenever you hit and pass a note sustains,\nIt gives you scores. (it affects accuracy too!)\n[In Vanilla Psych Engine, this has been not implemented]',
+			'scoresOnSustains',
+			'bool',
+			true);
+		addOption(option);
+
+		var option:Option = new Option('Only Miss Once on Sustains',
+			'If checked, whenever you miss a note sustains,\nit will only give you one penalty instead of multiple.\n[In Vanilla Psych Engine, this has been not implemented]',
+			'missSustainsOnce',
+			'bool',
+			true);
+		addOption(option);
+
 		var option:Option = new Option('Hitsound Volume',
-			'Funny notes does \"Tick!\" when you hit them."',
+			'If it\'s above 0, whenever you hit notes,\nit plays the "Tick!" sound with the volume it sets.',
 			'hitsoundVolume',
 			'percent',
 			0);
-		addOption(option);
 		option.scrollSpeed = 1.6;
 		option.minValue = 0.0;
 		option.maxValue = 1;
 		option.changeValue = 0.1;
 		option.decimals = 1;
 		option.onChange = onChangeHitsoundVolume;
+		addOption(option);
 
 		var option:Option = new Option('Rating Offset',
 			'Changes how late/early you have to hit for a "Sick!"\nHigher values mean you have to hit later.',

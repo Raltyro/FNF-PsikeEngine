@@ -136,6 +136,13 @@ class RatingSpr {
 		reposition();
 	}
 
+	public function setProperties(prop:String, val:Dynamic) {
+		if (rating != null) Reflect.setProperty(rating, prop, val);
+		if (combo != null) Reflect.setProperty(combo, prop, val);
+		if (comboNums != null) for (v in comboNums) Reflect.setProperty(v, prop, val);
+		if (diffNums != null) for (v in diffNums) Reflect.setProperty(v, prop, val);
+	}
+
 	public function reposition() {
 		rating.screenCenter();
 		rating.setPosition(rating.x - 90, rating.y - 80);

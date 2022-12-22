@@ -26,6 +26,7 @@ class Note extends FlxSprite
 	public var noteData:Int = 0;
 	public var canBeHit:Bool = false;
 	public var tooLate:Bool = false;
+	public var hasMissed:Bool = false; // basically ignoreNote but for misses
 	public var wasGoodHit:Bool = false;
 	public var ignoreNote:Bool = false;
 	public var hitByOpponent:Bool = false;
@@ -347,8 +348,7 @@ class Note extends FlxSprite
 				&& strumTime < songPos + (Conductor.safeZoneOffset * earlyHitMult));
 	}
 
-	override function update(elapsed:Float)
-	{
+	override function update(elapsed:Float) {
 		super.update(elapsed);
 
 		if (mustPress) {
@@ -364,12 +364,6 @@ class Note extends FlxSprite
 				if((isSustainNote && prevNote.wasGoodHit) || strumTime <= Conductor.songPosition)
 					wasGoodHit = true;
 			}
-		}
-
-		if (tooLate && !inEditor)
-		{
-			if (alpha > 0.3)
-				alpha = 0.3;
 		}
 	}
 }

@@ -40,7 +40,7 @@ class ClientPrefs {
 	public static var hitsoundVolume:Float = 0;
 	public static var pauseMusic:String = 'Tea Time';
 	public static var checkForUpdates:Bool = true;
-	public static var comboStacking = true;
+	public static var comboStacking:Bool = true;
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
 		'scrolltype' => 'multiplicative', 
@@ -62,7 +62,9 @@ class ClientPrefs {
 		'opponentplay' => false
 	];
 
-	public static var comboOffset:Array<Int> = [0, 0, 0, 0];
+	public static var comboOffset:Array<Int> = [0, 0, 0, 0, 0, 0];
+	public static var scoresOnSustains:Bool = true;
+	public static var missSustainsOnce:Bool = true;
 	public static var ratingOffset:Int = 0;
 	public static var sickWindow:Int = 45;
 	public static var goodWindow:Int = 90;
@@ -121,6 +123,7 @@ class ClientPrefs {
 		"gameplaySettings", "controllerMode", "hitsoundVolume",
 		"pauseMusic", "checkForUpdates", "comboStacking",
 		"autoPausePlayState", "gameOverInfos",
+		"scoresOnSustains", "missSustainsOnce",
 		//"cursing", "violence",
 		#if !html5
 		"autoPause",
