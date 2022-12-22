@@ -2530,9 +2530,9 @@ class PlayState extends MusicBeatState
 
 				unspawnNotes.push(swagNote);
 
-				var roundSus:Int = Math.round(swagNote.sustainLength / Conductor.stepCrochet);
+				var roundSus:Int = Math.round(Math.max(2, swagNote.sustainLength / Conductor.stepCrochet));
 				if (roundSus > 0) {
-					for (susNote in 0...Math.floor(Math.max(roundSus, 1))) {
+					for (susNote in 0...roundSus+1) {
 						oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
 
 						var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * roundSus) + (Conductor.stepCrochet / FlxMath.roundDecimal(songSpeed, 2)), daNoteData, oldNote, true);
