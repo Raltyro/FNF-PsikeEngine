@@ -4877,11 +4877,10 @@ class PlayState extends MusicBeatState
 
 		if (!startingSong && generatedMusic) changeDiscordPresence();
 		if (SONG.notes[curSection] != null) {
-			if (generatedMusic && !endingSong && !isCameraOnForcedPos) {
+			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection();
-			}
 
-			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.camZooms) {
+			if (ClientPrefs.camZooms && camZooming && FlxG.camera.zoom < 1.35) {
 				FlxG.camera.zoom += 0.015 * camZoomingMult;
 				camHUD.zoom += 0.03 * camZoomingMult;
 			}
