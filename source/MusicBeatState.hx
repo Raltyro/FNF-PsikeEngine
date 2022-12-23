@@ -17,15 +17,23 @@ import flixel.FlxBasic;
 
 class MusicBeatState extends FlxUIState
 {
-	private var curSection:Int = 0;
-	private var stepsToDo:Int = 0;
-
 	private var curBPMChange:BPMChangeEvent;
-	private var curStep:Int = 0;
-	private var curBeat:Int = 0;
+
+	private var passedSections:Array<Float> = [];
+	private var stepsToDo:Float = 0;
+	private var curSection:Int = 0;
+	private var prevSection:Int = 0;
 
 	private var curDecStep:Float = 0;
+	private var curStep:Int = 0;
+	private var prevDecStep:Float = 0;
+	private var prevStep:Int = 0;
+
 	private var curDecBeat:Float = 0;
+	private var curBeat:Int = 0;
+	private var prevDecBeat:Float = 0;
+	private var prevBeat:Int = 0;
+
 	private var controls(get, never):Controls;
 
 	private var stateClass:Class<MusicBeatState>;
@@ -59,17 +67,23 @@ class MusicBeatState extends FlxUIState
 		Paths.compress(2);
 		persistentUpdate = false;
 		previousStateClass = cast Type.getClass(this);
+		passedSections = null;
 	}
 
 	override function update(elapsed:Float):Void {
-		var oldStep:Int = curStep;
+		prevDecStep = curDecStep;
+		prevStep = curStep;
+
+		prevDecBeat = curDecBeat;
+		prevBeat = curBeat;
+
 		updateCurStep();
 		updateBeat();
 
-		if (oldStep != curStep) {
+		if (prevStep != curStep) {
 			if (curStep > 0 || !isPlayState) stepHit();
 
-			if (oldStep < curStep)
+			if (prevStep < curStep)
 				updateSection();
 			else
 				rollbackSection();
@@ -80,13 +94,19 @@ class MusicBeatState extends FlxUIState
 	}
 
 	private function updateSection(dontHit:Bool = false):Void {
-		if (stepsToDo <= 0) {
+		var steps = getBeatsOnSection() * 4;
+		if (stepsToDo <= steps) {
 			curSection = 0;
-			stepsToDo = 0;
+			stepsToDo = steps;
+			passedSections.resize(0);
 		}
-		while(curStep >= stepsToDo) {
-			stepsToDo += Math.round(getBeatsOnSection() * 4);
 
+		while(curStep >= stepsToDo) {
+			passedSections.push(stepsToDo);
+			stepsToDo += steps;
+			steps = getBeatsOnSection() * 4;
+
+			prevSection = curSection;
 			curSection++;
 			if (!dontHit) sectionHit();
 		}
@@ -95,16 +115,21 @@ class MusicBeatState extends FlxUIState
 	private function rollbackSection():Void {
 		var lastSection = curSection;
 
-		while(curStep < stepsToDo) {
-			if (stepsToDo < 0) {
+		var prevSteps;
+		while(passedSections.length > 0) {
+			if (stepsToDo < passedSections[0]) {
 				updateSection(false);
 				if (curSection > lastSection || !isPlayState) sectionHit();
 				return;
 			}
-			stepsToDo -= Math.round(getBeatsOnSection() * 4);
+			prevSteps = passedSections[passedSections.length];
+
+			if (prevSteps < stepsToDo) break;
+			passedSections.pop();
+			stepsToDo -= prevSteps;
 			curSection--;
 		}
-		sectionHit();
+		if (curSection > lastSection) sectionHit();
 	}
 
 	private function updateBeat():Void {
@@ -167,8 +192,7 @@ class MusicBeatState extends FlxUIState
 	}
 
 	public function stepHit():Void {
-		if (curStep % 4 == 0)
-			beatHit();
+		if (curStep % 4 == 0) beatHit();
 	}
 
 	public function beatHit():Void {

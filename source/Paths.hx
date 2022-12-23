@@ -301,7 +301,7 @@ class Paths
 	static public function music(key:String, ?library:String, ?stream:Bool):Sound
 	{
 		var file:Sound = returnSound('music', key, library,
-			stream != null ? stream : (!MusicBeatState.inState(PlayState) || streamMusic)
+			stream//stream != null ? stream : (!MusicBeatState.inState(PlayState) || streamMusic)
 		);
 		return file;
 	}

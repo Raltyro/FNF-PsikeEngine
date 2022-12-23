@@ -73,7 +73,7 @@ class ClientPrefs {
 	
 	public static var hardwareCache:Bool = true;
 	public static var isHardCInited:Bool = false;
-	public static var streamMusic:Bool = true;
+	public static var streamMusic:Bool = false;
 	public static var isStreMInited:Bool = false;
 
 	//Every key has two binds, add your key bind down here and then add your control on options/ControlsSubState.hx and Controls.hx
