@@ -58,8 +58,8 @@ class Conductor {
 	}
 
 	public static function getBPMFromIndex(index:Int):BPMChangeEvent {
-		var map;
-		if ((map = bpmChangeMap[index]) == null) return getDummyBPMChange();
+		var map = bpmChangeMap[index];
+		if (map == null) return getDummyBPMChange();
 		if (map.id == index) return map;
 
 		sortBPMChangeMap(); map = bpmChangeMap[index];
