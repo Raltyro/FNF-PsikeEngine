@@ -2823,9 +2823,7 @@ class PlayState extends MusicBeatState
 		if (paused)
 		{
 			if (FlxG.sound.music != null && !startingSong)
-			{
 				resyncVocals();
-			}
 
 			if (startTimer != null && !startTimer.finished)
 				startTimer.active = true;
@@ -4206,9 +4204,9 @@ class PlayState extends MusicBeatState
 
 	private function fillKeysPressed() {
 		var keybinds:Int = keysArray.length;
-		while (strumsBlocked.length < keybinds) strumsBlocked.push(false);
-		while (keysPressed.length < keybinds) keysPressed.push(false);
-		while (keysUsed.length < keybinds) keysUsed.push(false);
+		if (strumsBlocked != null) while (strumsBlocked.length < keybinds) strumsBlocked.push(false);
+		if (keysPressed != null) while (keysPressed.length < keybinds) keysPressed.push(false);
+		if (keysUsed != null) while (keysUsed.length < keybinds) keysUsed.push(false);
 	}
 
 	private function getKeyFromEvent(key:FlxKey):Int {
@@ -4784,10 +4782,12 @@ class PlayState extends MusicBeatState
 		setOnLuas('curDecBeat', curDecBeat);
 		super.stepHit();
 
-		var time:Float = FlxG.sound.music.time;
-		var resync:Bool = vocals.loaded && Math.abs(vocals.time - time) > 8;
-		if (Math.abs(time - (Conductor.songPosition - Conductor.offset)) > 16 || resync)
-			resyncVocals(resync);
+		if (!paused && !startingSong) {
+			var time:Float = FlxG.sound.music.time;
+			var resync:Bool = vocals.loaded && Math.abs(vocals.time - time) > 12;
+			if (Math.abs(time - (Conductor.songPosition - Conductor.offset)) > 16 || resync)
+				resyncVocals(resync);
+		}
 
 		if (curStep == lastStepHit) return;
 

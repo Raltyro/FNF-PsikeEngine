@@ -1,26 +1,19 @@
 package;
 
-import Conductor.BPMChangeEvent;
-import flixel.FlxG;
-import flixel.addons.ui.FlxUIState;
-import flixel.math.FlxRect;
-import flixel.util.FlxTimer;
 import flixel.addons.transition.FlxTransitionableState;
-import flixel.tweens.FlxEase;
-import flixel.tweens.FlxTween;
-import flixel.FlxSprite;
-import flixel.util.FlxColor;
-import flixel.util.FlxGradient;
+import flixel.addons.ui.FlxUIState;
 import flixel.FlxState;
 import flixel.FlxCamera;
-import flixel.FlxBasic;
+import flixel.FlxG;
 
-class MusicBeatState extends FlxUIState
-{
+import Conductor.BPMChangeEvent;
+
+class MusicBeatState extends FlxUIState {
 	private var curBPMChange:BPMChangeEvent;
 
 	private var passedSections:Array<Float> = [];
 	private var stepsToDo:Float = 0;
+
 	private var curSection:Int = 0;
 	private var prevSection:Int = 0;
 
@@ -46,28 +39,29 @@ class MusicBeatState extends FlxUIState
 		return PlayerSettings.player1.controls;
 
 	public function new() {
+		isPlayState = (stateClass = Type.getClass(this)) == PlayState;
 		curBPMChange = Conductor.getDummyBPMChange();
+
 		super();
 	}
 
 	override function create() {
-		var skip:Bool = FlxTransitionableState.skipNextTransOut;
+		var skip = FlxTransitionableState.skipNextTransOut;
 		camBeat = FlxG.camera;
+
 		super.create();
 
 		if (!skip) openSubState(new CustomFadeTransition(0.7, true));
 		FlxTransitionableState.skipNextTransOut = false;
-		isPlayState = inState(PlayState);
-		stateClass = Type.getClass(this);
 	}
 
 	override function destroy() {
-		super.destroy();
-
-		Paths.compress(2);
+		previousStateClass = cast stateClass;
 		persistentUpdate = false;
-		previousStateClass = cast Type.getClass(this);
 		passedSections = null;
+		Paths.compress(2);
+
+		super.destroy();
 	}
 
 	override function update(elapsed:Float):Void {
@@ -82,8 +76,8 @@ class MusicBeatState extends FlxUIState
 
 		if (prevStep != curStep) {
 			if (curStep > 0 || !isPlayState) stepHit();
-
-			if (prevStep < curStep)
+			if (passedSections == null) passedSections = [];
+			if (curStep > prevStep)
 				updateSection();
 			else
 				rollbackSection();
@@ -93,42 +87,33 @@ class MusicBeatState extends FlxUIState
 		super.update(elapsed);
 	}
 
-	private function updateSection(dontHit:Bool = false):Void {
-		var steps = getBeatsOnSection() * 4;
-		if (stepsToDo <= steps) {
+	private function updateSection(?dontHit:Bool = false):Void {
+		if (stepsToDo <= 0) {
 			curSection = 0;
-			stepsToDo = steps;
+			stepsToDo = getBeatsOnSection() * 4;
 			passedSections.resize(0);
 		}
 
 		while(curStep >= stepsToDo) {
 			passedSections.push(stepsToDo);
-			stepsToDo += steps;
-			steps = getBeatsOnSection() * 4;
+			stepsToDo = stepsToDo + getBeatsOnSection() * 4;
 
 			prevSection = curSection;
-			curSection++;
+			curSection = passedSections.length;
 			if (!dontHit) sectionHit();
 		}
 	}
 
 	private function rollbackSection():Void {
-		var lastSection = curSection;
-
-		var prevSteps;
-		while(passedSections.length > 0) {
-			if (stepsToDo < passedSections[0]) {
-				updateSection(false);
-				if (curSection > lastSection || !isPlayState) sectionHit();
-				return;
-			}
-			prevSteps = passedSections[passedSections.length];
-
-			if (prevSteps < stepsToDo) break;
-			passedSections.pop();
-			stepsToDo -= prevSteps;
-			curSection--;
+		if (curStep <= 0) {
+			stepsToDo = 0;
+			return updateSection();
 		}
+
+		var lastSection = prevSection = curSection;
+		while((curSection = passedSections.length) > 0 && curStep < passedSections[curSection - 1])
+			stepsToDo = passedSections.pop();
+
 		if (curSection > lastSection) sectionHit();
 	}
 
@@ -138,12 +123,13 @@ class MusicBeatState extends FlxUIState
 	}
 
 	private function updateCurStep():Void {
-		var rawSongPos = Conductor.songPosition - ClientPrefs.noteOffset;
-
-		curBPMChange = Conductor.getBPMFromSeconds(rawSongPos, curBPMChange != null ? curBPMChange.id : -1);
-		curDecStep = Conductor.getStep(rawSongPos, curBPMChange.id);
+		curBPMChange = Conductor.getBPMFromSeconds(Conductor.songPosition, curBPMChange != null ? curBPMChange.id : -1);
+		curDecStep = Conductor.getStep(Conductor.songPosition, ClientPrefs.noteOffset, curBPMChange.id);
 		curStep = Math.floor(curDecStep);
 	}
+
+	public function getBeatsOnSection():Float
+		return inline Conductor.getSectionBeats(PlayState.SONG, curSection);
 
 	private static var nextState:FlxState;
 	public static function switchState(nextState:FlxState, reset:Bool = false) {
@@ -159,37 +145,33 @@ class MusicBeatState extends FlxUIState
 	}
 
 	private static function postResetState() {
-		FlxTransitionableState.skipNextTransIn = false;
-		CustomFadeTransition.finishCallback = null;
-
-		FlxG.state.persistentUpdate = false;
-		FlxG.resetState();
+		nextState = Type.createInstance(Type.getClass(FlxG.state), []);
+		postSwitchState();
 	}
 
 	private static function postSwitchState() {
 		FlxTransitionableState.skipNextTransIn = false;
 		CustomFadeTransition.finishCallback = null;
 
-		FlxG.state.persistentUpdate = false;
-		FlxG.switchState(nextState);
+		FlxG.state.switchTo(nextState);
+		@:privateAccess FlxG.game._requestedState = nextState;
 		nextState = null;
 	}
 
-	public static function resetState() {
+	public static function resetState()
 		MusicBeatState.switchState(null, true);
-	}
 
-	public static function getState(?state:FlxState):MusicBeatState {
+	public static function getState(?state:FlxState):MusicBeatState
 		return cast(state != null ? state : FlxG.state);
-	}
 
-	public static function inState(state:Class<FlxState>):Bool {
-		return Std.isOfType(FlxG.state, state);
-	}
+	public static function isState(state1:FlxState, state2:Class<FlxState>):Bool
+		return Std.isOfType(state1, state2);
 
-	public static function previousStateIs(state:Class<FlxState>):Bool {
-		return previousStateClass != null && previousStateClass == state;
-	}
+	public static function inState(state:Class<FlxState>):Bool
+		return inline isState(FlxG.state, state);
+
+	public static function previousStateIs(state:Class<FlxState>):Bool
+		return previousStateClass == state;
 
 	public function stepHit():Void {
 		if (curStep % 4 == 0) beatHit();
@@ -201,9 +183,5 @@ class MusicBeatState extends FlxUIState
 
 	public function sectionHit():Void {
 		//trace('Section: ' + curSection + ', Beat: ' + curBeat + ', Step: ' + curStep);
-	}
-
-	public function getBeatsOnSection():Float {
-		return inline Conductor.getSectionBeats(PlayState.SONG, curSection);
 	}
 }

@@ -1,69 +1,65 @@
 package;
 
-import Conductor.BPMChangeEvent;
-import flixel.FlxG;
 import flixel.FlxSubState;
-import flixel.FlxBasic;
-import flixel.FlxSprite;
+import flixel.FlxG;
 
-class MusicBeatSubstate extends FlxSubState
-{
-	public function new()
-	{
-		super();
-	}
+import Conductor.BPMChangeEvent;
 
-	private var lastBeat:Float = 0;
-	private var lastStep:Float = 0;
-
-	private var curStep:Int = 0;
-	private var curBeat:Int = 0;
+class MusicBeatSubstate extends FlxSubState {
+	private var curBPMChange:BPMChangeEvent;
 
 	private var curDecStep:Float = 0;
+	private var curStep:Int = 0;
+	private var prevDecStep:Float = 0;
+	private var prevStep:Int = 0;
+
 	private var curDecBeat:Float = 0;
+	private var curBeat:Int = 0;
+	private var prevDecBeat:Float = 0;
+	private var prevBeat:Int = 0;
+
 	private var controls(get, never):Controls;
 
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
 
-	override function update(elapsed:Float)
-	{
-		//everyStep();
-		var oldStep:Int = curStep;
+	public function new() {
+		curBPMChange = Conductor.getDummyBPMChange();
+		super();
+	}
+
+	override function update(elapsed:Float) {
+		prevDecStep = curDecStep;
+		prevStep = curStep;
+
+		prevDecBeat = curDecBeat;
+		prevBeat = curBeat;
 
 		updateCurStep();
 		updateBeat();
 
-		if (oldStep != curStep && curStep > 0)
-			stepHit();
-
+		if (prevStep != curStep) stepHit();
 
 		super.update(elapsed);
 	}
 
-	private function updateBeat():Void
-	{
-		curBeat = Math.floor(curStep / 4);
-		curDecBeat = curDecStep/4;
+	private function updateBeat():Void {
+		curDecBeat = curDecStep / 4;
+		curBeat = Math.floor(curDecBeat);
 	}
 
-	private function updateCurStep():Void
-	{
-		var lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
+	private function updateCurStep():Void {
+		var rawSongPos = Conductor.songPosition - ClientPrefs.noteOffset;
 
-		var shit = ((Conductor.songPosition - ClientPrefs.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
-		curDecStep = lastChange.stepTime + shit;
-		curStep = lastChange.stepTime + Math.floor(shit);
+		curBPMChange = Conductor.getBPMFromSeconds(rawSongPos, curBPMChange != null ? curBPMChange.id : -1);
+		curDecStep = Conductor.getStep(rawSongPos, curBPMChange.id);
+		curStep = Math.floor(curDecStep);
 	}
 
 	public function stepHit():Void
-	{
-		if (curStep % 4 == 0)
-			beatHit();
-	}
+		if (curStep % 4 == 0) beatHit();
 
-	public function beatHit():Void
-	{
-		//do literally nothing dumbass
+	public function beatHit():Void {
+		//trace('Beat: ' + curBeat);
 	}
 }

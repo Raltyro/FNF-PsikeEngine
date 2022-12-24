@@ -1,7 +1,5 @@
 package;
 
-import flixel.util.FlxSort;
-
 import Song.SwagSong;
 
 /**
@@ -13,8 +11,8 @@ typedef BPMChangeEvent = {
 	var stepTime:Int;
 	var songTime:Float;
 	var bpm:Float;
-	var ?stepCrochet:Float;
-	var ?id:Int; // is calculated in mapBPMChanges()
+	var id:Int; // is calculated in mapBPMChanges()
+	@:optional var stepCrochet:Float;
 }
 
 class Conductor {
@@ -43,7 +41,7 @@ class Conductor {
 		return data[data.length - 1];
 	}
 
-	public inline static function getDummyBPMChange():BPMChangeEvent {
+	public static function getDummyBPMChange():BPMChangeEvent {
 		return {
 			stepTime: 0,
 			songTime: 0,
@@ -68,11 +66,11 @@ class Conductor {
 	}
 
 	// just wanted to lyk, these arent acctualy seconds, its ms! same goes for the functions below
-	public static function getBPMFromSeconds(time:Float, ?from:Int = -1):BPMChangeEvent {
+	public static function getBPMFromSeconds(time:Float, from:Int = -1):BPMChangeEvent {
 		var lastChange = getBPMFromIndex(from), reverse = lastChange.songTime > time;
 		from = lastChange.id;
 
-		var i = from >= 0 ? from : reverse ? bpmChangeMap.length : -1, v;
+		var i = from >= 0 ? from : (reverse ? bpmChangeMap.length : -1), v;
 		while (reverse ? --i >= 0 : ++i < bpmChangeMap.length) {
 			v = bpmChangeMap[i];
 
@@ -83,11 +81,11 @@ class Conductor {
 		return lastChange;
 	}
 
-	public static function getBPMFromStep(step:Float, ?from:Int = -1):BPMChangeEvent {
+	public static function getBPMFromStep(step:Float, from:Int = -1):BPMChangeEvent {
 		var lastChange = getBPMFromIndex(from), reverse = lastChange.stepTime > step;
 		from = lastChange.id;
 
-		var i = from >= 0 ? from : reverse ? bpmChangeMap.length : -1, v;
+		var i = from >= 0 ? from : (reverse ? bpmChangeMap.length : -1), v;
 		while (reverse ? --i >= 0 : ++i < bpmChangeMap.length) {
 			v = bpmChangeMap[i];
 
@@ -98,36 +96,43 @@ class Conductor {
 		return lastChange;
 	}
 
-	public static function getCrotchetAtTime(time:Float, ?from:Int = -1):Float
+	@:noCompletion
+	public static function getCrotchetAtTime(time:Float, ?from:Int):Float
 		return getBPMFromSeconds(time, from).stepCrochet * 4;
 
-	public static function stepToSeconds(step:Float, ?from:Int = -1):Float {
+	@:noCompletion
+	public static function stepToSeconds(step:Float, offset:Float = 0, ?from:Int):Float {
 		var lastChange = getBPMFromStep(step, from);
-		return lastChange.songTime + (step - lastChange.stepTime) * lastChange.stepCrochet;
+		return lastChange.songTime + (step - lastChange.stepTime - offset) * lastChange.stepCrochet;
 	}
 
-	public static function beatToSeconds(beat:Float, ?from:Int = -1):Float
-		return inline stepToSeconds(beat * 4, from);
+	@:noCompletion
+	public static function beatToSeconds(beat:Float, ?offset:Float, ?from:Int):Float
+		return inline stepToSeconds(beat * 4, offset, from);
 
-	public static function getStep(time:Float, ?from:Int = -1):Float {
+	@:noCompletion
+	public static function getStep(time:Float, offset:Float = 0, ?from:Int):Float {
 		var lastChange = getBPMFromSeconds(time, from);
-		return lastChange.stepTime + (time - lastChange.songTime) / lastChange.stepCrochet;
+		return lastChange.stepTime + (time - lastChange.songTime - offset) / lastChange.stepCrochet;
 	}
 
-	public static function getStepRounded(time:Float, ?from:Int = -1):Int
-		return Math.floor(inline getStep(time, from));
+	@:noCompletion
+	public static function getStepRounded(time:Float, ?offset:Float, ?from:Int):Int
+		return Math.floor(inline getStep(time, offset, from));
 
-	public static function getBeat(time:Float, ?from:Int = -1):Float
-		return (inline getStep(time, from)) / 4;
+	@:noCompletion
+	public static function getBeat(time:Float, ?offset:Float = 0, ?from:Int):Float
+		return (inline getStep(time, offset, from)) / 4;
 
-	public static function getBeatRounded(time:Float, ?from:Int = -1):Int
-		return Math.floor(inline getBeat(time, from));
+	@:noCompletion
+	public static function getBeatRounded(time:Float, ?offset:Float, ?from:Int):Int
+		return Math.floor(inline getBeat(time, offset, from));
 
 	public static function mapBPMChanges(song:SwagSong) {
 		bpmChangeMap = [];
 
 		var curBPM:Float = song.bpm;
-		var totalPos:Float = 0, totalSteps:Int = 0, totalBPM:Int = 0;
+		var totalPos:Float = 0, totalSteps = 0, totalBPM = 0;
 
 		var deltaSteps, v;
 		for (i in 0...song.notes.length) {
@@ -152,6 +157,7 @@ class Conductor {
 		trace("new BPM map BUDDY " + bpmChangeMap);
 	}
 
+	@:noCompletion
 	public static function getSectionBeats(song:SwagSong, section:Int):Float {
 		var v:Null<Float> = (song == null || song.notes[section] == null) ? null : song.notes[section].sectionBeats;
 		return (v == null) ? 4 : v;
