@@ -42,11 +42,12 @@ class Conductor {
 	}
 
 	public static function getDummyBPMChange():BPMChangeEvent {
+		var bpm = PlayState.SONG != null ? PlayState.SONG.bpm : bpm;
 		return {
 			stepTime: 0,
 			songTime: 0,
 			bpm: bpm,
-			stepCrochet: stepCrochet,
+			stepCrochet: calculateCrochet(bpm) / 4,
 			id: -1
 		};
 	}
@@ -57,8 +58,8 @@ class Conductor {
 	}
 
 	public static function getBPMFromIndex(index:Int):BPMChangeEvent {
-		var map = bpmChangeMap[index];
-		if (map == null) return getDummyBPMChange();
+		var map;
+		if ((map = bpmChangeMap[index]) == null) return getDummyBPMChange();
 		if (map.id == index) return map;
 
 		sortBPMChangeMap(); map = bpmChangeMap[index];
@@ -67,30 +68,36 @@ class Conductor {
 
 	// just wanted to lyk, these arent acctualy seconds, its ms! same goes for the functions below
 	public static function getBPMFromSeconds(time:Float, from:Int = -1):BPMChangeEvent {
+		if (bpmChangeMap.length == 0 || time < bpmChangeMap[0].songTime) return getDummyBPMChange();
+		else if (time >= bpmChangeMap[bpmChangeMap.length - 1].songTime) return bpmChangeMap[bpmChangeMap.length - 1];
 		var lastChange = getBPMFromIndex(from), reverse = lastChange.songTime > time;
 		from = lastChange.id;
 
-		var i = from >= 0 ? from : (reverse ? bpmChangeMap.length : -1), v;
+		var i = from < 0 ? (reverse ? bpmChangeMap.length : -1) : from, v;
 		while (reverse ? --i >= 0 : ++i < bpmChangeMap.length) {
-			v = bpmChangeMap[i];
-
-			if (v.id != i) {sortBPMChangeMap(); return getBPMFromSeconds(time);}
-			if (reverse ? v.songTime <= time : v.songTime >= time) break;
+			if ((v = bpmChangeMap[i]).id != i) {
+				sortBPMChangeMap();
+				return getBPMFromSeconds(time);
+			}
+			if (reverse ? v.songTime <= time : v.songTime > time) break;
 			lastChange = v;
 		}
 		return lastChange;
 	}
 
 	public static function getBPMFromStep(step:Float, from:Int = -1):BPMChangeEvent {
+		if (bpmChangeMap.length == 0 || step < bpmChangeMap[0].stepTime) return getDummyBPMChange();
+		else if (step >= bpmChangeMap[bpmChangeMap.length - 1].stepTime) return bpmChangeMap[bpmChangeMap.length - 1];
 		var lastChange = getBPMFromIndex(from), reverse = lastChange.stepTime > step;
 		from = lastChange.id;
 
-		var i = from >= 0 ? from : (reverse ? bpmChangeMap.length : -1), v;
+		var i = from < 0 ? (reverse ? bpmChangeMap.length : -1) : from, v;
 		while (reverse ? --i >= 0 : ++i < bpmChangeMap.length) {
-			v = bpmChangeMap[i];
-
-			if (v.id != i) {sortBPMChangeMap(); return getBPMFromStep(step);}
-			if (reverse ? v.stepTime <= step : v.stepTime >= step) break;
+			if ((v = bpmChangeMap[i]).id != i) {
+				sortBPMChangeMap();
+				return getBPMFromStep(step);
+			}
+			if (reverse ? v.stepTime <= step : v.stepTime > step) break;
 			lastChange = v;
 		}
 		return lastChange;
@@ -139,6 +146,7 @@ class Conductor {
 			v = song.notes[i];
 
 			if (v.changeBPM && v.bpm != curBPM) {
+				curBPM = v.bpm;
 				bpmChangeMap.push({
 					stepTime: totalSteps,
 					songTime: totalPos,
@@ -147,11 +155,9 @@ class Conductor {
 					id: totalBPM++
 				});
 			}
-			curBPM = v.bpm;
 
-			deltaSteps = Math.round(getSectionBeats(song, i) * 4);
+			totalSteps += (deltaSteps = Math.round(getSectionBeats(song, i) * 4));
 			totalPos += (calculateCrochet(curBPM) / 4) * deltaSteps;
-			totalSteps += deltaSteps;
 		}
 
 		trace("new BPM map BUDDY " + bpmChangeMap);
