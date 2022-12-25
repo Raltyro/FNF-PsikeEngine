@@ -73,9 +73,8 @@ class FunkinLua {
 	}
 
 	public static function execute(script:String):FunkinLua {
-		if (PlayState.instance == null || FlxG.state != PlayState.instance) return new FunkinLua(script);
-
 		var lua:FunkinLua = new FunkinLua(script);
+		if (PlayState.instance == null || FlxG.state != PlayState.instance) return lua;
 		if (!lua.closed) PlayState.instance.luaArray.push(lua);
 		return lua;
 	}
@@ -84,42 +83,41 @@ class FunkinLua {
 	public var lua:State;
 	#end
 	public var globalScriptName:String = '';
-	public var modFolder:String = '';
+	public var modDir:String = '';
 	public var scriptName:String;
 	public var closed:Bool = false;
 
 	public function new(script:String) {
 		if (!Path.isAbsolute(script)) { // any absoluted paths, fuck it.
-			script = format(script);
-
-			var dirs:Array<String> = script.split('/');
-			var mod:String = Paths.mods();
-			var index:Int = 0;
+			var dirs = (script = format(script)).split('/'), mod = Paths.mods(), index = -1;
 			for (i in 0...dirs.length) {
 				if (mod.startsWith(dirs[i])) {
-					index = i + 1;
-					modFolder = index < dirs.length ? dirs[index] : '';
+					modDir = ((index = i + 1) < dirs.length && Paths.isValidModDir(dirs[index])) ? dirs[index] : '';
 					break;
 				}
 			}
 
-			if (modFolder != '' && !Paths.isValidModDir(modFolder)) modFolder = '';
-			if (modFolder != '' || index != 0)
-				globalScriptName = haxe.io.Path.join([for (i in (index + (modFolder != '' ? 1 : 0))...dirs.length) dirs[i]]);
+			if (modDir != '' || index != -1)
+				globalScriptName = haxe.io.Path.join([for (i in (index + (modDir != '' ? 1 : 0))...dirs.length) dirs[i]]);
 		}
 		else globalScriptName = scriptName;
 		scriptName = script;
 
 		#if LUA_ALLOWED
 		lua = LuaL.newstate();
-		LuaL.openlibs(lua);
-		Lua_helper.init_callbacks(lua);
 
-		initGlobals();
+		var result:Int = LuaL.loadfile(lua, script);
+		if (result == Lua.LUA_OK) {
+			LuaL.openlibs(lua);
+			Lua_helper.init_callbacks(lua);
 
-		//LuaL.dostring(lua, CLENSE);
-		var result:Int = LuaL.dofile(lua, script);
-		if (result != 0) {
+			initGlobals();
+
+			// LuaL.dostring(lua, CLENSE);
+			result = Lua.pcall(lua, 0, 0, 0);
+		}
+
+		if (result != Lua.LUA_OK) {
 			var error:String = getErrorMessage();
 			trace('Error on lua script "$script"! ' + error);
 			#if windows
@@ -130,6 +128,7 @@ class FunkinLua {
 			stop();
 			return;
 		}
+
 		trace('lua script "$script" loaded successfully');
 
 		Lua_helper.link_extra_arguments(lua, [this]);
@@ -141,129 +140,132 @@ class FunkinLua {
 	}
 
 	#if LUA_ALLOWED
+	public static var globals:Map<String, Any>;
+
 	public function initGlobals() {
+		for (k => v in globals) set(k, v);
+
 		// Lua shit
 		set('Function_StopLua', Function_StopLua);
 		set('Function_Stop', Function_Stop);
 		set('Function_Continue', Function_Continue);
+
 		set('luaDebugMode', false);
 		set('luaDeprecatedWarnings', true);
 		set('luaBackwardCompatibility', true);
 		set('inChartEditor', false);
 
-		// Song/Week shit
-		set('curBpm', Conductor.bpm);
-		set('bpm', PlayState.SONG.bpm);
-		set('scrollSpeed', PlayState.SONG.speed);
-		set('crochet', Conductor.crochet);
-		set('stepCrochet', Conductor.stepCrochet);
-		set('songLength', PlayState.instance.songLength);
-		set('songName', PlayState.SONG.song);
-		set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
-		set('startedCountdown', false);
-		set('curStage', PlayState.SONG.stage);
-
-		set('isStoryMode', PlayState.isStoryMode);
-		set('difficulty', PlayState.storyDifficulty);
-
-		var difficultyName:String = CoolUtil.difficulties[PlayState.storyDifficulty];
-		set('difficultyName', difficultyName);
-		set('difficultyPath', Paths.formatToSongPath(difficultyName));
-		set('weekRaw', PlayState.storyWeek);
-		set('week', WeekData.weeksList[PlayState.storyWeek]);
-		set('seenCutscene', PlayState.seenCutscene);
-
-		// Camera poo
-		set('cameraX', 0);
-		set('cameraY', 0);
-
-		// Screen stuff
-		set('screenWidth', FlxG.width);
-		set('screenHeight', FlxG.height);
-
-		// PlayState cringe ass nae nae bullcrap
-		set('curBeat', 0);
-		set('curStep', 0);
-		set('curDecBeat', 0);
-		set('curDecStep', 0);
-
-		set('score', 0);
-		set('misses', 0);
-		set('hits', 0);
-
-		set('rating', 0);
-		set('ratingName', '');
-		set('ratingFC', '');
 		set('version', MainMenuState.psychEngineVersion.trim());
-
-		set('inGameOver', false);
-		set('mustHitSection', false);
-		set('altAnim', false);
-		set('gfSection', false);
-
-		// Gameplay settings
-		set('healthGainMult', PlayState.instance.healthGain);
-		set('healthLossMult', PlayState.instance.healthLoss);
-		set('playbackRate', PlayState.instance.playbackRate);
-		set('instakillOnMiss', PlayState.instance.instakillOnMiss);
-		set('botPlay', PlayState.instance.cpuControlled);
-		set('practice', PlayState.instance.practiceMode);
-
-		for (i in 0...4) {
-			set('defaultPlayerStrumX' + i, 0);
-			set('defaultPlayerStrumY' + i, 0);
-			set('defaultOpponentStrumX' + i, 0);
-			set('defaultOpponentStrumY' + i, 0);
-		}
-
-		// Default character positions woooo
-		set('defaultBoyfriendX', PlayState.instance.BF_X);
-		set('defaultBoyfriendY', PlayState.instance.BF_Y);
-		set('defaultOpponentX', PlayState.instance.DAD_X);
-		set('defaultOpponentY', PlayState.instance.DAD_Y);
-		set('defaultGirlfriendX', PlayState.instance.GF_X);
-		set('defaultGirlfriendY', PlayState.instance.GF_Y);
-
-		// Character shit
-		set('boyfriendName', PlayState.SONG.player1);
-		set('dadName', PlayState.SONG.player2);
-		set('gfName', PlayState.SONG.gfVersion);
-
-		// Some settings, no jokes
-		set('downscroll', ClientPrefs.downScroll);
-		set('middlescroll', ClientPrefs.middleScroll);
-		set('framerate', ClientPrefs.framerate);
-		set('ghostTapping', ClientPrefs.ghostTapping);
-		set('hideHud', ClientPrefs.hideHud);
-		set('timeBarType', ClientPrefs.timeBarType);
-		set('scoreZoom', ClientPrefs.scoreZoom);
-		set('cameraZoomOnBeat', ClientPrefs.camZooms);
-		set('flashingLights', ClientPrefs.flashing);
-		set('noteOffset', ClientPrefs.noteOffset);
-		set('healthBarAlpha', ClientPrefs.healthBarAlpha);
-		set('noResetButton', ClientPrefs.noReset);
-		set('lowQuality', ClientPrefs.lowQuality);
-		set('shadersEnabled', ClientPrefs.shaders);
 		set('scriptName', scriptName);
-		set('currentModDirectory', Paths.currentModDirectory);
 
 		#if windows
-		set('buildTarget', 'windows');
-		#elseif linux
-		set('buildTarget', 'linux');
-		#elseif mac
-		set('buildTarget', 'mac');
+		var os = 'windows';
 		#elseif html5
-		set('buildTarget', 'browser');
-		#elseif android
-		set('buildTarget', 'android');
+		var os = 'browser';
 		#else
-		set('buildTarget', 'unknown');
+		var os = Sys.systemName().toLowerCase();
 		#end
+		set('buildTarget', os);
 	}
 
 	public static function initStatics() {
 		Convert.traceUnsupported = false;
+		globals = [];
+
+		// Song/Week shit
+		globals.set('curBpm', Conductor.bpm);
+		globals.set('bpm', PlayState.SONG.bpm);
+		globals.set('scrollSpeed', PlayState.SONG.speed);
+		globals.set('crochet', Conductor.crochet);
+		globals.set('stepCrochet', Conductor.stepCrochet);
+		globals.set('songLength', PlayState.instance.songLength);
+		globals.set('songName', PlayState.SONG.song);
+		globals.set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
+		globals.set('startedCountdown', false);
+		globals.set('curStage', PlayState.SONG.stage);
+
+		globals.set('isStoryMode', PlayState.isStoryMode);
+		globals.set('difficulty', PlayState.storyDifficulty);
+
+		var difficultyName:String = CoolUtil.difficulties[PlayState.storyDifficulty];
+		globals.set('difficultyName', difficultyName);
+		globals.set('difficultyPath', Paths.formatToSongPath(difficultyName));
+		globals.set('weekRaw', PlayState.storyWeek);
+		globals.set('week', WeekData.weeksList[PlayState.storyWeek]);
+		globals.set('seenCutscene', PlayState.seenCutscene);
+
+		// Camera poo
+		globals.set('cameraX', 0);
+		globals.set('cameraY', 0);
+
+		// Screen stuff
+		globals.set('screenWidth', FlxG.width);
+		globals.set('screenHeight', FlxG.height);
+
+		// PlayState cringe ass nae nae bullcrap
+		globals.set('curBeat', 0);
+		globals.set('curStep', 0);
+		globals.set('curDecBeat', 0);
+		globals.set('curDecStep', 0);
+
+		globals.set('score', 0);
+		globals.set('misses', 0);
+		globals.set('hits', 0);
+
+		globals.set('rating', 0);
+		globals.set('ratingName', '');
+		globals.set('ratingFC', '');
+
+		globals.set('inGameOver', false);
+		globals.set('mustHitSection', false);
+		globals.set('altAnim', false);
+		globals.set('gfSection', false);
+
+		// Gameplay globals.settings
+		globals.set('healthGainMult', PlayState.instance.healthGain);
+		globals.set('healthLossMult', PlayState.instance.healthLoss);
+		globals.set('playbackRate', PlayState.instance.playbackRate);
+		globals.set('instakillOnMiss', PlayState.instance.instakillOnMiss);
+		globals.set('botPlay', PlayState.instance.cpuControlled);
+		globals.set('practice', PlayState.instance.practiceMode);
+
+		for (i in 0...4) {
+			globals.set('defaultPlayerStrumX' + i, 0);
+			globals.set('defaultPlayerStrumY' + i, 0);
+			globals.set('defaultOpponentStrumX' + i, 0);
+			globals.set('defaultOpponentStrumY' + i, 0);
+		}
+
+		// Default character positions woooo
+		globals.set('defaultBoyfriendX', PlayState.instance.BF_X);
+		globals.set('defaultBoyfriendY', PlayState.instance.BF_Y);
+		globals.set('defaultOpponentX', PlayState.instance.DAD_X);
+		globals.set('defaultOpponentY', PlayState.instance.DAD_Y);
+		globals.set('defaultGirlfriendX', PlayState.instance.GF_X);
+		globals.set('defaultGirlfriendY', PlayState.instance.GF_Y);
+
+		// Character shit
+		globals.set('boyfriendName', PlayState.SONG.player1);
+		globals.set('dadName', PlayState.SONG.player2);
+		globals.set('gfName', PlayState.SONG.gfVersion);
+
+		// Some settings, no jokes
+		globals.set('downscroll', ClientPrefs.downScroll);
+		globals.set('middlescroll', ClientPrefs.middleScroll);
+		globals.set('framerate', ClientPrefs.framerate);
+		globals.set('ghostTapping', ClientPrefs.ghostTapping);
+		globals.set('hideHud', ClientPrefs.hideHud);
+		globals.set('timeBarType', ClientPrefs.timeBarType);
+		globals.set('scoreZoom', ClientPrefs.scoreZoom);
+		globals.set('cameraZoomOnBeat', ClientPrefs.camZooms);
+		globals.set('flashingLights', ClientPrefs.flashing);
+		globals.set('noteOffset', ClientPrefs.noteOffset);
+		globals.set('healthBarAlpha', ClientPrefs.healthBarAlpha);
+		globals.set('noResetButton', ClientPrefs.noReset);
+		globals.set('lowQuality', ClientPrefs.lowQuality);
+		globals.set('shadersEnabled', ClientPrefs.shaders);
+		globals.set('currentModDirectory', Paths.currentModDirectory);
+
 		#if hscript
 		hscript = new HScript();
 		#end
@@ -283,26 +285,23 @@ class FunkinLua {
 		});
 
 		Lua_helper.set_static_callback("closeCustomSubstate", function(_) {
-			if(CustomSubstate.instance != null) {
-				PlayState.instance.closeSubState();
-				CustomSubstate.instance = null;
-				return true;
-			}
-			return false;
+			if (CustomSubstate.instance == null) return false;
+			PlayState.instance.closeSubState();
+			CustomSubstate.instance = null;
+			return true;
 		});
 
 
 		// shader shit
 		Lua_helper.set_static_callback("initLuaShader", function(l:FunkinLua, name:String, glslVersion:Int = 120) {
-			if(!ClientPrefs.shaders) return false;
+			if (!ClientPrefs.shaders) return false;
 
 			#if (!flash && MODS_ALLOWED && sys)
 			return PlayState.instance.initLuaShader(name, glslVersion);
 			#else
 			l.luaTrace("initLuaShader: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
-			#end
-
 			return false;
+			#end
 		});
 
 		Lua_helper.set_static_callback("setSpriteShader", function(l:FunkinLua, obj:String, shader:String) {
@@ -2520,56 +2519,44 @@ class FunkinLua {
 	}
 
 	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic):Dynamic {
-		var indices:Array<String> = variable.split('[');
-		if (indices.length > 1) {
-			var par:Dynamic;
-			if (PlayState.instance.variables.exists(indices[0]))
-				par = PlayState.instance.variables.get(indices[0]);
-			else
-				par = Reflect.getProperty(instance, indices[0]);
-
-			for (i in 1...indices.length) {
-				var index:Dynamic = indices[i].substr(0, indices[i].length - 1);
-				if (i >= indices.length - 1)
-					par[index] = value;
-				else
-					par = par[index];
-			}
-			return par;
-		}
-		/*if (Std.isOfType(instance, Map))
-			instance.set(variable,value);
-		else*/
-			
-		if (PlayState.instance.variables.exists(variable)) {
-			PlayState.instance.variables.set(variable, value);
+		var ind = variable.indexOf('[');
+		if (ind == -1) {
+			if (PlayState.instance.variables.exists(variable)) PlayState.instance.variables.set(variable, value);
+			else Reflect.setProperty(instance, variable, value);
 			return true;
 		}
 
-		Reflect.setProperty(instance, variable, value);
+		var str = variable.substr(0, ind), obj, pind, key:Dynamic;
+		if (PlayState.instance.variables.exists(str)) obj = PlayState.instance.variables.get(str);
+		else obj = Reflect.getProperty(instance, str);
+
+		while((pind = ind) != -1) {
+			if ((ind = variable.indexOf('[', ind + 1)) == -1) {
+				key = variable.substr(pind + 1);
+				obj[key] = value;
+				break;
+			}
+
+			key = variable.substring(pind + 1, ind - 2);
+			obj = obj[key];
+		}
+
 		return true;
 	}
 
 	public static function getVarInArray(instance:Dynamic, variable:String):Dynamic {
-		var indices:Array<String> = variable.split('[');
-		if (indices.length > 1) {
-			var par:Dynamic;
-			if (PlayState.instance.variables.exists(indices[0]))
-				par = PlayState.instance.variables.get(indices[0]);
-			else
-				par = Reflect.getProperty(instance, indices[0]);
+		var ind = variable.indexOf('['), str = variable.substr(0, ind == -1 ? variable.length : ind), obj, pind, key:Dynamic;
+		if (PlayState.instance.variables.exists(str)) obj = PlayState.instance.variables.get(str);
+		else obj = Reflect.getProperty(instance, str);
 
-			for (i in 1...indices.length) {
-				var index:Dynamic = indices[i].substr(0, indices[i].length - 1);
-				par = par[index];
-			}
-			return par;
+		while((pind = ind) != -1) {
+			ind = variable.indexOf('[', ind + 1);
+
+			key = variable.substring(pind + 1, ind == -1 ? variable.length - 1 : ind - 2);
+			obj = obj[key];
 		}
 
-		if (PlayState.instance.variables.exists(variable))
-			return PlayState.instance.variables.get(variable);
-
-		return Reflect.getProperty(instance, variable);
+		return obj;
 	}
 
 	static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic) {
@@ -2618,9 +2605,9 @@ class FunkinLua {
 	}
 
 	public static function getObjectDirectly(objectName:String, ?checkForTextsToo:Bool = true):Dynamic {
-		var coverMeInPiss:Dynamic = PlayState.instance.getLuaObject(objectName, checkForTextsToo);
-		if (coverMeInPiss == null) coverMeInPiss = getVarInArray(getInstance(), objectName);
-		return coverMeInPiss;
+		var obj = PlayState.instance.getLuaObject(objectName, checkForTextsToo);
+		if (obj == null) return getVarInArray(getInstance(), objectName);
+		return obj;
 	}
 
 	inline static function getTextObject(name:String):FlxText
@@ -2861,6 +2848,7 @@ class FunkinLua {
 		if (v != null) v = v.trim();
 		if (v == null || v == "") {
 			return switch(status) {
+				case Lua.LUA_ERRSYNTAX: "Syntax Error";
 				case Lua.LUA_ERRRUN: "Runtime Error";
 				case Lua.LUA_ERRMEM: "Memory Allocation Error";
 				case Lua.LUA_ERRERR: "Critical Error";

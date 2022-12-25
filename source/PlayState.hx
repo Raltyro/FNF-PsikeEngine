@@ -4999,10 +4999,10 @@ class PlayState extends MusicBeatState
 		return returnVal;
 	}
 
-	public function setOnLuas(variable:String, arg:Any) {
+	public function setOnLuas(key:String, val:Any) {
 		#if LUA_ALLOWED
-		for (i in 0...luaArray.length)
-			luaArray[i].set(variable, arg);
+		FunkinLua.globals.set(key, val);
+		for (l in luaArray) l.set(key, val);
 		#end
 	}
 
