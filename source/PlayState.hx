@@ -2918,7 +2918,6 @@ class PlayState extends MusicBeatState
 		updateStage(elapsed);
 
 		if (startedCountdown) Conductor.songPosition += elapsed * 1000 * playbackRate;
-		if (generatedMusic && !inCutscene) processInputs(elapsed);
 
 		if (!inCutscene) {
 			var lerpVal:Float = CoolUtil.boundTo(elapsed * 2.4 * cameraSpeed * playbackRate, 0, 1);
@@ -3049,6 +3048,8 @@ class PlayState extends MusicBeatState
 		}
 
 		if (generatedMusic && !inCutscene) {
+			processInputs(elapsed);
+
 			if (!boyfriend.stunned && boyfriend.animation.curAnim != null && (cpuControlled || !keysPressed.contains(true) || endingSong)) {
 				var canDance = boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss');
 				if (boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / playbackRate) * boyfriend.singDuration && canDance)
