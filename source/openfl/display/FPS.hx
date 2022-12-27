@@ -107,14 +107,13 @@ class FPS extends TextField {
 	private function __enterFrame(time:Float):Void {
 		currentTime = time;
 	#else
-	private override function __enterFrame(_):Void {
+	private override function __enterFrame(deltaTime:Float):Void {
 		currentTime = Timer.stamp();
 	#end
 		times.push(currentTime);
 
-		while (times[0] < currentTime - #if flash 1000 #else 1 #end) {
+		while (times[0] < currentTime - #if flash 1000 #else 1 #end)
 			times.shift();
-		}
 
 		var currentCount = times.length;
 		var fps = currentCount;//(currentCount + cacheCount) / 2;
@@ -146,19 +145,19 @@ class FPS extends TextField {
 		else textColor = 0xFFFFFFFF;
 
 		text = (
-			(showFPS ? ("FPS: " + currentFPS + " (" + CoolUtil.truncateFloat((1 / currentCount) * 1000) + "ms)\n") : "") +
+			(showFPS ? ('FPS: ${currentFPS}' + #if !flash ' | ' + Math.round(1000 / deltaTime) + #end ' (${CoolUtil.truncateFloat((1 / currentCount) * 1000)}ms)\n') : "") +
 			(
 				(
-					showMem && showMemPeak ? ("MEM / PEAK: " + CoolUtil.truncateFloat(currentMem) + " MB / " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
-					showMem ? ("MEM: " + CoolUtil.truncateFloat(currentMem) + " MB\n") :
-					showMemPeak ? ("MEM PEAK: " + CoolUtil.truncateFloat(currentMemPeak) + " MB\n") :
+					showMem && showMemPeak ? ('MEM / PEAK: ${CoolUtil.truncateFloat(currentMem)} MB / ${CoolUtil.truncateFloat(currentMemPeak)} MB\n') :
+					showMem ? ('MEM: ${CoolUtil.truncateFloat(currentMem)} MB\n') :
+					showMemPeak ? ('MEM PEAK: ${CoolUtil.truncateFloat(currentMemPeak)} MB\n') :
 					""
 				)
 				#if (windows || linux || mac) + (
 					showGc ? (
-						showMem && showMemPeak ? ("GC MEM / PEAK: " + CoolUtil.truncateFloat(currentGcMem) + " MB / " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
-						showMem ? ("GC MEM: " + CoolUtil.truncateFloat(currentGcMem) + " MB\n") :
-						showMemPeak ? ("GC MEM PEAK: " + CoolUtil.truncateFloat(currentGcMemPeak) + " MB\n") :
+						showMem && showMemPeak ? ('GC MEM / PEAK: ${CoolUtil.truncateFloat(currentGcMem)} MB / ${CoolUtil.truncateFloat(currentGcMemPeak)} MB\n') :
+						showMem ? ('GC MEM: ${CoolUtil.truncateFloat(currentGcMem)} MB\n') :
+						showMemPeak ? ('GC MEM PEAK: ${CoolUtil.truncateFloat(currentGcMemPeak)} MB\n') :
 						""
 					) :
 					""
@@ -169,9 +168,9 @@ class FPS extends TextField {
 				showGLStats ?
 				(
 					#if (gl_stats && !disable_cffi && (!html5 || !canvas))
-					"DRAWS: " + Context3DStats.totalDrawCalls() + "\n"
+					'DRAWS: ${Context3DStats.totalDrawCalls()}\n'
 					#else
-					"DRAWS: unknown\n"
+					'DRAWS: unknown\n'
 					#end
 				)
 				: ""
@@ -215,17 +214,17 @@ class FPS extends TextField {
 			return (size_t)info.WorkingSetSize;
 	")
 	#elseif linux
-	@:functionCode('
+	@:functionCode("
 		long rss = 0L;
 		FILE* fp = NULL;
 		
-		if ((fp = fopen("/proc/self/statm", "r")) == NULL)
+		if ((fp = fopen(\"/proc/self/statm\", \"r\")) == NULL)
 			return (size_t)0L;
 		
 		fclose(fp);
-		if (fscanf(fp, "%*s%ld", &rss) == 1)
+		if (fscanf(fp, \"%*s%ld\", &rss) == 1)
 			return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
-	')
+	")
 	#elseif mac
 	@:functionCode("
 		struct mach_task_basic_info info;
