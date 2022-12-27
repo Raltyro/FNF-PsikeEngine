@@ -138,7 +138,7 @@ class ModsMenuState extends MusicBeatState
 			}
 			modsList[curSelected][1] = !modsList[curSelected][1];
 			updateButtonToggle();
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		});
 		buttonToggle.setGraphicSize(50, 50);
 		buttonToggle.updateHitbox();
@@ -153,7 +153,7 @@ class ModsMenuState extends MusicBeatState
 		buttonUp = new FlxButton(startX, 0, "/\\", function()
 		{
 			moveMod(-1);
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		});
 		buttonUp.setGraphicSize(50, 50);
 		buttonUp.updateHitbox();
@@ -166,7 +166,7 @@ class ModsMenuState extends MusicBeatState
 
 		buttonDown = new FlxButton(startX, 0, "\\/", function() {
 			moveMod(1);
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		});
 		buttonDown.setGraphicSize(50, 50);
 		buttonDown.updateHitbox();
@@ -188,7 +188,7 @@ class ModsMenuState extends MusicBeatState
 			{
 				needaReset = true;
 			}
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		});
 		buttonTop.setGraphicSize(80, 50);
 		buttonTop.updateHitbox();
@@ -214,7 +214,7 @@ class ModsMenuState extends MusicBeatState
 				}
 			}
 			updateButtonToggle();
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		});
 		buttonDisableAll.setGraphicSize(170, 50);
 		buttonDisableAll.updateHitbox();
@@ -240,7 +240,7 @@ class ModsMenuState extends MusicBeatState
 				}
 			}
 			updateButtonToggle();
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		});
 		buttonEnableAll.setGraphicSize(170, 50);
 		buttonEnableAll.updateHitbox();
@@ -373,7 +373,7 @@ class ModsMenuState extends MusicBeatState
 		intendedColor = bg.color;
 		changeSelection();
 		updatePosition();
-		FlxG.sound.play(Paths.sound('scrollMenu'));
+		FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 
 		FlxG.mouse.visible = true;
 
@@ -477,7 +477,7 @@ class ModsMenuState extends MusicBeatState
 			if(colorTween != null) {
 				colorTween.cancel();
 			}
-			FlxG.sound.play(Paths.sound('cancelMenu'));
+			FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
 			FlxG.mouse.visible = false;
 			saveTxt();
 			if(needaReset)
@@ -502,12 +502,12 @@ class ModsMenuState extends MusicBeatState
 		if(controls.UI_UP_P)
 		{
 			changeSelection(-1);
-			FlxG.sound.play(Paths.sound('scrollMenu'));
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		}
 		if(controls.UI_DOWN_P)
 		{
 			changeSelection(1);
-			FlxG.sound.play(Paths.sound('scrollMenu'));
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		}
 		updatePosition(elapsed);
 		super.update(elapsed);

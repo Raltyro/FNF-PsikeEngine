@@ -115,7 +115,7 @@ class OptionsState extends MusicBeatState
 		}
 
 		if (controls.BACK) {
-			FlxG.sound.play(Paths.sound('cancelMenu'));
+			FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
 			if (PauseSubState.toOptions) {
 				MusicBeatState.switchState(new PlayState());
 				FlxG.sound.music.stop();
@@ -152,6 +152,6 @@ class OptionsState extends MusicBeatState
 				selectorRight.y = item.y;
 			}
 		}
-		FlxG.sound.play(Paths.sound('scrollMenu'));
+		FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 	}
 }

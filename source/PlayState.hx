@@ -2920,7 +2920,6 @@ class PlayState extends MusicBeatState
 		updateStage(elapsed);
 
 		if (startedCountdown) Conductor.songPosition += elapsed * 1000 * playbackRate;
-		if (generatedMusic && !inCutscene) processInputs(elapsed, false);
 
 		if (!inCutscene) {
 			var lerpVal:Float = CoolUtil.boundTo(elapsed * 2.4 * cameraSpeed * playbackRate, 0, 1);
@@ -3025,7 +3024,7 @@ class PlayState extends MusicBeatState
 		}
 
 		if (generatedMusic && !inCutscene) {
-			processInputs(elapsed, true);
+			processInputs(elapsed);
 
 			if (!boyfriend.stunned && boyfriend.animation.curAnim != null && (cpuControlled || !keysPressed.contains(true) || endingSong)) {
 				var canDance = boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss');
@@ -4233,24 +4232,23 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-	private function processInputs(elapsed:Float, opponent:Bool):Void {
+	private function processInputs(elapsed:Float):Void {
 		if (startedCountdown) {	
 			notes.forEachAlive(function(daNote:Note) {
-				if (opponent && !daNote.mustPress && !daNote.hitByOpponent && !daNote.ignoreNote && daNote.checkHit(Conductor.songPosition))
+				if (!daNote.mustPress && !daNote.hitByOpponent && !daNote.ignoreNote && daNote.checkHit(Conductor.songPosition))
 					opponentNoteHit(daNote);
 
-				if (!opponent && cpuControlled && !daNote.blockHit && daNote.mustPress && daNote.canBeHit && (daNote.isSustainNote
+				if (cpuControlled && !daNote.blockHit && daNote.mustPress && daNote.canBeHit && (daNote.isSustainNote
 					? (daNote.parent == null || daNote.parent.wasGoodHit) : daNote.checkHit(Conductor.songPosition)))
 					goodNoteHit(daNote);
 
 				// Hold notes
-				if (opponent || cpuControlled || boyfriend.stunned) return;
+				if (cpuControlled || boyfriend.stunned) return;
 				if (daNote.isSustainNote && strumsBlocked[daNote.noteData] != true && keysPressed[daNote.noteData] && (daNote.parent == null
 				|| daNote.parent.wasGoodHit) && daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.wasGoodHit && !daNote.blockHit) {
 					goodNoteHit(daNote);
 				}
 			});
-			if (opponent) return;
 
 			#if ACHIEVEMENTS_ALLOWED
 			if (keysPressed.contains(true) && !endingSong) {

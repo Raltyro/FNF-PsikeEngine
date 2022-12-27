@@ -236,7 +236,7 @@ class CreditsState extends MusicBeatState
 				if(colorTween != null)
 					colorTween.cancel();
 
-				FlxG.sound.play(Paths.sound('cancelMenu'));
+				FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
 				MusicBeatState.switchState(new MainMenuState());
 				quitting = true;
 			}
@@ -258,7 +258,7 @@ class CreditsState extends MusicBeatState
 	var moveTween:FlxTween = null;
 	function changeSelection(change:Int = 0)
 	{
-		FlxG.sound.play(Paths.sound('scrollMenu'));
+		FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		do {
 			curSelected += change;
 			if (curSelected < 0)
@@ -488,7 +488,7 @@ class CreditSectionState extends MusicBeatState {
 				if(colorTween != null) {
 					colorTween.cancel();
 				}
-				FlxG.sound.play(Paths.sound('cancelMenu'));
+				FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
 				
 				var state:CreditsState = new CreditsState();
 				state.curSelected = CreditsState.prevSelected;
@@ -539,7 +539,7 @@ class CreditSectionState extends MusicBeatState {
 		var squash:Bool = squished;
 		if (squash) squish();
 
-		FlxG.sound.play(Paths.sound('scrollMenu'));
+		FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 		do {
 			curSelected += change;
 			if (curSelected < 0)

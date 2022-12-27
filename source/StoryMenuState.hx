@@ -211,18 +211,18 @@ class StoryMenuState extends MusicBeatState
 			if (upP)
 			{
 				changeWeek(-1);
-				FlxG.sound.play(Paths.sound('scrollMenu'));
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 			}
 
 			if (downP)
 			{
 				changeWeek(1);
-				FlxG.sound.play(Paths.sound('scrollMenu'));
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 			}
 
 			if(FlxG.mouse.wheel != 0)
 			{
-				FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 				changeWeek(-FlxG.mouse.wheel);
 				changeDifficulty();
 			}
@@ -253,7 +253,7 @@ class StoryMenuState extends MusicBeatState
 			{
 				persistentUpdate = false;
 				openSubState(new ResetScoreSubState('', curDifficulty, '', curWeek));
-				//FlxG.sound.play(Paths.sound('scrollMenu'));
+				//FlxG.sound.play(Paths.sound('scrollMenu'), 0.7);
 			}
 			else if (controls.ACCEPT)
 			{
@@ -263,7 +263,7 @@ class StoryMenuState extends MusicBeatState
 
 		if (controls.BACK && !movedBack && !selectedWeek)
 		{
-			FlxG.sound.play(Paths.sound('cancelMenu'));
+			FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
 			movedBack = true;
 			MusicBeatState.switchState(new MainMenuState());
 			Main.fpsVar.inEditor = false;
@@ -288,7 +288,7 @@ class StoryMenuState extends MusicBeatState
 		{
 			if (stopspamming == false)
 			{
-				FlxG.sound.play(Paths.sound('confirmMenu'));
+				FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
 
 				grpWeekText.members[curWeek].startFlashing();
 
@@ -326,7 +326,7 @@ class StoryMenuState extends MusicBeatState
 				Main.fpsVar.inEditor = false;
 			});
 		} else {
-			FlxG.sound.play(Paths.sound('cancelMenu'));
+			FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
 		}
 	}
 
