@@ -68,8 +68,7 @@ class FunkinLua {
 	#end
 
 	public static function format(luaFile:String):String {
-		luaFile = luaFile.toLowerCase();
-		return Path.normalize(luaFile.endsWith('.lua') ? luaFile : '${luaFile}.lua');
+		return Path.normalize((luaFile = luaFile.toLowerCase()).endsWith('.lua') ? luaFile : '${luaFile}.lua');
 	}
 
 	public static function execute(script:String):FunkinLua {
@@ -2594,12 +2593,7 @@ class FunkinLua {
 
 	static function tweenShit(tag:String, vars:String) {
 		cancelTween(tag);
-		var variables:Array<String> = vars.split('.');
-		var sexyProp:Dynamic = getObjectDirectly(variables[0]);
-		if(variables.length > 1)
-			sexyProp = getVarInArray(getPropertyLoopThingWhatever(variables), variables[variables.length-1]);
-
-		return sexyProp;
+		return getVarInstance(vars);
 	}
 
 	static function cancelTween(tag:String) {

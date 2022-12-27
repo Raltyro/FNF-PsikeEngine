@@ -718,7 +718,7 @@ class PlayState extends MusicBeatState
 		}
 
 		Paths.clearUnusedMemory();
-		Paths.compress(4);
+		Paths.compress(6);
 
 		changeDiscordPresence("Starting");
 		startSpecificSongPost(songName);
@@ -729,6 +729,7 @@ class PlayState extends MusicBeatState
 		initializeKeyboard();
 
 		callOnLuas('onCreatePost');
+		cleanupLuas();
 		super.create();
 
 		CustomFadeTransition.nextCamera = camOther;
@@ -2918,6 +2919,7 @@ class PlayState extends MusicBeatState
 		updateStage(elapsed);
 
 		if (startedCountdown) Conductor.songPosition += elapsed * 1000 * playbackRate;
+		if (generatedMusic && !inCutscene) processInputs(elapsed, false);
 
 		if (!inCutscene) {
 			var lerpVal:Float = CoolUtil.boundTo(elapsed * 2.4 * cameraSpeed * playbackRate, 0, 1);
@@ -2994,34 +2996,8 @@ class PlayState extends MusicBeatState
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, CoolUtil.boundTo(1 - (elapsed * 9 * playbackRate), 0, 1));
-		iconP1.scale.set(mult, mult);
-		iconP1.updateHitbox();
-
-		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, CoolUtil.boundTo(1 - (elapsed * 9 * playbackRate), 0, 1));
-		iconP2.scale.set(mult, mult);
-		iconP2.updateHitbox();
-
-		var iconOffset:Int = 26;
-
-		iconP1.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) + (150 * iconP1.scale.x - 150) / 2 - iconOffset;
-		iconP2.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) - (150 * iconP2.scale.x) / 2 - iconOffset * 2;
-
 		if (health > 2)
 			health = 2;
-
-		if (healthBar.percent < 20) {
-			iconP1.setState(1);
-			iconP2.setState(2);
-		}
-		else if (healthBar.percent > 80) {
-			iconP1.setState(2);
-			iconP2.setState(1);
-		}
-		else {
-			iconP1.setState(0);
-			iconP2.setState(0);
-		}
 
 		// RESET = Quick Game Over Screen
 		if (!ClientPrefs.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong) {
@@ -3048,7 +3024,7 @@ class PlayState extends MusicBeatState
 		}
 
 		if (generatedMusic && !inCutscene) {
-			processInputs(elapsed);
+			processInputs(elapsed, true);
 
 			if (!boyfriend.stunned && boyfriend.animation.curAnim != null && (cpuControlled || !keysPressed.contains(true) || endingSong)) {
 				var canDance = boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss');
@@ -3065,6 +3041,32 @@ class PlayState extends MusicBeatState
 					daNote.wasGoodHit = false;
 				});
 			}
+		}
+
+		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, CoolUtil.boundTo(1 - (elapsed * 9 * playbackRate), 0, 1));
+		iconP1.scale.set(mult, mult);
+		iconP1.updateHitbox();
+
+		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, CoolUtil.boundTo(1 - (elapsed * 9 * playbackRate), 0, 1));
+		iconP2.scale.set(mult, mult);
+		iconP2.updateHitbox();
+
+		var iconOffset:Int = 26;
+
+		iconP1.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) + (150 * iconP1.scale.x - 150) / 2 - iconOffset;
+		iconP2.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) - (150 * iconP2.scale.x) / 2 - iconOffset * 2;
+
+		if (healthBar.percent < 20) {
+			iconP1.setState(1);
+			iconP2.setState(2);
+		}
+		else if (healthBar.percent > 80) {
+			iconP1.setState(2);
+			iconP2.setState(1);
+		}
+		else {
+			iconP1.setState(0);
+			iconP2.setState(0);
 		}
 
 		setOnLuas('cameraX', camFollowPos.x);
@@ -4230,23 +4232,24 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-	private function processInputs(elapsed:Float):Void {
-		if (startedCountdown) {
+	private function processInputs(elapsed:Float, opponent:Bool):Void {
+		if (startedCountdown) {	
 			notes.forEachAlive(function(daNote:Note) {
-				if (!daNote.mustPress && !daNote.hitByOpponent && !daNote.ignoreNote && daNote.checkHit(Conductor.songPosition))
+				if (opponent && !daNote.mustPress && !daNote.hitByOpponent && !daNote.ignoreNote && daNote.checkHit(Conductor.songPosition))
 					opponentNoteHit(daNote);
 
-				if (cpuControlled && !daNote.blockHit && daNote.mustPress && daNote.canBeHit && (daNote.isSustainNote
+				if (!opponent && cpuControlled && !daNote.blockHit && daNote.mustPress && daNote.canBeHit && (daNote.isSustainNote
 					? (daNote.parent == null || daNote.parent.wasGoodHit) : daNote.checkHit(Conductor.songPosition)))
 					goodNoteHit(daNote);
 
 				// Hold notes
-				if (cpuControlled || boyfriend.stunned) return;
+				if (opponent || cpuControlled || boyfriend.stunned) return;
 				if (daNote.isSustainNote && strumsBlocked[daNote.noteData] != true && keysPressed[daNote.noteData] && (daNote.parent == null
 				|| daNote.parent.wasGoodHit) && daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.wasGoodHit && !daNote.blockHit) {
 					goodNoteHit(daNote);
 				}
 			});
+			if (opponent) return;
 
 			#if ACHIEVEMENTS_ALLOWED
 			if (keysPressed.contains(true) && !endingSong) {
