@@ -876,10 +876,11 @@ class PlayState extends MusicBeatState
 				default:
 					startCountdown();
 			}
-			seenCutscene = true;
 		}
 		else
 			startCountdown();
+
+		seenCutscene = true;
 	}
 
 	function makeHUD() {

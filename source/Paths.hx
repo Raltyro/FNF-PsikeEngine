@@ -349,8 +349,8 @@ class Paths {
 		var invalidChars = ~/[~&\\;:<>#]+/g;
 		var hideChars = ~/[.,'"%?!]+/g;
 
-		var path:String = invalidChars.split(path.replace(' ', '-')).join("-");
-		return hideChars.split(path).join("").toLowerCase();
+		var path:String = invalidChars.split(path.replace(' ', '-')).join('-');
+		return hideChars.split(path).join('').toLowerCase();
 	}
 
 	// completely rewritten asset loading? fuck!
@@ -377,11 +377,11 @@ class Paths {
 
 		var srcKey:String = getPath('images/$key.png', IMAGE, library);
 		if ((graph = currentTrackedAssets.get(srcKey)) != null) {
-			if (!(modExists = FileSystem.exists(modKey))) {
+			//if (!(modExists = FileSystem.exists(modKey))) {
 				localTrackedAssets.push(srcKey);
 				return graph;
-			}
-			graph = null;
+			//}
+			//graph = null;
 		}
 		else modExists = FileSystem.exists(modKey);
 
@@ -391,10 +391,10 @@ class Paths {
 		if ((graph = currentTrackedAssets.get(path)) != null) return graph;
 		#end
 
-		if (modExists || OpenFlAssets.exists(path, IMAGE)) {
+		if (modExists || #if MODS_ALLOWED FileSystem.exists(path) #else OpenFlAssets.exists(path, IMAGE) #end) {
 			localTrackedAssets.push(path);
 
-			var bitmap:BitmapData = _regBitmap(path, hardwareCache, modExists);
+			var bitmap:BitmapData = _regBitmap(path, hardwareCache, #if MODS_ALLOWED true #else false #end);
 			if (bitmap != null) graph = FlxGraphic.fromBitmapData(bitmap, false, path);
 
 			if (graph != null) {
@@ -441,11 +441,16 @@ class Paths {
 		var folder:String = '';
 		if (path == 'songs') folder = 'songs:';
 		#end
+		var uwu:String = folder + (modExists ? path : track);
 
-		localTrackedAssets.push(track);
-		var sound:Sound = currentTrackedSounds.get(track);
-		if (sound == null) currentTrackedSounds.set(track, sound = regSound(folder + (modExists ? path : track), stream));
-		if (sound != null) return sound;
+		#if (!MODS_ALLOWED)
+		if (OpenFlAssets.exists(uwu, SOUND)) {
+		#end
+			localTrackedAssets.push(track);
+			var sound:Sound = currentTrackedSounds.get(track);
+			if (sound == null) currentTrackedSounds.set(track, sound = _regSound(uwu, stream, #if MODS_ALLOWED true #else modExists #end));
+			if (sound != null) return sound;
+		#if (!MODS_ALLOWED) } #end
 
 		trace('oh no its returning "sound" null NOOOO: $path' #if MODS_ALLOWED + ' | $modKey' #end);
 		return null;
@@ -462,7 +467,8 @@ class Paths {
 		#if MODS_ALLOWED
 		if (FileSystem.exists(key)) return _regSound(key, stream, true);
 		#end
-		return _regSound(key, stream, false);
+		if (OpenFlAssets.exists(key, SOUND)) return _regSound(key, stream, false);
+		return null;
 	}
 
 	#if MODS_ALLOWED
