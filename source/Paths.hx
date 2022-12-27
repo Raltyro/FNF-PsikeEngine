@@ -391,10 +391,10 @@ class Paths {
 		if ((graph = currentTrackedAssets.get(path)) != null) return graph;
 		#end
 
-		if (modExists || #if MODS_ALLOWED FileSystem.exists(path) #else OpenFlAssets.exists(path, IMAGE) #end) {
+		if (modExists || OpenFlAssets.exists(path, IMAGE)) {
 			localTrackedAssets.push(path);
 
-			var bitmap:BitmapData = _regBitmap(path, hardwareCache, #if MODS_ALLOWED true #else false #end);
+			var bitmap:BitmapData = _regBitmap(path, hardwareCache, modExists);
 			if (bitmap != null) graph = FlxGraphic.fromBitmapData(bitmap, false, path);
 
 			if (graph != null) {
