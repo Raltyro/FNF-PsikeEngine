@@ -114,7 +114,6 @@ class Main extends Sprite {
 	}
 
 	private function onGameReset() {
-		trace("reset");
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 

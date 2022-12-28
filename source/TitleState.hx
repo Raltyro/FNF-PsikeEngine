@@ -322,7 +322,6 @@ class TitleState extends MusicBeatState {
 				if (allowedKeys.contains(keyName)) {
 					easterEggKeysBuffer += keyName;
 					if (easterEggKeysBuffer.length >= 32) easterEggKeysBuffer = easterEggKeysBuffer.substring(1);
-					trace('Test! Allowed Key pressed!!! Buffer: ' + easterEggKeysBuffer);
 
 					for (wordRaw in easterEggKeys) {
 						var word:String = wordRaw.toUpperCase(); //just for being sure you're doing it right
