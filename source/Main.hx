@@ -1,24 +1,22 @@
 package;
 
+import lime.app.Application;
+
+import openfl.display.Sprite;
+import openfl.display.StageScaleMode;
+import openfl.display.FPS;
+import openfl.events.KeyboardEvent;
+import openfl.events.Event;
+import openfl.Lib;
+
 import flixel.input.keyboard.FlxKey;
-import flixel.graphics.FlxGraphic;
 import flixel.FlxG;
 import flixel.FlxGame;
-import flixel.FlxState;
-import openfl.Assets;
-import openfl.Lib;
-import openfl.display.FPS;
-import openfl.display.Sprite;
-import openfl.events.Event;
-import openfl.events.KeyboardEvent;
-import openfl.display.StageScaleMode;
-import lime.app.Application;
 
 #if desktop
 import Discord.DiscordClient;
 #end
 
-//crash handler stuff
 #if CRASH_HANDLER
 import openfl.events.UncaughtErrorEvent;
 import haxe.CallStack;
@@ -30,8 +28,7 @@ import sys.io.Process;
 
 using StringTools;
 
-class Main extends Sprite
-{
+class Main extends Sprite {
 	var game = {
 		width: 1280, // WINDOW width
 		height: 720, // WINDOW height
@@ -42,81 +39,62 @@ class Main extends Sprite
 		startFullscreen: false // if the game should start at fullscreen mode
 	};
 
+	public static var args:Array<String>;
+	public static var current:Main;
 	public static var fpsVar:FPS;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
-	
+
+	public static var muteKeys:Array<FlxKey> = [FlxKey.ZERO];
+	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
+	public static var volumeUpKeys:Array<FlxKey> = [FlxKey.NUMPADPLUS, FlxKey.PLUS];
 	public static var fullscreenKeys:Array<FlxKey> = [FlxKey.F11];
 	public static var focused:Bool = true;
 
-	public static function main():Void
-	{
-		Lib.current.addChild(new Main());
+	public static function main():Void {
+		args = Sys.args();
+		Lib.current.addChild(current = new Main());
 	}
 
-	public function new()
-	{
+	public function new() {
 		super();
 
-		if (stage != null)
-		{
-			init();
-		}
-		else
-		{
-			addEventListener(Event.ADDED_TO_STAGE, init);
-		}
+		if (stage != null) init();
+		else addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 
-	private function init(?E:Event):Void
-	{
+	private function init(?E:Event):Void {
 		if (hasEventListener(Event.ADDED_TO_STAGE))
-		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-		}
 
 		setupGame();
 	}
 
-	private function setupGame():Void
-	{
-		Lib.current.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
-		Lib.current.stage.addEventListener(KeyboardEvent.KEY_DOWN, handleInput);
-
+	private function setupGame():Void {
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
 
-		if (game.zoom == -1.0)
-		{
+		if (game.zoom == -1.0) {
 			var ratioX:Float = stageWidth / game.width;
 			var ratioY:Float = stageHeight / game.height;
 			game.zoom = Math.min(ratioX, ratioY);
 			game.width = Math.ceil(stageWidth / game.zoom);
 			game.height = Math.ceil(stageHeight / game.zoom);
 		}
-	
-		ClientPrefs.loadDefaultKeys();
-		addChild(new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 
-		fpsVar = new FPS(3, 3, 0xFFFFFF);
-		addChild(fpsVar);
+		Lib.current.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		Lib.current.stage.addEventListener(KeyboardEvent.KEY_DOWN, handleInput);
+
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
 
-		fpsVar.showFPS = ClientPrefs.showFPS;
-		fpsVar.showMem = ClientPrefs.showMem;
-		fpsVar.showMemPeak = ClientPrefs.showMemPeak;
-		fpsVar.showGc = ClientPrefs.showGc;
-		fpsVar.showGLStats = ClientPrefs.showGLStats;
-
+		FlxG.signals.postGameReset.add(onGameReset);
 		FlxG.signals.focusGained.add(onFocus);
 		FlxG.signals.focusLost.add(onFocusLost);
-		
-		#if html5
-		FlxG.autoPause = false;
-		FlxG.mouse.visible = false;
-		#end
-		
+
+		ClientPrefs.loadDefaultKeys();
+		addChild(new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
@@ -130,21 +108,58 @@ class Main extends Sprite
 		}
 		#end
 	}
-	
+
 	private function handleInput(evt:KeyboardEvent) {
 		if (fullscreenKeys.contains(CoolUtil.flKeyToFlx(evt.keyCode))) FlxG.fullscreen = !FlxG.fullscreen;
 	}
-	
+
+	private function onGameReset() {
+		trace("reset");
+		Paths.clearStoredMemory();
+		Paths.clearUnusedMemory();
+
+		PlayerSettings.init();
+		ClientPrefs.loadPrefs();
+
+		Highscore.load();
+
+		if (FlxG.save.data != null) {
+			if (FlxG.save.data.fullscreen != null) FlxG.fullscreen = FlxG.save.data.fullscreen;
+			if (FlxG.save.data.weekCompleted != null) StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
+		}
+
+		fpsVar = new FPS(3, 3, 0xFFFFFF);
+		addChild(fpsVar);
+
+		fpsVar.showFPS = ClientPrefs.showFPS;
+		fpsVar.showMem = ClientPrefs.showMem;
+		fpsVar.showMemPeak = ClientPrefs.showMemPeak;
+		fpsVar.showGc = ClientPrefs.showGc;
+		fpsVar.showGLStats = ClientPrefs.showGLStats;
+
+		FlxG.mouse.visible = false;
+		FlxG.sound.muteKeys = muteKeys;
+		FlxG.sound.volumeDownKeys = volumeDownKeys;
+		FlxG.sound.volumeUpKeys = volumeUpKeys;
+		FlxG.keys.preventDefaultKeys = [TAB];
+		FlxG.game.focusLostFramerate = 8;
+
+		#if html5
+		FlxG.autoPause = false;
+		FlxG.mouse.visible = false;
+		#end
+	}
+
 	private function onFocus() {
 		focused = true;
 	}
-	
+
 	var woah:Int = 0;
 	private function onFocusLost() {
 		woah = 3;
 		focused = false;
 	}
-	
+
 	private function onEnterFrame(_) {
 		// CLEVER WAY TO SECRETLY GC LMAO
 		//if (!focused && woah > 0) {
@@ -156,8 +171,7 @@ class Main extends Sprite
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
 	// very cool person for real they don't get enough credit for their work
 	#if CRASH_HANDLER
-	function onCrash(e:UncaughtErrorEvent):Void
-	{
+	function onCrash(e:UncaughtErrorEvent):Void {
 		var errMsg:String = "";
 		var path:String;
 		var callStack:Array<StackItem> = CallStack.exceptionStack(true);
@@ -168,10 +182,8 @@ class Main extends Sprite
 
 		path = "./crash/" + "PsychEngine_" + dateNow + ".txt";
 
-		for (stackItem in callStack)
-		{
-			switch (stackItem)
-			{
+		for (stackItem in callStack) {
+			switch (stackItem) {
 				case FilePos(s, file, line, column):
 					errMsg += file + " (line " + line + ")\n";
 				default:

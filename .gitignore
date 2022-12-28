@@ -6,7 +6,7 @@ art/build_x64-officialrelease.bat
 art/test_x64-debug-officialrelease.bat
 
 ### fucking bloats
-.DS_Store
+*.DS_Store
 
 ### VS Code
 export/*
@@ -30,5 +30,5 @@ _test.bat
 _copyrun.bat
 mods.lnk
 ..mods.lnk
-sublime.sublime-project
-sublime.sublime-workspace
+*.sublime-workspace
+*.sublime-project

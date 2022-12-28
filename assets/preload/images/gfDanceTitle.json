@@ -1,4 +1,6 @@
-{	
+{
+	"titleColors":"0xFF33FFFF, 0xFF3333CC",
+	"titleAlphas":"1, 0.64",	
 	"titlex":-150,
 	"titley":-100,
 	"startx":100,

@@ -4090,8 +4090,8 @@ class PlayState extends MusicBeatState
 							canMiss = true;
 						}
 					}
-					else if (daNote.isSustainNote && (daNote.wasGoodHit || daNote.prevNote.wasGoodHit ||
-					(daNote.parent != null && !daNote.parent.hasMissed)) && daNote.noteData == key)
+					else if (daNote.isSustainNote && daNote.noteData == key && ((daNote.wasGoodHit || daNote.prevNote.wasGoodHit) &&
+					(daNote.parent != null && !daNote.parent.hasMissed && daNote.parent.wasGoodHit)))
 						sortedNotesList.push(daNote);
 				}
 			});
