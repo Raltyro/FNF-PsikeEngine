@@ -257,17 +257,13 @@ class WeekData {
 		Paths.currentModDirectory = '';
 		
 		#if MODS_ALLOWED
-		if (FileSystem.exists("modsList.txt"))
-		{
+		if (FileSystem.exists("modsList.txt")) {
 			var list:Array<String> = CoolUtil.listFromString(File.getContent("modsList.txt"));
-			var foundTheTop = false;
-			for (i in list)
-			{
+			for (i in list) {
 				var dat = i.split("|");
-				if (dat[1] == "1" && !foundTheTop)
-				{
-					foundTheTop = true;
+				if (dat[1] == "1") {
 					Paths.currentModDirectory = dat[0];
+					break;
 				}
 			}
 		}

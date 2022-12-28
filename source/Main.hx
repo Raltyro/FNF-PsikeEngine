@@ -122,6 +122,10 @@ class Main extends Sprite {
 
 		Highscore.load();
 
+		#if MODS_ALLOWED
+		Paths.pushGlobalMods();
+		#end
+
 		if (FlxG.save.data != null) {
 			if (FlxG.save.data.fullscreen != null) FlxG.fullscreen = FlxG.save.data.fullscreen;
 			if (FlxG.save.data.weekCompleted != null) StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
@@ -136,6 +140,7 @@ class Main extends Sprite {
 		fpsVar.showGc = ClientPrefs.showGc;
 		fpsVar.showGLStats = ClientPrefs.showGLStats;
 
+		FlxG.fixedTimestep = false;
 		FlxG.mouse.visible = false;
 		FlxG.sound.muteKeys = muteKeys;
 		FlxG.sound.volumeDownKeys = volumeDownKeys;
@@ -146,6 +151,14 @@ class Main extends Sprite {
 		#if html5
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
+		#end
+
+		#if CHECK_FOR_UPDATES
+		if (ClientPrefs.checkForUpdates) {
+			CoolUtil.checkForUpdates(function(mustUpdate:Bool) {
+				if (mustUpdate) trace("Must Update!! Showing OutdatedState after TitleState");
+			});
+		}
 		#end
 	}
 

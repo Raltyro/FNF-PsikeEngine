@@ -8,6 +8,13 @@ import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 class FlxAnimationController implements IFlxDestroyable
 {
 	/**
+	 * the mf psychers 
+	 */
+	public static var globalSpeed:Float = 1;
+	public var followGlobalSpeed:Bool = true;
+	public var speed:Float = 1;
+
+	/**
 	 * Property access for currently playing animation (warning: can be `null`).
 	 */
 	public var curAnim(get, set):FlxAnimation;
@@ -80,14 +87,12 @@ class FlxAnimationController implements IFlxDestroyable
 		_animations = new Map<String, FlxAnimation>();
 	}
 
-	public static var globalSpeed:Float = 1;
-	public var followGlobalSpeed:Bool = true;
 	public function update(elapsed:Float):Void
 	{
 		if (_curAnim != null)
 		{
-			var e:Float = elapsed;
-			if(followGlobalSpeed) e *= globalSpeed;
+			var e:Float = elapsed * speed;
+			if (followGlobalSpeed) e *= globalSpeed;
 
 			_curAnim.update(e);
 		}
