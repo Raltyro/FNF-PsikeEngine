@@ -239,7 +239,7 @@ class TitleState extends MusicBeatState {
 
 		switch(easterEgg) {
 			case 'RIVER':
-				gfDance.animation.speed = Math.min(1.3, Conductor.bpm / 108);
+				gfDance.animation.speed = Math.min(1.3, Conductor.bpm / 104);
 		}
 		#end
 

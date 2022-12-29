@@ -154,7 +154,7 @@ class Assets
 		@param	hardware		Hardware Caching (Default: false)
 		@return		A BitmapData object
 	**/
-	public static var traceNewBitmaps:Bool = false;
+	//public static var traceNewBitmaps:Bool = false;
 	public static function registerBitmapData(bitmap:BitmapData, key:String, useCache:Bool = true, hardware:Bool = false):BitmapData {
 		if (bitmap == null || key == null) return bitmap;
 		
@@ -162,9 +162,9 @@ class Assets
 		
 		#if !flash
 		if (hardware && bitmap.image != null) {
-			if (traceNewBitmaps) trace(key, "hardware");
+			//if (traceNewBitmaps) trace(key, "hardware");
 			
-			bitmap.lock();
+			//bitmap.lock();
 			var texture = Lib.current.stage.context3D.createRectangleTexture(
 				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, false
 			);
@@ -175,7 +175,7 @@ class Assets
 		}
 		else
 		#end
-		if (traceNewBitmaps) trace(key);
+		//if (traceNewBitmaps) trace(key);
 		
 		if (useCache && cache.enabled)
 			cache.setBitmapData(key, bitmap);

@@ -123,6 +123,7 @@ class Paths {
 				if (assetExcluded(obj)) return;
 
 				OpenFlAssets.cache.removeBitmapData(key);
+				OpenFlAssets.cache.clear(key);
 				FlxG.bitmap._cache.remove(key);
 
 				if (obj.bitmap != null) {
@@ -143,7 +144,7 @@ class Paths {
 		if (assetExcluded(obj)) return;
 
 		OpenFlAssets.cache.removeSound(key);
-		Assets.cache.clear(key);
+		OpenFlAssets.cache.clear(key);
 
 		if (obj != null) {
 			@:privateAccess{

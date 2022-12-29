@@ -67,6 +67,8 @@ class Conductor {
 	}
 
 	// just wanted to lyk, these arent acctualy seconds, its ms! same goes for the functions below
+	// oh yeah forgot to say, most of these functions are reused from a never finished engine i made :/
+	// --Raltyro
 	public static function getBPMFromSeconds(time:Float, from:Int = -1):BPMChangeEvent {
 		if (bpmChangeMap.length == 0 || time < bpmChangeMap[0].songTime) return getDummyBPMChange();
 		else if (time >= bpmChangeMap[bpmChangeMap.length - 1].songTime) return bpmChangeMap[bpmChangeMap.length - 1];
