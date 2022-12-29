@@ -232,17 +232,6 @@ class TitleState extends MusicBeatState {
 		add(textGroup);
 		add(ngSpr);
 
-		#if TITLE_SCREEN_EASTER_EGG
-		var easterEgg:String = FlxG.save.data.psychDevsEasterEgg;
-		if (easterEgg == null) easterEgg = '';
-		easterEgg = easterEgg.toUpperCase();
-
-		switch(easterEgg) {
-			case 'RIVER':
-				gfDance.animation.speed = Math.min(1.3, Conductor.bpm / 105.5);
-		}
-		#end
-
 		if (initialized)
 			skipIntro();
 		else {
@@ -409,6 +398,17 @@ class TitleState extends MusicBeatState {
 				gfDance.animation.play('danceRight');
 			else
 				gfDance.animation.play('danceLeft');
+
+			#if TITLE_SCREEN_EASTER_EGG
+			var easterEgg:String = FlxG.save.data.psychDevsEasterEgg;
+			if (easterEgg == null) easterEgg = '';
+			easterEgg = easterEgg.toUpperCase();
+
+			switch(easterEgg) {
+				case 'RIVER':
+					gfDance.animation.speed = Math.min(1.3, curBPMChange.bpm / 105.5);
+			}
+			#end
 		}
 
 		if (!closedState) {
