@@ -360,7 +360,7 @@ class FreeplayState extends MusicBeatState
 					}
 					vocals.play(true);
 
-					FlxG.sound.music.time = vocals.time;
+					FlxG.sound.music.time = vocals.time = 0;
 				}
 				vocals.looped = !(FlxG.sound.music.looped = true);
 				vocals.volume = FlxG.sound.music.volume = 0.7;
