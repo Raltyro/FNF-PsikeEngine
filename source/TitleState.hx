@@ -239,7 +239,7 @@ class TitleState extends MusicBeatState {
 
 		switch(easterEgg) {
 			case 'RIVER':
-				gfDance.animation.speed = Math.min(1.3, Conductor.bpm / 104);
+				gfDance.animation.speed = Math.min(1.3, Conductor.bpm / 105.5);
 		}
 		#end
 
@@ -469,6 +469,8 @@ class TitleState extends MusicBeatState {
 
 			if (playJingle) {
 				if (FreeplayState.vocals != null) FreeplayState.destroyFreeplayVocals();
+				Conductor.mapBPMChanges(true);
+				Conductor.changeBPM(titleJSON.bpm);
 
 				var sound:FlxSound = null;
 				switch(easteregg) {

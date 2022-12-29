@@ -137,8 +137,11 @@ class Conductor {
 	public static function getBeatRounded(time:Float, ?offset:Float, ?from:Int):Int
 		return Math.floor(inline getBeat(time, offset, from));
 
-	public static function mapBPMChanges(song:SwagSong) {
-		bpmChangeMap = [];
+	public static function mapBPMChanges(?song:SwagSong, reuse:Bool = false) {
+		if (reuse) bpmChangeMap.resize(0);
+		else bpmChangeMap = [];
+
+		if (song == null) return;
 
 		var curBPM:Float = song.bpm;
 		var totalPos:Float = 0, totalSteps = 0, totalBPM = 0;

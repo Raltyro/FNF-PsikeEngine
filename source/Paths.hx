@@ -275,11 +275,11 @@ class Paths {
 	#if (!MODS_ALLOWED) inline #end static public function image(key:String, ?library:String):FlxGraphic
 		return returnGraphic(key, library);
 
-	#if (!MODS_ALLOWED) inline #end static public function inst(song:String):Sound
-		return returnSound('songs', '${formatToSongPath(song)}/Inst', streamMusic);
+	#if (!MODS_ALLOWED) inline #end static public function inst(song:String, ?stream:Bool, forceNoStream:Bool = false):Sound
+		return returnSound('songs', '${formatToSongPath(song)}/Inst', !forceNoStream && (stream || streamMusic));
 
-	#if (!MODS_ALLOWED) inline #end static public function voices(song:String):Sound
-		return returnSound('songs', '${formatToSongPath(song)}/Voices', streamMusic);
+	#if (!MODS_ALLOWED) inline #end static public function voices(song:String, ?stream:Bool, forceNoStream:Bool = false):Sound
+		return returnSound('songs', '${formatToSongPath(song)}/Voices', !forceNoStream && (stream || streamMusic));
 
 	static public function getTextFromFile(key:String, ?ignoreMods:Bool = false):String {
 		#if sys
@@ -449,6 +449,12 @@ class Paths {
 		#end
 			localTrackedAssets.push(track);
 			var sound:Sound = currentTrackedSounds.get(track);
+
+			// if no stream and sound is stream, fuck it, load one that arent stream
+			@:privateAccess if (!stream && sound != null && sound.__buffer != null && sound.__buffer.__srcVorbisFile != null) {
+				decacheSound(track);
+				sound = null;
+			}
 			if (sound == null) currentTrackedSounds.set(track, sound = _regSound(uwu, stream, #if MODS_ALLOWED true #else modExists #end));
 			if (sound != null) return sound;
 		#if (!MODS_ALLOWED) } #end

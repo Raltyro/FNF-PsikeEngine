@@ -339,20 +339,37 @@ class FreeplayState extends MusicBeatState
 				#if PRELOAD_ALL
 				destroyFreeplayVocals();
 				FlxG.sound.music.volume = 0;
-				Paths.currentModDirectory = songs[curSelected].folder;
-				var poop:String = Highscore.formatSong(songs[curSelected].songName.toLowerCase(), curDifficulty);
-				PlayState.SONG = Song.loadFromJson(poop, songs[curSelected].songName.toLowerCase());
-				if (PlayState.SONG.needsVoices)
-					vocals = new FlxSound().loadEmbedded(Paths.voices(PlayState.SONG.song));
-				else
-					vocals = new FlxSound();
 
+				Paths.currentModDirectory = songs[curSelected].folder;
+
+				var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
+				var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
+				PlayState.SONG = Song.loadFromJson(poop, songLowercase);
+				Conductor.mapBPMChanges(PlayState.SONG, true);
+				Conductor.changeBPM(PlayState.SONG.bpm);
+
+				if (PlayState.SONG.needsVoices) vocals = new FlxSound().loadEmbedded(Paths.voices(PlayState.SONG.song, true));
+				else vocals = new FlxSound();
 				FlxG.sound.list.add(vocals);
-				FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.7);
-				vocals.play();
+
+				FlxG.sound.music.loadEmbedded(Paths.inst(PlayState.SONG.song, true), false);
+				FlxG.sound.music.onComplete = function() {
+					if (vocals == null) {
+						FlxG.sound.music.onComplete = null;
+						return;
+					}
+					vocals.play(true);
+
+					FlxG.sound.music.time = vocals.time;
+				}
+				vocals.looped = !(FlxG.sound.music.looped = true);
+				vocals.volume = FlxG.sound.music.volume = 0.7;
 				vocals.persist = true;
-				vocals.looped = true;
-				vocals.volume = 0.7;
+				vocals.autoDestroy = false;
+
+				FlxG.sound.music.play();
+				vocals.play();
+
 				instPlaying = curSelected;
 				#end
 			}
@@ -363,15 +380,6 @@ class FreeplayState extends MusicBeatState
 			persistentUpdate = false;
 			var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
 			var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
-			/*#if MODS_ALLOWED
-			if(!sys.FileSystem.exists(Paths.modsJson(songLowercase + '/' + poop)) && !sys.FileSystem.exists(Paths.json(songLowercase + '/' + poop))) {
-			#else
-			if(!OpenFlAssets.exists(Paths.json(songLowercase + '/' + poop))) {
-			#end
-				poop = songLowercase;
-				curDifficulty = 1;
-				trace('Couldnt find file');
-			}*/
 			trace(poop);
 
 			PlayState.SONG = Song.loadFromJson(poop, songLowercase);
