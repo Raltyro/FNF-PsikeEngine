@@ -359,6 +359,7 @@ class PlayState extends MusicBeatState
 		persistentDraw = true;
 
 		// Clean-up
+		Conductor.usePlayState = true;
 		Conductor.songPosition = Math.NEGATIVE_INFINITY;
 		if (firstStart) FlxG.sound.destroy(true);
 		Paths.clearStoredMemory();

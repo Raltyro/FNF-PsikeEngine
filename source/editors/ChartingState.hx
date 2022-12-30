@@ -290,6 +290,7 @@ class ChartingState extends MusicBeatState
 		currentSongName = Paths.formatToSongPath(_song.song);
 		loadSong();
 		reloadGridLayer();
+		Conductor.usePlayState = true;
 		Conductor.changeBPM(_song.bpm);
 		Conductor.mapBPMChanges(_song);
 

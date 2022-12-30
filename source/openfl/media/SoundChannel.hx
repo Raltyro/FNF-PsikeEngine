@@ -67,7 +67,10 @@ import lime.media.AudioSource;
 	/**
 		self explanatory
 	*/
+	public var loopTime(get, set):Int;
+	public var endTime(get, set):Null<Int>;
 	public var pitch(get, set):Float;
+	public var loops(get, set):Int;
 
 	@:noCompletion private var __isValid:Bool;
 	@:noCompletion private var __soundTransform:SoundTransform;
@@ -112,6 +115,7 @@ import lime.media.AudioSource;
 		{
 			__source = source;
 			__source.onComplete.add(source_onComplete);
+			__source.onLoop.add(source_onLoop);
 			__isValid = true;
 
 			__source.play();
@@ -142,6 +146,7 @@ import lime.media.AudioSource;
 
 		#if lime
 		__source.onComplete.remove(source_onComplete);
+		__source.onLoop.remove(source_onLoop);
 		__source.dispose();
 		__source = null;
 		#end
@@ -170,11 +175,10 @@ import lime.media.AudioSource;
 		if (!__checkUpdatePeaks(currentTime)) return;
 
 		var buffer = __source.buffer;
-		if (buffer == null || __source.__backend == null) return;
 
 		// MS, NOT SECOND
 		var bufferTimeBlocks = __source.__backend.bufferTimeBlocks;
-		var khz:Float = (buffer.sampleRate / 1000), index:Int = Std.int((currentTime - Std.int(bufferTimeBlocks[0] * 1000)) * khz), samples:Int = 480;
+		var khz:Float = (buffer.sampleRate / 1000), index:Int = Math.floor((currentTime - Math.floor(bufferTimeBlocks[0] * 1000)) * khz), samples:Int = 480;
 		if (index < 0) {
 			if ((samples -= index) < 1) return;
 			index = 0;
@@ -189,7 +193,7 @@ import lime.media.AudioSource;
 		var sample:Float, rows:Int = 0;
 
 		var bytes = bufferDatas[bufferi].buffer;
-		while (rows < samples) {
+		while(rows < samples) {
 			if (index >= bufferSize) {
 				if ((bytes = bufferDatas[++bufferi].buffer) == null) break;
 				index = 0;
@@ -197,13 +201,13 @@ import lime.media.AudioSource;
 
 			if (!lfilled) {
 				sample = bytes.getUInt16(index * channels * 2) / 65535;
-				if (sample > .5) sample = Math.abs(sample - 1);
+				if (sample > .5) sample = -(sample - 1);
 				if (sample > lpeak) lfilled = (lpeak = sample) >= 1;
 			}
 
 			if (!rfilled) {
 				sample = bytes.getUInt16(index * channels * 2 + 2) / 65535;
-				if (sample > .5) sample = Math.abs(sample - 1);
+				if (sample > .5) sample = -(sample - 1);
 				if (sample > rpeak) rfilled = (rpeak = sample) >= 1;
 			}
 
@@ -223,19 +227,19 @@ import lime.media.AudioSource;
 		__leftPeak = __rightPeak = 0;
 		if (!__isValid) return;
 
+		var buffer = __source.buffer;
+		if (buffer == null) return __dispose();
+
 		#if (lime_cffi && !macro)
 		#if lime_vorbis
-		if (__source.__backend.stream) return __updateVorbisPeaks();
+		if (__source.__backend != null && __source.__backend.stream) return __updateVorbisPeaks();
 		#end
 
 		var currentTime:Float = position;
-		if (!__checkUpdatePeaks(currentTime)) return;
-
-		var buffer = __source.buffer;
-		if (buffer == null || buffer.data == null) return;
+		if (!__checkUpdatePeaks(currentTime) || buffer.data == null) return;
 
 		// MS, NOT SECOND
-		var khz:Float = (buffer.sampleRate / 1000), index:Int = Std.int(currentTime * khz), samples:Int = 480;
+		var khz:Float = (buffer.sampleRate / 1000), index:Int = Math.floor(currentTime * khz), samples:Int = 480;
 		if (index < 0) {
 			if ((samples -= index) < 1) return;
 			index = 0;
@@ -249,16 +253,16 @@ import lime.media.AudioSource;
 		var lpeak:Float = 0, rpeak:Float = 0;
 		var sample:Float, rows:Int = 0;
 
-		while (index < length && rows < samples) {
+		while(index < length && rows < samples) {
 			if (!lfilled) {
 				sample = bytes.getUInt16(index * channels * 2) / 65535;
-				if (sample > .5) sample = Math.abs(sample - 1);
+				if (sample > .5) sample = -(sample - 1);
 				if (sample > lpeak) lfilled = (lpeak = sample) >= 1;
 			}
 
 			if (!rfilled) {
 				sample = bytes.getUInt16(index * channels * 2 + 2) / 65535;
-				if (sample > .5) sample = Math.abs(sample - 1);
+				if (sample > .5) sample = -(sample - 1);
 				if (sample > rpeak) rfilled = (rpeak = sample) >= 1;
 			}
 
@@ -355,6 +359,72 @@ import lime.media.AudioSource;
 		#end
 	}
 
+	@:noCompletion private function get_loopTime():Int
+	{
+		if (!__isValid) return -1;
+
+		#if lime
+		return __source.loopTime;
+		#else
+		return -1;
+		#end
+	}
+
+	@:noCompletion private function set_loopTime(value:Int):Int
+	{
+		if (!__isValid) return -1;
+
+		#if lime
+		return __source.loopTime = value;
+		#else
+		return -1;
+		#end
+	}
+
+	@:noCompletion private function get_endTime():Null<Int>
+	{
+		if (!__isValid) return null;
+
+		#if lime
+		return __source.length;
+		#else
+		return null;
+		#end
+	}
+
+	@:noCompletion private function set_endTime(value:Null<Int>):Null<Int>
+	{
+		if (!__isValid) return null;
+
+		#if lime
+		return __source.length = value;
+		#else
+		return null;
+		#end
+	}
+
+	@:noCompletion private function get_loops():Int
+	{
+		if (!__isValid) return 0;
+
+		#if lime
+		return __source.loops;
+		#else
+		return 0;
+		#end
+	}
+
+	@:noCompletion private function set_loops(value:Int):Int
+	{
+		if (!__isValid) return 0;
+
+		#if lime
+		return __source.loops = value;
+		#else
+		return 0;
+		#end
+	}
+
 	@:noCompletion private function get_leftPeak():Float
 	{
 		__updatePeaks();
@@ -374,6 +444,11 @@ import lime.media.AudioSource;
 
 		__dispose();
 		dispatchEvent(new Event(Event.SOUND_COMPLETE));
+	}
+
+	@:noCompletion private function source_onLoop():Void
+	{
+		dispatchEvent(new Event(Event.SOUND_LOOP));
 	}
 }
 #else

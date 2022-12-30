@@ -161,20 +161,20 @@ class FlxSound extends FlxBasic
 	/**
 	 * Whether or not this sound should loop.
 	 */
-	public var looped:Bool;
+	public var looped(default, set):Bool;
 
 	/**
 	 * In case of looping, the point (in milliseconds) from where to restart the sound when it loops back
 	 * @since 4.1.0
 	 */
-	public var loopTime:Float = 0.0;
+	public var loopTime(default, set):Float = 0.0;
 
 	/**
 	 * At which point to stop playing the sound, in milliseconds.
 	 * If not set / `null`, the sound completes normally.
 	 * @since 4.2.0
 	 */
-	public var endTime:Null<Float>;
+	public var endTime(default, set):Null<Float>;
 
 	/**
 	 * The tween used to fade this sound's volume in and out (set via `fadeIn()` and `fadeOut()`)
@@ -338,6 +338,9 @@ class FlxSound extends FlxBasic
 		if (_channel != null)
 		{
 			_channel.removeEventListener(Event.SOUND_COMPLETE, stopped);
+			#if !flash
+			_channel.removeEventListener(Event.SOUND_LOOP, ev_looped);
+			#end
 			_channel.stop();
 			_channel = null;
 		}
@@ -410,8 +413,10 @@ class FlxSound extends FlxBasic
 		}
 		#end
 
+		#if flash
 		if (endTime != null && _time >= endTime)
 			stopped();
+		#end
 	}
 
 	override public function kill():Void
@@ -710,7 +715,7 @@ class FlxSound extends FlxBasic
 
 		_time = StartTime;
 		_paused = false;
-		_channel = _sound.play(_time, 0, _transform);
+		_channel = _sound.play(_time, #if !flash looped ? 999 : #end 0, _transform);
 		if (_channel != null)
 		{
 			@:privateAccess{
@@ -725,6 +730,9 @@ class FlxSound extends FlxBasic
 			pitch = _pitch;
 			#end
 			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
+			#if !flash
+			_channel.addEventListener(Event.SOUND_LOOP, ev_looped);
+			#end
 			active = true;
 		}
 		else
@@ -735,7 +743,7 @@ class FlxSound extends FlxBasic
 	}
 
 	/**
-	 * An internal helper function used to help Flash
+	 * An internal helper functions used to help Flash
 	 * clean up finished sounds or restart looped sounds.
 	 */
 	function stopped(?_):Void
@@ -751,6 +759,22 @@ class FlxSound extends FlxBasic
 		else
 			cleanup(autoDestroy);
 	}
+
+	#if !flash
+	function ev_looped(?_):Void
+	{
+		if (onComplete != null)
+			onComplete();
+
+		if (!looped)
+		{
+			cleanup(autoDestroy);
+		}
+		else
+			_channel.loops = 999;
+	}
+	#end
+
 
 	/**
 	 * An internal helper function used to help Flash clean up (and potentially re-use) finished sounds.
@@ -772,6 +796,9 @@ class FlxSound extends FlxBasic
 		if (_channel != null)
 		{
 			_channel.removeEventListener(Event.SOUND_COMPLETE, stopped);
+			#if !flash
+			_channel.removeEventListener(Event.SOUND_LOOP, ev_looped);
+			#end
 			_channel.stop();
 			_channel = null;
 		}
@@ -930,6 +957,36 @@ class FlxSound extends FlxBasic
 		return _pitch = FlxMath.bound(v, 0);
 	}
 	#end
+
+	inline function set_looped(v:Bool):Bool
+	{
+		#if !flash
+		if (playing) {
+			if (v) _channel.loops = 999;
+			else _channel.loops = 0;
+		}
+		#end
+		return looped = v;
+	}
+
+	inline function set_loopTime(v:Float):Float
+	{
+		#if !flash
+		if (playing) _channel.loopTime = Std.int(v);
+		#end
+		return loopTime = v;
+	}
+
+	inline function set_endTime(v:Null<Float>):Null<Float>
+	{
+		#if !flash
+		if (playing) {
+			if (v != null && v > 0) _channel.endTime = Std.int(v);
+			else _channel.endTime = null;
+		}
+		#end
+		return endTime = v;
+	}
 
 	inline function get_pan():Float
 	{

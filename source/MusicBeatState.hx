@@ -9,7 +9,7 @@ import flixel.FlxG;
 import Conductor.BPMChangeEvent;
 
 class MusicBeatState extends FlxUIState {
-	private var curBPMChange:BPMChangeEvent;
+	public var curBPMChange:BPMChangeEvent;
 
 	private var passedSections:Array<Float> = [];
 	private var stepsToDo:Float = 0;
@@ -46,7 +46,7 @@ class MusicBeatState extends FlxUIState {
 	}
 
 	override function create() {
-		if (curBPMChange.bpm != Conductor.bpm) curBPMChange = Conductor.getDummyBPMChange();
+		if (curBPMChange != null && curBPMChange.bpm != Conductor.bpm) curBPMChange = Conductor.getDummyBPMChange();
 		var skip = FlxTransitionableState.skipNextTransOut;
 		camBeat = FlxG.camera;
 

@@ -12,11 +12,13 @@ import lime.math.Vector4;
 class AudioSource
 {
 	public var onComplete = new Event<Void->Void>();
+	public var onLoop = new Event<Void->Void>();
 	public var buffer:AudioBuffer;
 	public var currentTime(get, set):Int;
 	public var gain(get, set):Float;
 	public var length(get, set):Int;
 	public var loops(get, set):Int;
+	public var loopTime(get, set):Int;
 	public var pitch(get, set):Float;
 	public var offset:Int;
 	public var position(get, set):Vector4;
@@ -107,6 +109,16 @@ class AudioSource
 	@:noCompletion private function set_loops(value:Int):Int
 	{
 		return __backend.setLoops(value);
+	}
+
+	@:noCompletion private function get_loopTime():Int
+	{
+		return __backend.getLoopTime();
+	}
+
+	@:noCompletion private function set_loopTime(value:Int):Int
+	{
+		return __backend.setLoopTime(value);
 	}
 
 	@:noCompletion private function get_pitch():Float

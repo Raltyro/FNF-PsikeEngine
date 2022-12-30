@@ -129,6 +129,8 @@ class MasterEditorMenu extends MusicBeatState
 			}
 			FlxG.sound.music.volume = 0;
 			#if PRELOAD_ALL
+			Conductor.usePlayState = false;
+			Conductor.mapBPMChanges(true);
 			FreeplayState.destroyFreeplayVocals();
 			#end
 		}

@@ -218,8 +218,11 @@ class TitleState extends MusicBeatState {
 		Conductor.songPosition = 0;
 		super.update(0);
 
-		if (FreeplayState.vocals == null)
+		if (FreeplayState.vocals == null) {
+			Conductor.usePlayState = false;
+			Conductor.mapBPMChanges(true);
 			Conductor.changeBPM(titleJSON.bpm);
+		}
 
 		add(bg);
 
@@ -469,6 +472,7 @@ class TitleState extends MusicBeatState {
 
 			if (playJingle) {
 				if (FreeplayState.vocals != null) FreeplayState.destroyFreeplayVocals();
+				Conductor.usePlayState = false;
 				Conductor.mapBPMChanges(true);
 				Conductor.changeBPM(titleJSON.bpm);
 

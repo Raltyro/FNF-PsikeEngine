@@ -26,6 +26,7 @@ class Conductor {
 	public static var offset:Float = 0;
 
 	public static var bpmChangeMap:Array<BPMChangeEvent> = [];
+	public static var usePlayState:Bool = false;
 
 	public function new() {}
 
@@ -42,7 +43,7 @@ class Conductor {
 	}
 
 	public static function getDummyBPMChange():BPMChangeEvent {
-		var bpm = PlayState.SONG != null ? PlayState.SONG.bpm : bpm;
+		var bpm = (usePlayState && PlayState.SONG != null) ? PlayState.SONG.bpm : bpm;
 		return {
 			stepTime: 0,
 			songTime: 0,
@@ -142,6 +143,7 @@ class Conductor {
 		else bpmChangeMap = [];
 
 		if (song == null) return;
+		MusicBeatState.getState().curBPMChange = null;
 
 		var curBPM:Float = song.bpm;
 		var totalPos:Float = 0, totalSteps = 0, totalBPM = 0;

@@ -9,8 +9,9 @@ class HTML5AudioSource
 	private var completed:Bool;
 	private var gain:Float;
 	private var id:Int;
-	private var length:Int;
+	private var length:Null<Int>;
 	private var loops:Int;
+	private var loopTime:Null<Int>;
 	private var parent:AudioSource;
 	private var playing:Bool;
 	private var position:Vector4;
@@ -98,8 +99,9 @@ class HTML5AudioSource
 		{
 			loops--;
 			stop();
-			// currentTime = 0;
+			if (loopTime != null && loopTime > 0) setCurrentTime(loopTime);
 			play();
+			parent.onLoop.dispatch();
 			return;
 		}
 		else if (parent.buffer != null && parent.buffer.__srcHowl != null)
@@ -202,6 +204,14 @@ class HTML5AudioSource
 	public function setLoops(value:Int):Int
 	{
 		return loops = value;
+	}
+
+	public function getLoopTime():Int {
+		return loopTime;
+	}
+
+	public function setLoopTime(value:Int):Int {
+		return loopTime = value;
 	}
 
 	public function getPitch():Float

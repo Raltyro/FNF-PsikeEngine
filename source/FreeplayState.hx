@@ -345,6 +345,7 @@ class FreeplayState extends MusicBeatState
 				var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
 				var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
 				PlayState.SONG = Song.loadFromJson(poop, songLowercase);
+				Conductor.usePlayState = true;
 				Conductor.mapBPMChanges(PlayState.SONG, true);
 				Conductor.changeBPM(PlayState.SONG.bpm);
 
