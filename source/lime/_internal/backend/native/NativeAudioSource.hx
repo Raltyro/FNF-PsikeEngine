@@ -214,18 +214,19 @@ class NativeAudioSource
 		var numBuffers = 0, offset = 0, index = 0, data;
 		for (buffer in buffers) {
 			index = position - offset;
-			if (samples - index >= STREAM_BUFFER_SIZE) {
+			//if (samples - index >= STREAM_BUFFER_SIZE) {
 				data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
 				AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
 				position += STREAM_BUFFER_SIZE;
 				numBuffers++;
-			}
-			else {
-				if (index < samples) {
-					data = readVorbisFileBuffer(vorbisFile, samples - index);
-					AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
-					numBuffers++;
-				}
+			//}
+			//else {
+				//if (index < samples) {
+			//		data = readVorbisFileBuffer(vorbisFile, samples - index);
+			//		AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
+			//		numBuffers++;
+			//		break;
+			//	}
 				/*
 				if (loops > 0 && prev == -1) {
 					var st = loopTime;
@@ -236,8 +237,8 @@ class NativeAudioSource
 					vorbisFile.timeSeek(st / 1000);
 					timerNoCheck = true;
 				}
-				else */break;
-			}
+				else */
+			//}
 		}
 
 		AL.sourceQueueBuffers(handle, numBuffers, buffers);
