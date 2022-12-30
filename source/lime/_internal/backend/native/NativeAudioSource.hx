@@ -30,6 +30,7 @@ class NativeAudioSource
 	private var buffers:Array<ALBuffer>;
 	private var bufferDatas:Array<UInt8Array>;
 	private var bufferTimeBlocks:Array<Float>;
+	private var emptyBufferData:UInt8Array;
 	private var completed:Bool;
 	private var dataLength:Int;
 	private var format:Int;
@@ -81,10 +82,11 @@ class NativeAudioSource
 			buffers = new Array();
 			bufferDatas = new Array();
 			bufferTimeBlocks = new Array();
+			emptyBufferData = new UInt8Array(STREAM_BUFFER_SIZE);
 
 			for (i in 0...STREAM_NUM_BUFFERS) {
 				buffers.push(AL.createBuffer());
-				bufferDatas.push(new UInt8Array(Bytes.alloc(0))); // temporary
+				bufferDatas.push(new UInt8Array(STREAM_BUFFER_SIZE));
 				bufferTimeBlocks.push(0);
 			}
 
@@ -152,33 +154,33 @@ class NativeAudioSource
 
 	private function readVorbisFileBuffer(vorbisFile:VorbisFile, length:Int):UInt8Array {
 		#if lime_vorbis
-		var buffer = new UInt8Array(length);
-		var read = 0, total = 0, readMax;
+		var buffer = bufferDatas[0], read = STREAM_NUM_BUFFERS - 1;
 
-		var size = STREAM_NUM_BUFFERS - 1;
-		for (i in 0...size) {
+		for (i in 0...read) {
 			bufferTimeBlocks[i] = bufferTimeBlocks[i + 1];
 			bufferDatas[i] = bufferDatas[i + 1];
 		}
-		bufferTimeBlocks[size] = vorbisFile.timeTell();
-		bufferDatas[size] = buffer;
+		bufferTimeBlocks[read] = vorbisFile.timeTell();
+		bufferDatas[read] = buffer;
 
-		var max = 0;
-		while(total < length) {
-			readMax = 4096;
-
-			if (readMax > (max = length - total))
-				readMax = max;
-
-			read = vorbisFile.read(buffer.buffer, total, readMax);
-
-			if (read > 0) total += read;
-			else break;
-		}
-
+		inline vorbisFileBuffer(vorbisFile, length, buffer);
 		return buffer;
 		#else
 		return null;
+		#end
+	}
+
+	private function vorbisFileBuffer(vorbisFile:VorbisFile, length:Int, buffer) {
+		#if lime_vorbis
+		var read = 0, total = 0, readMax;
+
+		while(total < length) {
+			if ((readMax = 4096) > (read = length - total)) readMax = read;
+			if ((read = vorbisFile.read(buffer.buffer, total, readMax)) > 0)
+				total += read;
+			else
+				break;
+		}
 		#end
 	}
 
@@ -189,56 +191,51 @@ class NativeAudioSource
 		var vorbisFile = parent.buffer.__srcVorbisFile;
 		if (vorbisFile == null) return dispose();
 
-		var position = 0, samples = samples;
+		var position = 0, samples = samples, sampleRate = parent.buffer.sampleRate;
 		if (buffers == null) {
 			var buffersProcessed:Int = AL.getSourcei(handle, AL.BUFFERS_PROCESSED);
+			if (buffersProcessed < 1) return;
 
-			if (buffersProcessed > 0) {
-				if (length != null)
-					samples = Std.int((length + parent.offset) / 1000 * parent.buffer.sampleRate);
+			if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
+			if ((position = Int64.toInt(vorbisFile.pcmTell())) < samples)
+				buffers = AL.sourceUnqueueBuffers(handle, buffersProcessed);
+			else
+				return;
 
-				if ((position = Int64.toInt(vorbisFile.pcmTell())) < samples)
-					buffers = AL.sourceUnqueueBuffers(handle, buffersProcessed);
-				else
-					return;
-
-				if (buffers == null) return;
-			}
-			else return;
+			if (buffers == null) return;
 		}
 		else {
 			position = Int64.toInt(vorbisFile.pcmTell());
-			if (length != null) samples = Std.int((length + parent.offset) / 1000 * parent.buffer.sampleRate);
+			if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
 		}
 
-		var numBuffers = 0, offset = 0, index = 0, data;
+		var numBuffers = 0, size = 0, data;
 		for (buffer in buffers) {
-			index = position - offset;
-			//if (samples - index >= STREAM_BUFFER_SIZE) {
-				data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
-				AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
-				position += STREAM_BUFFER_SIZE;
-				numBuffers++;
-			//}
-			//else {
-				//if (index < samples) {
-			//		data = readVorbisFileBuffer(vorbisFile, samples - index);
-			//		AL.bufferData(buffer, format, data, data.length, parent.buffer.sampleRate);
-			//		numBuffers++;
-			//		break;
-			//	}
-				/*
-				if (loops > 0 && prev == -1) {
-					var st = loopTime;
-					if (st == null || st < 1) st = 0;
+			if ((size = samples - position) < STREAM_BUFFER_SIZE) {
+				if (size < 1) break;
+				/*if (loops > 0) {
+					data = readVorbisFileBuffer(vorbisFile, size);
 
-					resetTimer(Std.int((getLength() - ((prev = vorbisFile.timeTell()) * 1000)) / getPitch()));
-					offset = samples - Std.int(st / 1000 * parent.buffer.sampleRate);
-					vorbisFile.timeSeek(st / 1000);
-					timerNoCheck = true;
+					var prev = vorbisFile.timeTell(), st:Null<Float> = loopTime;
+					if (st == null || st < 1) st = 0;
+					else st /= 1000;
+
+					vorbisFile.timeSeek(st);
+					vorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE - size, data);
+					vorbisFile.timeSeek(prev);
 				}
-				else */
-			//}
+				else
+					data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);*/
+			}
+			//else
+			//	data = readVorbisFileBuffer(vorbisFile, size = STREAM_BUFFER_SIZE);
+
+			data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
+			AL.bufferData(buffer, format, data, STREAM_BUFFER_SIZE, sampleRate);
+			position += STREAM_BUFFER_SIZE;
+			numBuffers++;
+
+			//if (loops > 0 && size < STREAM_BUFFER_SIZE) break;
 		}
 
 		AL.sourceQueueBuffers(handle, numBuffers, buffers);
@@ -307,16 +304,13 @@ class NativeAudioSource
 		refillBuffers();
 	}
 
-	private var timerNoCheck:Bool = false;
 	private function timer_onRun():Void {
 		if (handle == null) return forceStop();
 
-		if (!timerNoCheck) {
-			var timeRemaining = Std.int((getLength() - getCurrentTime()) / getPitch());
-			if (timeRemaining > 100 && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING) {
-				resetTimer(timeRemaining);
-				return;
-			}
+		var timeRemaining = Std.int((getLength() - getCurrentTime()) / getPitch());
+		if (timeRemaining > 100 && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING) {
+			resetTimer(timeRemaining);
+			return;
 		}
 
 		if (loops > 0) {
@@ -324,14 +318,9 @@ class NativeAudioSource
 			if (st == null || st < 1) st = 0;
 
 			loops--;
-			if (stream && timerNoCheck) {
-				timerNoCheck = false;
-				resetTimer(Std.int((getLength() - st) / getPitch()));
-				parent.onLoop.dispatch();
-				return;
-			}
 			playing = false;
-			setCurrentTime(st);
+			/*if (stream) setCurrentTime(getCurrentTime() - getLength() + st);
+			else*/setCurrentTime(st);
 			play();
 			parent.onLoop.dispatch();
 			return;
@@ -374,7 +363,6 @@ class NativeAudioSource
 		if (handle != null && parent != null && parent.buffer != null) {
 			if (stream) {
 				AL.sourceStop(handle);
-				timerNoCheck = false;
 
 				if (parent.buffer.__srcVorbisFile != null)
 					parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
@@ -386,7 +374,6 @@ class NativeAudioSource
 			}
 			else {
 				AL.sourceRewind(handle);
-				timerNoCheck = false;
 
 				// AL.sourcef (handle, AL.SEC_OFFSET, (value + parent.offset) / 1000);
 
