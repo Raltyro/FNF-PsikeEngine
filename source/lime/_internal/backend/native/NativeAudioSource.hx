@@ -202,40 +202,27 @@ class NativeAudioSource
 			else
 				return;
 
-			if (buffers == null) return;
+			//if (buffers == null) return;
 		}
 		else {
+			if (buffers.length == 0) return;
+
 			position = Int64.toInt(vorbisFile.pcmTell());
 			if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
 		}
+
+		if (position < 0) vorbisFile.timeSeek(0);
 
 		var numBuffers = 0, size = 0, data;
 		for (buffer in buffers) {
 			if ((size = samples - position) < STREAM_BUFFER_SIZE) {
 				if (size < 1) break;
-				/*if (loops > 0) {
-					data = readVorbisFileBuffer(vorbisFile, size);
-
-					var prev = vorbisFile.timeTell(), st:Null<Float> = loopTime;
-					if (st == null || st < 1) st = 0;
-					else st /= 1000;
-
-					vorbisFile.timeSeek(st);
-					vorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE - size, data);
-					vorbisFile.timeSeek(prev);
-				}
-				else
-					data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);*/
 			}
-			//else
-			//	data = readVorbisFileBuffer(vorbisFile, size = STREAM_BUFFER_SIZE);
 
 			data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
 			AL.bufferData(buffer, format, data, STREAM_BUFFER_SIZE, sampleRate);
 			position += STREAM_BUFFER_SIZE;
 			numBuffers++;
-
-			//if (loops > 0 && size < STREAM_BUFFER_SIZE) break;
 		}
 
 		AL.sourceQueueBuffers(handle, numBuffers, buffers);
@@ -244,7 +231,7 @@ class NativeAudioSource
 		// of data, which typically happens if an operation (such as
 		// resizing a window) freezes the main thread.
 		// If AL is supposed to be playing but isn't, restart it here.
-		if (playing && handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.STOPPED) {
+		if (playing && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.STOPPED) {
 			AL.sourcePlay(handle);
 			resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
 		}
@@ -261,10 +248,10 @@ class NativeAudioSource
 		stopStreamTimer();
 		setCurrentTime(0);
 	}
-	
+
 	private function forceStop():Void {
 		stop();
-		
+
 		completed = true;
 		parent.onComplete.dispatch();
 	}
@@ -276,7 +263,7 @@ class NativeAudioSource
 
 	private function resetStreamTimer():Void {
 		stopStreamTimer();
-		
+
 		if (stream) {
 			streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
 			streamTimer.run = streamTimer_onRun;
@@ -318,14 +305,12 @@ class NativeAudioSource
 			if (st == null || st < 1) st = 0;
 
 			loops--;
-			playing = false;
-			/*if (stream) setCurrentTime(getCurrentTime() - getLength() + st);
-			else*/setCurrentTime(st);
-			play();
+			playing = true;
+			setCurrentTime(st);
 			parent.onLoop.dispatch();
 			return;
 		}
-		
+
 		forceStop();
 	}
 
