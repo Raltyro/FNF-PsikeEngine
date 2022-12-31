@@ -14,6 +14,7 @@ class AudioSource
 	public var onComplete = new Event<Void->Void>();
 	public var onLoop = new Event<Void->Void>();
 	public var buffer:AudioBuffer;
+	public var playing(get, null):Bool;
 	public var currentTime(get, set):Int;
 	public var gain(get, set):Float;
 	public var length(get, set):Int;
@@ -71,6 +72,11 @@ class AudioSource
 	}
 
 	// Get & Set Methods
+	@:noCompletion private function get_playing():Bool
+	{
+		@:privateAccess return __backend.playing;
+	}
+
 	@:noCompletion private function get_currentTime():Int
 	{
 		return __backend.getCurrentTime();

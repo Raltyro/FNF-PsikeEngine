@@ -5,7 +5,9 @@ import openfl.events.Event;
 import openfl.events.EventDispatcher;
 #if lime
 import lime.media.AudioSource;
-#if lime_cffi import lime._internal.backend.native.NativeAudioSource; #end
+#if lime_cffi
+import lime._internal.backend.native.NativeAudioSource;
+#end
 #end
 
 /**

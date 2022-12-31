@@ -530,7 +530,15 @@ class FlxSound extends FlxBasic
 		#if FLX_PITCH
 		pitch = 1;
 		#end
-		_length = (_sound == null) ? 0 : _sound.length;
+		if (_sound != null) {
+			_length = _sound.length;
+			#if !flash
+			_channel = _sound.makeChannel();
+			#end
+		}
+		else
+			_length = 0;
+
 		endTime = _length;
 		return this;
 	}
@@ -710,29 +718,47 @@ class FlxSound extends FlxBasic
 	 */
 	function startSound(StartTime:Float):Void
 	{
-		if (_sound == null)
-			return;
+		if (_sound == null) return;
 
-		_time = StartTime;
 		_paused = false;
-		_channel = _sound.play(_time, #if !flash looped ? 999 : #end 0, _transform);
+		_time = StartTime;
+		#if flash
+		_channel = _sound.play(_time, 0, _transform);
+
 		if (_channel != null)
-		{
+		#else
+		@:privateAccess var recreate = (_channel == null || !_channel.__isValid);
+		var loops = looped ? 999 : 0;
+		if (recreate)
+			_channel = _sound.play(_time, loops, _transform);
+		else @:privateAccess{
+			_channel.soundTransform = _transform;
+			_channel.__source.loops = Std.int(Math.max(0, loops - 1));
+			_channel.__source.offset = Std.int(_time);
+			_channel.__source.currentTime = 0;
+			_channel.__source.play();
+		}
+
+		if (!recreate || _channel != null)
+		#end {
+			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
+
+			#if FLX_PITCH
+			_timeScaleAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
+			_realPitch = -1.0;
+			pitch = _pitch;
+			#end
+
+			#if !flash
 			@:privateAccess{
 				_channel.__lastPeakTime = 0;
 				_channel.__leftPeak = 0;
 				_channel.__rightPeak = 0;
 			}
 			_amplitudeTime = -1;
-			#if FLX_PITCH
-			_timeScaleAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
-			_realPitch = -1.0;
-			pitch = _pitch;
-			#end
-			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
-			#if !flash
 			_channel.addEventListener(Event.SOUND_LOOP, ev_looped);
 			#end
+
 			active = true;
 		}
 		else
@@ -796,11 +822,18 @@ class FlxSound extends FlxBasic
 		if (_channel != null)
 		{
 			_channel.removeEventListener(Event.SOUND_COMPLETE, stopped);
-			#if !flash
-			_channel.removeEventListener(Event.SOUND_LOOP, ev_looped);
-			#end
+			#if flash
 			_channel.stop();
 			_channel = null;
+			#else
+			_channel.removeEventListener(Event.SOUND_LOOP, ev_looped);
+			@:privateAccess{
+				if (_channel.__isValid) {
+					if (resetPosition) _channel.__source.stop();
+					else _channel.__source.pause();
+				}
+			}
+			#end
 		}
 
 		active = false;
@@ -860,7 +893,7 @@ class FlxSound extends FlxBasic
 
 	inline function get_playing():Bool
 	{
-		return _channel != null;
+		@:privateAccess return _channel != null #if !flash && _channel.__isValid && _channel.__source.playing #end;
 	}
 
 	inline function get_volume():Float
@@ -1006,27 +1039,22 @@ class FlxSound extends FlxBasic
 	function set_time(time:Float):Float
 	{
 		time = FlxMath.bound(time, 0, length - 1);
-		if (playing && _realPitch > 0)
+		if (_channel != null && _realPitch > 0)
 		{
-			#if openfl
+			#if flash
+			cleanup(false, true);
+			startSound(time);
+			#else
 			@:privateAccess{
-				if (_channel == null || !_channel.__isValid) {
+				if (!_channel.__isValid) {
 					cleanup(false, true);
 					startSound(time);
 				}
 				else {
-					#if lime
 					_channel.__source.offset = Std.int(time);
 					_channel.__source.currentTime = 0;
-					#else
-					_channel.__source.offset = 0;
-					_channel.position = Std.int(time);
-					#end
 				}
 			}
-			#else
-			cleanup(false, true);
-			startSound(time);
 			#end
 		}
 		return _time = time;

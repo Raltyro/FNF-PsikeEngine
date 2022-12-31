@@ -359,15 +359,16 @@ class FreeplayState extends MusicBeatState
 						FlxG.sound.music.onComplete = null;
 						return;
 					}
-					vocals.play(true);
+					FlxG.sound.music.pause(); vocals.stop();
+					vocals.time = FlxG.sound.music.time;
+					FlxG.sound.music.resume(); vocals.play();
 				}
 				vocals.looped = !(FlxG.sound.music.looped = true);
 				vocals.volume = FlxG.sound.music.volume = 0.7;
 				vocals.persist = true;
 				vocals.autoDestroy = false;
 
-				FlxG.sound.music.play();
-				vocals.play();
+				FlxG.sound.music.play(); vocals.play();
 
 				instPlaying = curSelected;
 				#end
