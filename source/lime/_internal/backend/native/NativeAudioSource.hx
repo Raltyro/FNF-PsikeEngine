@@ -27,10 +27,11 @@ class NativeAudioSource
 	#end
 	private static var STREAM_TIMER_FREQUENCY = 100;
 
+	private var bufferStarted:Bool;
 	private var buffers:Array<ALBuffer>;
 	private var bufferDatas:Array<UInt8Array>;
 	private var bufferTimeBlocks:Array<Float>;
-	private var emptyBufferData:UInt8Array;
+	private var bufferLoopedTimes:Array<Float>;
 	private var completed:Bool;
 	private var dataLength:Int;
 	private var format:Int;
@@ -65,7 +66,7 @@ class NativeAudioSource
 			}
 			bufferDatas = null;
 			bufferTimeBlocks = null;
-			emptyBufferData = null;
+			bufferLoopedTimes = null;
 			handle = null;
 		}
 	}
@@ -75,6 +76,8 @@ class NativeAudioSource
 
 		dataLength = 0;
 		format = parent.buffer.__format;
+		bufferLoopedTimes = new Array();
+		bufferStarted = false;
 
 		if (parent.buffer.__srcVorbisFile != null) {
 			stream = true;
@@ -85,7 +88,6 @@ class NativeAudioSource
 			buffers = new Array();
 			bufferDatas = new Array();
 			bufferTimeBlocks = new Array();
-			emptyBufferData = new UInt8Array(STREAM_BUFFER_SIZE);
 
 			for (i in 0...STREAM_NUM_BUFFERS) {
 				buffers.push(AL.createBuffer());
@@ -107,7 +109,6 @@ class NativeAudioSource
 		samples = Std.int((dataLength * 8) / (parent.buffer.channels * parent.buffer.bitsPerSample));
 	}
 
-	private var noReFillBuffer:Bool = false;
 	public function play():Void {
 		/*var pitch:Float = AL.getSourcef (handle, AL.PITCH);
 			trace(pitch);
@@ -151,7 +152,6 @@ class NativeAudioSource
 
 		if (handle == null) return;
 		AL.sourcePause(handle);
-		noReFillBuffer = true;
 
 		stopStreamTimer();
 		stopTimer();
@@ -183,13 +183,13 @@ class NativeAudioSource
 		#end
 	}
 
-	private var bufferLoopedTimes:Array<Float> = [];
 	private function refillBuffers(buffers:Array<ALBuffer> = null):Void {
 		#if lime_vorbis
 		if (handle == null || parent == null || parent.buffer == null) return dispose();
 
 		var vorbisFile = parent.buffer.__srcVorbisFile;
 		if (vorbisFile == null) return dispose();
+		bufferStarted = true;
 
 		var position = 0, samples = samples, sampleRate = parent.buffer.sampleRate;
 		if (buffers == null) {
@@ -205,6 +205,7 @@ class NativeAudioSource
 
 				vorbisFile.timeSeek(st);
 				position = Std.int(st * sampleRate);
+				parent.offset = 0;
 			}
 			buffers = AL.sourceUnqueueBuffers(handle, buffersProcessed);
 		}
@@ -247,7 +248,6 @@ class NativeAudioSource
 			AL.sourceStop(handle);
 
 		playing = false;
-		noReFillBuffer = false;
 		bufferLoopedTimes.resize(0);
 
 		stopTimer();
@@ -378,13 +378,12 @@ class NativeAudioSource
 			if (stream) {
 				AL.sourceStop(handle);
 
-				if (parent.buffer.__srcVorbisFile != null)
-					parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
+				if (!bufferStarted || Std.int(bufferTimeBlocks[0] * 1000) - parent.offset != value + parent.offset) {
+					if (parent.buffer.__srcVorbisFile != null)
+						parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
 
-				if (playing || Std.int(bufferTimeBlocks[0] * 1000) != Std.int(value + parent.offset)) {
 					AL.sourceUnqueueBuffers(handle, STREAM_NUM_BUFFERS);
 					refillBuffers(buffers);
-					noReFillBuffer = false;
 				}
 
 				if (playing) AL.sourcePlay(handle);

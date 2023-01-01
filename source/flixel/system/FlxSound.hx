@@ -735,8 +735,8 @@ class FlxSound extends FlxBasic
 			_channel.soundTransform = _transform;
 			_channel.__source.loops = Std.int(Math.max(0, loops - 1));
 			_channel.__source.offset = Std.int(_time);
-			_channel.__source.currentTime = 0;
 			_channel.__source.play();
+			_channel.__source.offset = 0;
 		}
 
 		if (!recreate || _channel != null)
@@ -1051,8 +1051,8 @@ class FlxSound extends FlxBasic
 					startSound(time);
 				}
 				else {
-					_channel.__source.offset = Std.int(time);
-					_channel.__source.currentTime = 0;
+					_channel.__source.offset = 0;
+					_channel.__source.currentTime = Std.int(time);
 				}
 			}
 			#end
