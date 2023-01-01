@@ -533,7 +533,7 @@ class FlxSound extends FlxBasic
 		if (_sound != null) {
 			_length = _sound.length;
 			#if !flash
-			_channel = _sound.makeChannel();
+			makeChannel();
 			#end
 		}
 		else
@@ -542,6 +542,20 @@ class FlxSound extends FlxBasic
 		endTime = _length;
 		return this;
 	}
+
+	#if !flash
+	function makeChannel()
+	@:privateAccess{
+		var source = new lime.media.AudioSource(_sound.__buffer);
+		source.gain = 0;
+
+		_channel = new SoundChannel();
+		_channel.__source = source;
+		_channel.__source.onComplete.add(_channel.source_onComplete);
+		_channel.__source.onLoop.add(_channel.source_onLoop);
+		_channel.__isValid = true;
+	}
+	#end
 
 	/**
 	 * Call this function if you want this sound's volume to change
@@ -724,24 +738,12 @@ class FlxSound extends FlxBasic
 		_time = StartTime;
 		#if flash
 		_channel = _sound.play(_time, 0, _transform);
+		#else
+		@:privateAccess if (_channel == null || !_channel.__isValid) makeChannel();
+		#end
 
 		if (_channel != null)
-		#else
-		@:privateAccess var recreate = (_channel == null || !_channel.__isValid);
-		var loops = looped ? 999 : 0;
-		if (recreate)
-			_channel = _sound.play(_time, loops, _transform);
-		else @:privateAccess{
-			_channel.soundTransform = _transform;
-			_channel.__source.loops = Std.int(Math.max(0, loops - 1));
-			_channel.__source.offset = Std.int(_time);
-			_channel.__source.play();
-			_channel.__source.offset = 0;
-		}
-
-		if (!recreate || _channel != null)
-		#end {
-			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
+		{
 
 			#if FLX_PITCH
 			_timeScaleAdjust = timeScaleBased ? FlxG.timeScale : 1.0;
@@ -751,6 +753,11 @@ class FlxSound extends FlxBasic
 
 			#if !flash
 			@:privateAccess{
+				_channel.soundTransform = _transform;
+				_channel.__source.loops = Std.int(Math.max(0, (looped ? 999 : 0) - 1));
+				_channel.__source.offset = Std.int(_time);
+				_channel.__source.play();
+				_channel.__source.offset = 0;
 				_channel.__lastPeakTime = 0;
 				_channel.__leftPeak = 0;
 				_channel.__rightPeak = 0;
@@ -758,6 +765,7 @@ class FlxSound extends FlxBasic
 			_amplitudeTime = -1;
 			_channel.addEventListener(Event.SOUND_LOOP, ev_looped);
 			#end
+			_channel.addEventListener(Event.SOUND_COMPLETE, stopped);
 
 			active = true;
 		}

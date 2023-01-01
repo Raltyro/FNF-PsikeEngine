@@ -169,7 +169,9 @@ class Assets
 				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, false
 			);
 			texture.uploadFromBitmapData(bitmap);
-			bitmap.dispose(); bitmap.disposeImage();
+			bitmap.image.data = null;
+			bitmap.dispose();
+			bitmap.disposeImage();
 			
 			bitmap = BitmapData.fromTexture(texture);
 		}
