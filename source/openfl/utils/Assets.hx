@@ -144,7 +144,7 @@ class Assets
 
 		return null;
 	}
-	
+
 	/**
 		Registers an instance of an embedded bitmap
 		@usage		Assets.registerBitmapData(bitmapData);
@@ -157,14 +157,13 @@ class Assets
 	//public static var traceNewBitmaps:Bool = false;
 	public static function registerBitmapData(bitmap:BitmapData, key:String, useCache:Bool = true, hardware:Bool = false):BitmapData {
 		if (bitmap == null || key == null) return bitmap;
-		
+
 		#if (lime && tools && !display)
-		
+
 		#if !flash
 		if (hardware && bitmap.image != null) {
 			//if (traceNewBitmaps) trace(key, "hardware");
-			
-			//bitmap.lock();
+
 			var texture = Lib.current.stage.context3D.createRectangleTexture(
 				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, false
 			);
@@ -172,17 +171,17 @@ class Assets
 			bitmap.image.data = null;
 			bitmap.dispose();
 			bitmap.disposeImage();
-			
+
 			bitmap = BitmapData.fromTexture(texture);
 		}
 		else
 		#end
 		//if (traceNewBitmaps) trace(key);
-		
+
 		if (useCache && cache.enabled)
 			cache.setBitmapData(key, bitmap);
 		#end
-		
+
 		return bitmap;
 	}
 

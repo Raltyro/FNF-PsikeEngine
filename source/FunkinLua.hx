@@ -2417,7 +2417,7 @@ class FunkinLua {
 
 		var obj:Dynamic = Reflect.getProperty(instance, variable.substr(0, ind)), key:Dynamic, pind;
 		while((pind = ind) != -1) {
-			if (obj == null) return false;
+			//if (obj == null) return false;
 			if ((ind = variable.indexOf('[', ind + 1)) == -1) {
 				key = variable.substr(pind + 1);
 				obj[key] = value;
@@ -2437,7 +2437,7 @@ class FunkinLua {
 
 		var obj:Dynamic = Reflect.getProperty(instance, variable.substr(0, ind)), key:Dynamic;
 		while(ind != -1) {
-			if (obj == null) break;
+			//if (obj == null) break;
 			key = variable.substring(ind + 1, (ind = variable.indexOf('[', ind + 1)) == -1 ? variable.length - 1 : ind - 2);
 			obj = obj[key];
 		}
@@ -2503,7 +2503,7 @@ class FunkinLua {
 
 		var obj:Dynamic = getVarInArray(obj, variable.substr(0, ind)), pind;
 		while((pind = ind) != -1) {
-			if (obj == null) return false;
+			//if (obj == null) return false;
 			if ((ind = variable.indexOf('.', ind + 1)) == -1)
 				return setVarInArray(obj, variable.substr(pind + 1), value);
 
@@ -2519,7 +2519,7 @@ class FunkinLua {
 
 		var obj:Dynamic = getVarInArray(obj, variable.substr(0, ind));
 		while(ind != -1) {
-			if (obj == null) break;
+			//if (obj == null) break;
 			obj = getVarInArray(obj, variable.substring(ind + 1, (ind = variable.indexOf('.', ind + 1)) == -1 ? variable.length : ind));
 		}
 
@@ -2539,7 +2539,7 @@ class FunkinLua {
 
 		var obj:Dynamic = getObjectDirectly(variable.substr(0, ind), checkForTextsToo), pind;
 		while((pind = ind) != -1) {
-			if (obj == null) return false;
+			//if (obj == null) return false;
 			if ((ind = variable.indexOf('.', ind + 1)) == -1)
 				return setVarInArray(obj, variable.substr(pind + 1), value);
 
@@ -2558,7 +2558,7 @@ class FunkinLua {
 
 		var obj:Dynamic = getObjectDirectly(variable.substr(0, ind), checkForTextsToo);
 		while(ind != -1) {
-			if (obj == null) break;
+			//if (obj == null) break;
 			obj = getVarInArray(obj, variable.substring(ind + 1, (ind = variable.indexOf('.', ind + 1)) == -1 ? variable.length : ind));
 		}
 
@@ -2742,7 +2742,7 @@ class FunkinLua {
 	var lastCalledFunction:String = '';
 	public function call(func:String, ?args:Array<Any>):Dynamic {
 		#if LUA_ALLOWED
-		if (closed || lua == null) return Function_Continue;
+		if (closed) return Function_Continue;
 		lastCalledFunction = func;
 
 		Lua.getglobal(lua, func);

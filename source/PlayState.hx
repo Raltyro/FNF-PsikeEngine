@@ -2423,9 +2423,8 @@ class PlayState extends MusicBeatState
 		music.onComplete = finishSong.bind();
 		music.pitch = playbackRate;
 		music.volume = 1;
-		music.time = 0;
-		music.play();
-		vocals.play();
+		vocals.time = music.time = 0;
+		music.play(); vocals.play();
 		
 		if (startOnTime > 0) setSongTime(startOnTime - 500);
 		startOnTime = 0;

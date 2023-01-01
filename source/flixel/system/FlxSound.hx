@@ -755,9 +755,9 @@ class FlxSound extends FlxBasic
 			@:privateAccess{
 				_channel.soundTransform = _transform;
 				_channel.__source.loops = Std.int(Math.max(0, (looped ? 999 : 0) - 1));
-				_channel.__source.offset = Std.int(_time);
-				_channel.__source.play();
 				_channel.__source.offset = 0;
+				_channel.__source.currentTime = Std.int(_time);
+				_channel.__source.play();
 				_channel.__lastPeakTime = 0;
 				_channel.__leftPeak = 0;
 				_channel.__rightPeak = 0;

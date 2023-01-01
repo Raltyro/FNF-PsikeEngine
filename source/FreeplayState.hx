@@ -362,7 +362,7 @@ class FreeplayState extends MusicBeatState
 					FlxG.sound.music.pause();
 					vocals.stop();
 
-					vocals.time = FlxG.sound.music.time;
+					vocals.time = FlxG.sound.music.time = FlxG.sound.music.time - 1;
 					FlxG.sound.music.resume();
 					vocals.play();
 				}

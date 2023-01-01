@@ -5,7 +5,9 @@ import haxe.Int64;
 import haxe.Timer;
 import lime.math.Vector4;
 import lime.media.openal.AL;
+import lime.media.openal.ALAuxiliaryEffectSlot;
 import lime.media.openal.ALBuffer;
+import lime.media.openal.ALEffect;
 import lime.media.openal.ALSource;
 import lime.media.vorbis.VorbisFile;
 import lime.media.AudioManager;
@@ -27,6 +29,8 @@ class NativeAudioSource
 	#end
 	private static var STREAM_TIMER_FREQUENCY = 100;
 
+	private var aux:ALAuxiliaryEffectSlot;
+	private var effects:Array<ALEffect>;
 	private var bufferStarted:Bool;
 	private var buffers:Array<ALBuffer>;
 	private var bufferDatas:Array<UInt8Array>;
@@ -110,34 +114,6 @@ class NativeAudioSource
 	}
 
 	public function play():Void {
-		/*var pitch:Float = AL.getSourcef (handle, AL.PITCH);
-			trace(pitch);
-			AL.sourcef (handle, AL.PITCH, pitch*0.9);
-			pitch = AL.getSourcef (handle, AL.PITCH);
-			trace(pitch); */
-		/*var pos = getPosition();
-			trace(AL.DISTANCE_MODEL);
-			AL.distanceModel(AL.INVERSE_DISTANCE);
-			trace(AL.DISTANCE_MODEL);
-			AL.sourcef(handle, AL.ROLLOFF_FACTOR, 5);
-			setPosition(new Vector4(10, 10, -100));
-			pos = getPosition();
-			trace(pos); */
-		/*var filter = AL.createFilter();
-			trace(AL.getErrorString());
-
-			AL.filteri(filter, AL.FILTER_TYPE, AL.FILTER_LOWPASS);
-			trace(AL.getErrorString());
-
-			AL.filterf(filter, AL.LOWPASS_GAIN, 0.5);
-			trace(AL.getErrorString());
-
-			AL.filterf(filter, AL.LOWPASS_GAINHF, 0.5);
-			trace(AL.getErrorString());
-
-			AL.sourcei(handle, AL.DIRECT_FILTER, filter);
-			trace(AL.getErrorString()); */
-
 		if (playing || handle == null)
 			return;
 
@@ -378,7 +354,7 @@ class NativeAudioSource
 			if (stream) {
 				AL.sourceStop(handle);
 
-				if (!bufferStarted || Std.int(bufferTimeBlocks[0] * 1000) - parent.offset != value + parent.offset) {
+				if (!bufferStarted || getCurrentTime() != value + parent.offset) {
 					if (parent.buffer.__srcVorbisFile != null)
 						parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
 
