@@ -741,6 +741,7 @@ class FlxSound extends FlxBasic
 		#else
 		@:privateAccess if (_channel == null || !_channel.__isValid) makeChannel();
 		#end
+		trace(_time);
 
 		if (_channel != null)
 		{
@@ -874,6 +875,7 @@ class FlxSound extends FlxBasic
 	@:allow(flixel.system.frontEnds.SoundFrontEnd)
 	function onFocusLost():Void
 	{
+		trace(_time);
 		_alreadyPaused = _paused;
 		pause();
 	}
