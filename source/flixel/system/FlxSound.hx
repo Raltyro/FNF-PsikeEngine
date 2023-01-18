@@ -741,7 +741,6 @@ class FlxSound extends FlxBasic
 		#else
 		@:privateAccess if (_channel == null || !_channel.__isValid) makeChannel();
 		#end
-		trace(_time);
 
 		if (_channel != null)
 		{
@@ -757,8 +756,14 @@ class FlxSound extends FlxBasic
 				_channel.soundTransform = _transform;
 				_channel.__source.loops = Std.int(Math.max(0, (looped ? 999 : 0) - 1));
 				_channel.__source.offset = 0;
+				#if (js && html5)
 				_channel.__source.currentTime = Std.int(_time);
 				_channel.__source.play();
+				#else
+				_channel.__source.__backend.playing = true;
+				_channel.__source.__backend.setCurrentTime(Std.int(_time));
+				if (_channel.__source.__backend.stream) _channel.__source.__backend.stopStreamTimer();
+				#end
 				_channel.__lastPeakTime = 0;
 				_channel.__leftPeak = 0;
 				_channel.__rightPeak = 0;
@@ -875,7 +880,6 @@ class FlxSound extends FlxBasic
 	@:allow(flixel.system.frontEnds.SoundFrontEnd)
 	function onFocusLost():Void
 	{
-		trace(_time);
 		_alreadyPaused = _paused;
 		pause();
 	}

@@ -4796,6 +4796,9 @@ class PlayState extends MusicBeatState
 	override function stepHit() {
 		setOnLuas('curDecStep', curDecStep);
 		setOnLuas('curDecBeat', curDecBeat);
+		setOnLuas('curStep', curStep);
+		setOnLuas('curBeat', curBeat);
+		setOnLuas('curSection', curSection);
 		super.stepHit();
 
 		if (!paused && !startingSong) {
@@ -4807,7 +4810,6 @@ class PlayState extends MusicBeatState
 		if (curStep == lastStepHit) return;
 
 		lastStepHit = curStep;
-		setOnLuas('curStep', curStep);
 		callOnLuas('onStepHit');
 	}
 
@@ -4882,8 +4884,6 @@ class PlayState extends MusicBeatState
 		}
 
 		lastBeatHit = curBeat;
-
-		setOnLuas('curBeat', curBeat);
 		callOnLuas('onBeatHit');
 	}
 
@@ -4912,8 +4912,7 @@ class PlayState extends MusicBeatState
 			setOnLuas('altAnim', SONG.notes[curSection].altAnim);
 			setOnLuas('gfSection', SONG.notes[curSection].gfSection);
 		}
-		
-		setOnLuas('curSection', curSection);
+
 		callOnLuas('onSectionHit');
 	}
 
