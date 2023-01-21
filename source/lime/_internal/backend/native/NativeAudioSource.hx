@@ -246,10 +246,10 @@ class NativeAudioSource
 	private function resetStreamTimer():Void {
 		stopStreamTimer();
 
-		if (stream) {
+		//if (stream) {
 			streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
 			streamTimer.run = streamTimer_onRun;
-		}
+		//}
 	}
 
 	private function stopTimer():Void {

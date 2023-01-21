@@ -739,7 +739,7 @@ class FlxSound extends FlxBasic
 		#if flash
 		_channel = _sound.play(_time, 0, _transform);
 		#else
-		@:privateAccess if (_channel == null || !_channel.__isValid) makeChannel();
+		@:privateAccess if (_channel == null || !_channel.__isValid || _channel.__source.__backend == null) makeChannel();
 		#end
 
 		if (_channel != null)
@@ -760,9 +760,9 @@ class FlxSound extends FlxBasic
 				_channel.__source.currentTime = Std.int(_time);
 				_channel.__source.play();
 				#else
+				if (_channel.__source.__backend.stream) _channel.__source.__backend.resetStreamTimer();
 				_channel.__source.__backend.playing = true;
 				_channel.__source.__backend.setCurrentTime(Std.int(_time));
-				if (_channel.__source.__backend.stream) _channel.__source.__backend.stopStreamTimer();
 				#end
 				_channel.__lastPeakTime = 0;
 				_channel.__leftPeak = 0;
@@ -814,7 +814,6 @@ class FlxSound extends FlxBasic
 			_channel.loops = 999;
 	}
 	#end
-
 
 	/**
 	 * An internal helper function used to help Flash clean up (and potentially re-use) finished sounds.
