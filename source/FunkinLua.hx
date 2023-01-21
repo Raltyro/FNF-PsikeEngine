@@ -999,7 +999,7 @@ class FunkinLua {
 
 		Lua_helper.set_static_callback("getMidpointY", function(_, obj:String):Float {
 			var obj:FlxObject = getVarInstance(obj);
-			if (obj != null) return obj.getMidpoint().x;
+			if (obj != null) return obj.getMidpoint().y;
 			return 0;
 		});
 
