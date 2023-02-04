@@ -13,6 +13,8 @@ import flixel.input.keyboard.FlxKey;
 import flixel.FlxG;
 import flixel.FlxGame;
 
+import screenshotplugin.ScreenShotPlugin;
+
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -49,6 +51,7 @@ class Main extends Sprite {
 	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
 	public static var volumeUpKeys:Array<FlxKey> = [FlxKey.NUMPADPLUS, FlxKey.PLUS];
 	public static var fullscreenKeys:Array<FlxKey> = [FlxKey.F11];
+	public static var screenshotKeys:Array<FlxKey> = [FlxKey.PRINTSCREEN];
 	public static var focused:Bool = true;
 
 	public static function main():Void {
@@ -94,6 +97,9 @@ class Main extends Sprite {
 
 		ClientPrefs.loadDefaultKeys();
 		addChild(new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+
+		ScreenShotPlugin.screenshotKeys = screenshotKeys;
+		FlxG.plugins.add(new ScreenShotPlugin());
 
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);

@@ -213,6 +213,11 @@ class NativeAudioSource
 		// resizing a window) freezes the main thread.
 		// If AL is supposed to be playing but isn't, restart it here.
 		if (playing && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.STOPPED) {
+			if (bufferLoopedTimes.length > 0) {
+				bufferLoopedTimes.resize(0);
+				setCurrentTime(getCurrentTime() - 1);
+				return;
+			}
 			AL.sourcePlay(handle);
 			resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
 		}
