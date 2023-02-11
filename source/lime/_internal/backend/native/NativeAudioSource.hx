@@ -257,8 +257,8 @@ class NativeAudioSource {
 		}
 
 		if (stream) {
-			bufferLoops = 0;
 			loops -= bufferLoops;
+			bufferLoops = 0;
 			parent.onLoop.dispatch();
 			return;
 		}

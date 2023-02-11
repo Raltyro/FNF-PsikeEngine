@@ -65,6 +65,16 @@ import flixel.addons.display.FlxRuntimeShader;
 import openfl.filters.ShaderFilter;
 #end
 
+#if FLX_GAMEPAD
+
+#if FLX_JOYSTICK_API
+import openfl.events.JoystickEvent;
+#elseif FLX_GAMEINPUT_API
+import lime.ui.GamepadButton;
+#end
+
+#end
+
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -726,7 +736,7 @@ class PlayState extends MusicBeatState
 		RecalculateRating();
 
 		Conductor.safeZoneOffset = (ClientPrefs.safeFrames / 60) * 1000;
-		if (ClientPrefs.controllerMode) initializeGamepads();
+		/*if (ClientPrefs.controllerMode)*/ initializeGamepads();
 		initializeKeyboard();
 
 		callOnLuas('onCreatePost');
@@ -4193,26 +4203,30 @@ class PlayState extends MusicBeatState
 	}
 
 	#if FLX_GAMEPAD
-
-	#if FLX_JOYSTICK_API
-	private function onButtonPress(event:JoystickEvent) {
-		
+	private function onButtonPress(#if FLX_JOYSTICK_API event:JoystickEvent #else button:GamepadButton #end) {
+		var key:Int = getKeyFromButton(#if FLX_JOYSTICK_API event.id #else button #end);
+		if (key >= 0) inputPress(key);
 	}
 
-	private function onButtonRelease(event:JoystickEvent) {
-		
+	private function onButtonRelease(#if FLX_JOYSTICK_API event:JoystickEvent #else button:GamepadButton #end) {
+		var key:Int = getKeyFromButton(#if FLX_JOYSTICK_API event.id #else button #end);
+		if (key >= 0) inputRelease(key);
 	}
-	#elseif FLX_GAMEINPUT_API
+
+	#if FLX_GAMEINPUT_API
 	private var gamepads:Array<FlxGamepad> = [];
-	private function gamepadConnected(gamepad:FlxGamepad) {
+	private function gamepadConnected(gamepad:FlxGamepad) @:privateAccess {
 		if (gamepads.contains(gamepad)) return;
 		gamepads.push(gamepad);
-		
+		gamepad._device.__gamepad.onButtonDown.add(onButtonPress);
+		gamepad._device.__gamepad.onButtonUp.add(onButtonRelease);
 	}
 
-	private function gamepadDisconnected(gamepad:FlxGamepad) {
+	private function gamepadDisconnected(gamepad:FlxGamepad) @:privateAccess {
 		if (!gamepads.contains(gamepad)) return;
 		gamepads.remove(gamepad);
+		gamepad._device.__gamepad.onButtonDown.remove(onButtonPress);
+		gamepad._device.__gamepad.onButtonUp.remove(onButtonRelease);
 	}
 	#end
 
@@ -4229,6 +4243,17 @@ class PlayState extends MusicBeatState
 		if (key != NONE) {
 			for (i in 0...keysArray.length) if (keysArray[i].contains(key)) return i;
 		}
+		return -1;
+	}
+
+	private static var gamepadControls:Array<Array<#if FLX_GAMEINPUT_API GamepadButton #else Int #end>> = [
+		[GamepadButton.DPAD_LEFT, GamepadButton.X],
+		[GamepadButton.DPAD_DOWN, GamepadButton.A],
+		[GamepadButton.DPAD_UP, GamepadButton.Y],
+		[GamepadButton.DPAD_RIGHT, GamepadButton.B],
+	];
+	private function getKeyFromButton(button:#if FLX_GAMEINPUT_API GamepadButton #else Int #end):Int {
+		for (i in 0...gamepadControls.length) if (gamepadControls[i].contains(button)) return i;
 		return -1;
 	}
 
