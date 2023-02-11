@@ -13,6 +13,7 @@ import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxSoundAsset;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxStringUtil;
+import flash.media.SoundMixer;
 import openfl.Assets;
 #if flash11
 import flash.utils.ByteArray;
@@ -549,11 +550,13 @@ class FlxSound extends FlxBasic
 		var source = new lime.media.AudioSource(_sound.__buffer);
 		source.gain = 0;
 
-		_channel = new SoundChannel();
+		_channel = new SoundChannel(null, _transform);
 		_channel.__source = source;
 		_channel.__source.onComplete.add(_channel.source_onComplete);
 		_channel.__source.onLoop.add(_channel.source_onLoop);
 		_channel.__isValid = true;
+
+		SoundMixer.__registerSoundChannel(_channel);
 	}
 	#end
 
@@ -754,20 +757,14 @@ class FlxSound extends FlxBasic
 			#if !flash
 			@:privateAccess{
 				_channel.soundTransform = _transform;
-				_channel.__source.loops = Std.int(Math.max(0, (looped ? 999 : 0) - 1));
-				_channel.__source.offset = 0;
-				#if (js && html5)
-				_channel.__source.currentTime = Std.int(_time);
-				_channel.__source.play();
-				#else
-				if (_channel.__source.__backend.stream) _channel.__source.__backend.resetStreamTimer();
 				_channel.__source.__backend.playing = true;
-				_channel.__source.__backend.setCurrentTime(Std.int(_time));
-				#end
+				_channel.__source.offset = 0;
+				_channel.__source.currentTime = Std.int(_time);
 				_channel.__lastPeakTime = 0;
 				_channel.__leftPeak = 0;
 				_channel.__rightPeak = 0;
 			}
+			looped = looped;
 			_amplitudeTime = -1;
 			_channel.addEventListener(Event.SOUND_LOOP, ev_looped);
 			#end
@@ -993,12 +990,12 @@ class FlxSound extends FlxBasic
 	{
 		var adjusted:Float = FlxMath.bound(v * _timeScaleAdjust, 0);
 		if (_channel != null && _realPitch != adjusted) {
-			_channel.pitch = adjusted;
-			if (adjusted > 0 && _realPitch <= 0) {
+			if ((_channel.pitch = adjusted) > 0 && _realPitch <= 0) {
 				_realPitch = adjusted;
 				time = _time;
 			}
-			else _realPitch = adjusted;
+			else
+				_realPitch = adjusted;
 		}
 		return _pitch = FlxMath.bound(v, 0);
 	}
@@ -1063,7 +1060,7 @@ class FlxSound extends FlxBasic
 					cleanup(false, true);
 					startSound(time);
 				}
-				else {
+				else if (playing) {
 					_channel.__source.offset = 0;
 					_channel.__source.currentTime = Std.int(time);
 				}

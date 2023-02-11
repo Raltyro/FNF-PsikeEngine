@@ -1,16 +1,14 @@
 package lime._internal.backend.native;
 
-import haxe.io.Bytes;
-import haxe.Int64;
 import haxe.Timer;
+import haxe.Int64;
+
 import lime.math.Vector4;
 import lime.media.openal.AL;
-import lime.media.openal.ALAuxiliaryEffectSlot;
 import lime.media.openal.ALBuffer;
-import lime.media.openal.ALEffect;
 import lime.media.openal.ALSource;
 import lime.media.vorbis.VorbisFile;
-import lime.media.AudioManager;
+import lime.media.AudioBuffer;
 import lime.media.AudioSource;
 import lime.utils.UInt8Array;
 
@@ -19,125 +17,119 @@ import lime.utils.UInt8Array;
 @:noDebug
 #end
 @:access(lime.media.AudioBuffer)
-class NativeAudioSource
-{
-	private static var STREAM_BUFFER_SIZE = 48000;
+class NativeAudioSource {
+	private static var STREAM_BUFFER_SIZE:Int = 16000;
 	#if (native_audio_buffers && !macro)
-	private static var STREAM_NUM_BUFFERS = Std.parseInt(haxe.macro.Compiler.getDefine("native_audio_buffers"));
+	private static var STREAM_NUM_BUFFERS:Int = Std.parseInt(haxe.macro.Compiler.getDefine("native_audio_buffers"));
 	#else
-	private static var STREAM_NUM_BUFFERS = 3;
+	private static var STREAM_NUM_BUFFERS:Int = 3;
 	#end
-	private static var STREAM_TIMER_FREQUENCY = 100;
+	private static var STREAM_TIMER_FREQUENCY:Int = 100;
 
-	private var aux:ALAuxiliaryEffectSlot;
-	private var effects:Array<ALEffect>;
-	private var bufferStarted:Bool;
 	private var buffers:Array<ALBuffer>;
 	private var bufferDatas:Array<UInt8Array>;
 	private var bufferTimeBlocks:Array<Float>;
-	private var bufferLoopedTimes:Array<Float>;
-	private var completed:Bool;
-	private var dataLength:Int;
-	private var format:Int;
-	private var handle:ALSource;
+	private var bufferLoops:Int;
+
 	private var length:Null<Int>;
-	private var loops:Int;
 	private var loopTime:Null<Int>;
-	private var parent:AudioSource;
 	private var playing:Bool;
+	private var loops:Int;
 	private var position:Vector4;
+
+	private var dataLength:Int;
 	private var samples:Int;
+	private var format:Int;
+	private var completed:Bool;
 	private var stream:Bool;
-	private var streamTimer:Timer;
+
+	private var handle:ALSource;
+	private var parent:AudioSource;
 	private var timer:Timer;
+	private var streamTimer:Timer;
 
 	public function new(parent:AudioSource) {
 		this.parent = parent;
-
 		position = new Vector4();
 	}
 
 	public function dispose():Void {
-		forceStop();
-
 		if (handle != null) {
 			AL.sourcei(handle, AL.BUFFER, null);
 			AL.deleteSource(handle);
-
-			if (buffers != null) {
-				AL.deleteBuffers(buffers);
-				buffers = null;
-			}
-			bufferDatas = null;
-			bufferTimeBlocks = null;
-			bufferLoopedTimes = null;
 			handle = null;
+		}
+
+		if (buffers != null) {
+			AL.deleteBuffers(buffers);
+			buffers = null;
 		}
 	}
 
 	public function init():Void {
 		parent.buffer.initBuffer();
 
-		dataLength = 0;
+		handle = AL.createSource();
 		format = parent.buffer.__format;
-		bufferLoopedTimes = new Array();
-		bufferStarted = false;
+		bufferLoops = 0;
 
-		if (parent.buffer.__srcVorbisFile != null) {
-			stream = true;
-
-			var vorbisFile = parent.buffer.__srcVorbisFile;
+		var vorbisFile = parent.buffer.__srcVorbisFile;
+		if (stream = vorbisFile != null) {
 			dataLength = Std.int(Int64.toInt(vorbisFile.pcmTotal()) * parent.buffer.channels * (parent.buffer.bitsPerSample / 8));
 
 			buffers = new Array();
 			bufferDatas = new Array();
 			bufferTimeBlocks = new Array();
-
 			for (i in 0...STREAM_NUM_BUFFERS) {
 				buffers.push(AL.createBuffer());
 				bufferDatas.push(new UInt8Array(STREAM_BUFFER_SIZE));
 				bufferTimeBlocks.push(0);
 			}
-
-			handle = AL.createSource();
 		}
 		else {
 			dataLength = parent.buffer.data.length;
-
-			handle = AL.createSource();
-
-			if (handle != null)
-				AL.sourcei(handle, AL.BUFFER, parent.buffer.__srcBuffer);
+			if (handle != null) AL.sourcei(handle, AL.BUFFER, parent.buffer.__srcBuffer);
 		}
 
 		samples = Std.int((dataLength * 8) / (parent.buffer.channels * parent.buffer.bitsPerSample));
 	}
 
 	public function play():Void {
-		if (playing || handle == null)
-			return;
+		if (playing || handle == null) return;
 
 		playing = true;
-
 		setCurrentTime(completed ? 0 : getCurrentTime());
-		if (stream) resetStreamTimer();
 	}
 
 	public function pause():Void {
+		if (handle != null) AL.sourcePause(handle);
+
 		playing = false;
-
-		if (handle == null) return;
-		AL.sourcePause(handle);
-
 		stopStreamTimer();
 		stopTimer();
 	}
 
+	public function stop():Void {
+		if (playing && handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
+			AL.sourceStop(handle);
+
+		bufferLoops = 0;
+
+		playing = false;
+		stopStreamTimer();
+		stopTimer();
+	}
+
+	private function complete():Void {
+		stop();
+
+		completed = true;
+		parent.onComplete.dispatch();
+	}
+
 	private function readVorbisFileBuffer(vorbisFile:VorbisFile, length:Int):UInt8Array {
 		#if lime_vorbis
-		var buffer = bufferDatas[0];
-		var read = STREAM_NUM_BUFFERS - 1, total = 0, readMax;
-
+		var buffer = bufferDatas[0], read = STREAM_NUM_BUFFERS - 1, total = 0, readMax;
 		for (i in 0...read) {
 			bufferTimeBlocks[i] = bufferTimeBlocks[i + 1];
 			bufferDatas[i] = bufferDatas[i + 1];
@@ -147,125 +139,93 @@ class NativeAudioSource
 
 		while(total < length) {
 			if ((readMax = 4096) > (read = length - total)) readMax = read;
-			if ((read = vorbisFile.read(buffer.buffer, total, readMax)) > 0)
-				total += read;
-			else
+			if ((read = vorbisFile.read(buffer.buffer, total, readMax)) > 0) total += read;
+			else if (loops > 0) {
+				bufferLoops++;
+				vorbisFile.timeSeek(loopTime != null ? Math.max(0, loopTime / 1000) : 0);
+			}
+			else 
 				break;
 		}
-
 		return buffer;
 		#else
 		return null;
 		#end
 	}
 
-	private function refillBuffers(buffers:Array<ALBuffer> = null):Void {
+	/*
+	private function fillBuffer(buffer:ALBuffer):Void {
 		#if lime_vorbis
-		if (handle == null || parent == null || parent.buffer == null) return dispose();
+		if (parent == null || parent.buffer == null) return dispose();
 
 		var vorbisFile = parent.buffer.__srcVorbisFile;
 		if (vorbisFile == null) return dispose();
-		bufferStarted = true;
 
-		var position = 0, samples = samples, sampleRate = parent.buffer.sampleRate;
-		if (buffers == null) {
-			var buffersProcessed:Int = AL.getSourcei(handle, AL.BUFFERS_PROCESSED);
-			if (buffersProcessed < 1) return;
+		var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
+		if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
+		if (position >= samples) return;
 
-			if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
-			if ((position = Int64.toInt(vorbisFile.pcmTell())) >= samples) {	
-				if (loops - bufferLoopedTimes.length < 1) return;
-				var st:Null<Float> = loopTime;
-				if (st == null || st < 1) st = 0;
-				else bufferLoopedTimes.push(st = st / 1000);
-
-				vorbisFile.timeSeek(st);
-				position = Std.int(st * sampleRate);
-				parent.offset = 0;
-			}
-			buffers = AL.sourceUnqueueBuffers(handle, buffersProcessed);
-		}
-		else {
-			if (buffers.length == 0) return;
-
-			position = Int64.toInt(vorbisFile.pcmTell());
-			if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
+		var data;
+		if (samples - position >= 1) {
+			var size = (data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE)).length;
+			AL.bufferData(buffer, format, data, size, sampleRate);
+			AL.sourceQueueBuffer(handle, buffer);
 		}
 
-		if (position < 0) vorbisFile.timeSeek(0);
+		if (playing && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.STOPPED) {
+			AL.sourcePlay(handle);
+			resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
+		}
+		#end
+	}
+	*/
+
+	private function fillBuffers(buffers:Array<ALBuffer>):Void {
+		#if lime_vorbis
+		if (buffers.length < 1 || parent == null || parent.buffer == null) return dispose();
+
+		var vorbisFile = parent.buffer.__srcVorbisFile;
+		if (vorbisFile == null) return dispose();
+
+		var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
+		if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
+		if (position >= samples) return;
 
 		var numBuffers = 0, size = 0, data;
 		for (buffer in buffers) {
-			if ((size = samples - position) < STREAM_BUFFER_SIZE) {
-				if (size < 1) break;
-			}
+			if (samples - position < 1)
+				break;
 
-			data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE);
-			AL.bufferData(buffer, format, data, STREAM_BUFFER_SIZE, sampleRate);
-			position += STREAM_BUFFER_SIZE;
+			position += (size = (data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE)).length);
+			AL.bufferData(buffer, format, data, size, sampleRate);
 			numBuffers++;
 		}
 
 		AL.sourceQueueBuffers(handle, numBuffers, buffers);
 
-		// OpenAL can unexpectedly stop playback if the buffers run out
-		// of data, which typically happens if an operation (such as
-		// resizing a window) freezes the main thread.
-		// If AL is supposed to be playing but isn't, restart it here.
 		if (playing && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.STOPPED) {
-			if (bufferLoopedTimes.length > 0) {
-				bufferLoopedTimes.resize(0);
-				setCurrentTime(getCurrentTime() - 1);
-				return;
-			}
 			AL.sourcePlay(handle);
 			resetTimer(Std.int((getLength() - getCurrentTime()) / getPitch()));
 		}
 		#end
 	}
 
-	public function stop():Void {
-		if (playing && handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
-			AL.sourceStop(handle);
-
-		playing = false;
-		bufferLoopedTimes.resize(0);
-
-		stopTimer();
-		stopStreamTimer();
-		setCurrentTime(0);
-	}
-
-	private function forceStop():Void {
-		stop();
-
-		completed = true;
-		parent.onComplete.dispatch();
-	}
-
-	private function stopStreamTimer():Void {
-		if (streamTimer != null)
-			streamTimer.stop();
-	}
+	// Timers
+	inline function stopStreamTimer():Void if (streamTimer != null) streamTimer.stop();
 
 	private function resetStreamTimer():Void {
 		stopStreamTimer();
 
-		//if (stream) {
-			streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
-			streamTimer.run = streamTimer_onRun;
-		//}
+		streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
+		streamTimer.run = streamTimer_onRun;
 	}
 
-	private function stopTimer():Void {
-		if (timer != null)
-			timer.stop();
-	}
+	inline function stopTimer():Void if (timer != null) timer.stop();
 
 	private function resetTimer(timeRemaining:Int):Void {
 		stopTimer();
 
-		if (timeRemaining <= 30) {
+		if (timeRemaining <= 8) {
 			timer_onRun();
 			return;
 		}
@@ -275,218 +235,154 @@ class NativeAudioSource
 
 	// Event Handlers
 	private function streamTimer_onRun():Void {
-		refillBuffers();
+		var vorbisFile;
+		if (handle == null || (vorbisFile = parent.buffer.__srcVorbisFile) == null) return;
+
+		var processed = AL.getSourcei(handle, AL.BUFFERS_PROCESSED), queued = AL.getSourcei(handle, AL.BUFFERS_QUEUED);
+		if (processed > 0) fillBuffers(AL.sourceUnqueueBuffers(handle, processed));
 	}
 
 	private function timer_onRun():Void {
-		if (handle == null) return forceStop();
-
-		var check = !stream, curTime = 0;
-		if (!check && bufferLoopedTimes.length > 0) {
-			var offset:Float = AL.getSourcef(handle, AL.SEC_OFFSET) * 1000, index = Math.floor(offset / STREAM_BUFFER_SIZE);
-			if (index >= STREAM_NUM_BUFFERS || bufferTimeBlocks[index] != bufferLoopedTimes[0]) {
-				curTime = (Std.int(bufferTimeBlocks[0] * 1000) + Std.int(offset)) - parent.offset;
-				check = true;
-			}
-		}
-		else {
-			curTime = getCurrentTime();
-			check = true;
-		}
-
-		if (check) {
-			var timeRemaining = Std.int(Math.max(31, (getLength() - curTime) / getPitch()));
-			if (bufferLoopedTimes.length > 0 || (timeRemaining > 100 && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)) {
+		if (playing) {
+			var timeRemaining = Std.int((getLength() - getCurrentTime()) / getPitch());
+			if (timeRemaining > 16 && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING) {
 				resetTimer(timeRemaining);
 				return;
 			}
 		}
 
-		if (loops > 0) {
-			var st = loopTime;
-			if (st == null || st < 1) st = 0;
+		if (loops <= 0) {
+			complete();
+			return;
+		}
 
-			if (stream && bufferLoopedTimes.length > 0) {
-				bufferLoopedTimes.shift();
-				loops--;
-				resetTimer(Std.int((getLength() - st) / getPitch()));
-				parent.onLoop.dispatch();
-				return;
-			}
-
-			loops--;
-			playing = true;
-			setCurrentTime(st);
+		if (stream) {
+			bufferLoops = 0;
+			loops -= bufferLoops;
 			parent.onLoop.dispatch();
 			return;
 		}
 
-		forceStop();
+		loops--;
+		setCurrentTime(loopTime != null ? Std.int(Math.max(0, loopTime)) : 0);
+		parent.onLoop.dispatch();
 	}
 
 	// Get & Set Methods
 	public function getCurrentTime():Int {
 		if (completed) return getLength();
 		else if (handle != null) {
-			if (stream) {
-				var time = (Std.int(bufferTimeBlocks[0] * 1000) + Std.int(AL.getSourcef(handle, AL.SEC_OFFSET) * 1000)) - parent.offset;
-				if (time < 0) return 0;
-				return time;
-			}
-			else {
-				var offset = AL.getSourcei(handle, AL.BYTE_OFFSET);
-				var ratio = (offset / dataLength);
-				var totalSeconds = samples / parent.buffer.sampleRate;
+			var time;
 
-				var time = Std.int(totalSeconds * ratio * 1000) - parent.offset;
+			if (stream) time = Std.int((bufferTimeBlocks[0] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000);
+			else time = Std.int(samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000);
+			time -= parent.offset;
 
-				// var time = Std.int (AL.getSourcef (handle, AL.SEC_OFFSET) * 1000) - parent.offset;
-				if (time < 0) return 0;
-				return time;
-			}
+			if (time > 0) return time;
 		}
-
 		return 0;
 	}
 
 	public function setCurrentTime(value:Int):Int {
-		// `setCurrentTime()` has side effects and is never safe to skip.
-		/* if (value == getCurrentTime())
-			return value;
-		*/
+		if (handle == null) return value;
 
-		if (handle != null && parent != null && parent.buffer != null) {
-			if (stream) {
-				AL.sourceStop(handle);
+		var total = samples / parent.buffer.sampleRate * 1000;
+		var time = Math.max(0, Math.min(total, value + parent.offset)), ratio = time / total;
 
-				if (!bufferStarted || getCurrentTime() != value + parent.offset) {
-					if (parent.buffer.__srcVorbisFile != null)
-						parent.buffer.__srcVorbisFile.timeSeek((value + parent.offset) / 1000);
+		if (stream) {
+			AL.sourceStop(handle);
+			AL.sourceUnqueueBuffers(handle, AL.getSourcei(handle, AL.BUFFERS_QUEUED));
 
-					AL.sourceUnqueueBuffers(handle, STREAM_NUM_BUFFERS);
-					refillBuffers(buffers);
-				}
+			#if lime_vorbis
+			var vorbisFile = parent.buffer.__srcVorbisFile;
+			if (vorbisFile != null) {
+				vorbisFile.timeSeek(time / 1000);
+				//AL.sourcei(handle, AL.BYTE_OFFSET, Std.int(dataLength * (
+				//	ratio - (Math.floor(samples * ratio / STREAM_BUFFER_SIZE) * STREAM_BUFFER_SIZE / samples)
+				//)));
 
-				if (playing) AL.sourcePlay(handle);
+				//fillBuffer(buffers[0]);
+				fillBuffers(buffers);
+				if (playing) resetStreamTimer();
 			}
-			else {
-				AL.sourceRewind(handle);
-
-				// AL.sourcef (handle, AL.SEC_OFFSET, (value + parent.offset) / 1000);
-
-				var secondOffset = (value + parent.offset) / 1000;
-				var totalSeconds = samples / parent.buffer.sampleRate;
-
-				if (secondOffset < 0) secondOffset = 0;
-				if (secondOffset > totalSeconds) secondOffset = totalSeconds;
-
-				var ratio = (secondOffset / totalSeconds);
-				var totalOffset = Std.int(dataLength * ratio);
-
-				AL.sourcei(handle, AL.BYTE_OFFSET, totalOffset);
-				if (playing) AL.sourcePlay(handle);
-			}
+			#end
+		}
+		else {
+			AL.sourceRewind(handle);
+			AL.sourcei(handle, AL.BYTE_OFFSET, Std.int(dataLength * ratio));
 		}
 
 		if (playing) {
 			var timeRemaining = Std.int((getLength() - value) / getPitch());
-
-			if (timeRemaining > 0) {
-				completed = false;
+			if (completed = timeRemaining < 1) complete();
+			else {
+				AL.sourcePlay(handle);
 				resetTimer(timeRemaining);
 			}
-			else {
-				playing = false;
-				completed = true;
-			}
 		}
-
-		return value;
-	}
-
-	public function getGain():Float {
-		if (handle != null)
-			return AL.getSourcef(handle, AL.GAIN);
-		else
-			return 1;
-	}
-
-	public function setGain(value:Float):Float {
-		if (handle != null)
-			AL.sourcef(handle, AL.GAIN, value);
-
 		return value;
 	}
 
 	public function getLength():Int {
-		if (length != null)
-			return length;
-
+		if (length != null) return length;
 		return Std.int(samples / parent.buffer.sampleRate * 1000) - parent.offset;
 	}
-
 	public function setLength(value:Int):Int {
 		if (value == length) return value;
-
 		if (playing) {
 			var timeRemaining = Std.int((value - getCurrentTime()) / getPitch());
-			if (timeRemaining > 0)
-				resetTimer(timeRemaining);
+			if (timeRemaining > 0) resetTimer(timeRemaining);
 		}
-
 		return length = value;
 	}
 
-	public function getLoops():Int {
-		return loops;
-	}
-
-	public function setLoops(value:Int):Int {
-		return loops = value;
-	}
-
-	public function getLoopTime():Int {
-		return loopTime;
-	}
-
-	public function setLoopTime(value:Int):Int {
-		return loopTime = value;
-	}
-
 	public function getPitch():Float {
-		if (handle != null)
-			return AL.getSourcef(handle, AL.PITCH);
-		else
-			return 1;
+		if (handle != null) return AL.getSourcef(handle, AL.PITCH);
+		return 1;
 	}
 
 	public function setPitch(value:Float):Float {
-		if (value == getPitch()) return value;
+		if (handle == null || value == getPitch()) return value;
+		AL.sourcef(handle, AL.PITCH, value);
 
 		if (playing) {
 			var timeRemaining = Std.int((getLength() - getCurrentTime()) / value);
-			if (timeRemaining > 0)
-				resetTimer(timeRemaining);
+			if (timeRemaining > 0) resetTimer(timeRemaining);
 		}
-
-		if (handle != null)
-			AL.sourcef(handle, AL.PITCH, value);
-
 		return value;
 	}
 
+	public function getGain():Float {
+		if (handle == null) return 1;
+		return AL.getSourcef(handle, AL.GAIN);
+	}
+
+	public function setGain(value:Float):Float {
+		if (handle != null) AL.sourcef(handle, AL.GAIN, value);
+		return value;
+	}
+
+	inline public function getLoops():Int return loops;
+
+	inline public function setLoops(value:Int):Int return loops = value;
+
+	inline public function getLoopTime():Int return loopTime;
+
+	inline public function setLoopTime(value:Int):Int return loopTime = value;
+
+	#if emscripten
+	inline public function getPosition():Vector4 return position;
+	#else
 	public function getPosition():Vector4 {
 		if (handle != null) {
-			#if !emscripten
 			var value = AL.getSource3f(handle, AL.POSITION);
 			position.x = value[0];
 			position.y = value[1];
 			position.z = value[2];
-			#end
 		}
-
 		return position;
 	}
+	#end
 
 	public function setPosition(value:Vector4):Vector4 {
 		position.x = value.x;
@@ -498,7 +394,6 @@ class NativeAudioSource
 			AL.distanceModel(AL.NONE);
 			AL.source3f(handle, AL.POSITION, position.x, position.y, position.z);
 		}
-
 		return position;
 	}
 }
