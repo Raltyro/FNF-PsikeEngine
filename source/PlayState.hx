@@ -4827,8 +4827,8 @@ class PlayState extends MusicBeatState
 		super.stepHit();
 
 		if (!paused && !startingSong) {
-			var resync:Bool = vocals.loaded && Math.abs(vocals.time - FlxG.sound.music.time) > (vocals.vorbis == null ? 16 : 24);
-			if (Math.abs(FlxG.sound.music.time - (Conductor.songPosition - Conductor.offset)) > 16 || resync)
+			var resync:Bool = vocals.loaded && Math.abs(vocals.time - FlxG.sound.music.time) > (vocals.vorbis == null ? 6 : 12);
+			if (Math.abs(FlxG.sound.music.time - (Conductor.songPosition - Conductor.offset)) > 6 || resync)
 				resyncVocals(resync);
 		}
 

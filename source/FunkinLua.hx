@@ -639,6 +639,7 @@ class FunkinLua {
 
 		Lua_helper.set_static_callback("addHaxeLibrary", function(l:FunkinLua, libName:String, ?libPackage:String):Void {
 			#if hscript
+			if (hscript.variables.exists(libName)) return;
 			try {
 				var str:String = '';
 				if (libPackage != null && libPackage.length > 0)
