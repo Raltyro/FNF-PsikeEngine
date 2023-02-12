@@ -186,7 +186,7 @@ class NoteOffsetState extends MusicBeatState {
 
 	inline function makeStage():Void {
 		camGame.scroll.set(120, 130);
-		defaultCamZoom = 0.8;
+		defaultCamZoom = 0.7;
 
 		var bg:BGSprite = new BGSprite('stageback', -600, -200, 0.9, 0.9);
 		add(bg);
@@ -308,9 +308,11 @@ class NoteOffsetState extends MusicBeatState {
 			if (left || right || down || up) mouse.visible = true;
 			else if (FlxG.mouse.justPressed) mouse.visible = false;
 
+			var justpressed = false;
 			if (holdingObject != -1 && (controls.RESET || (nativeHoldingObject ? FlxG.mouse.justReleased : controls.ACCEPT))) {
 				ratingSpr.setProperties('alpha', 1);
 				modeConfigText.alpha = 1;
+				justpressed = true;
 
 				//var v = holdingObject * 2;
 				//mouse.x = ClientPrefs.comboOffset[v] + holdingObjectOffset.x;
@@ -319,7 +321,7 @@ class NoteOffsetState extends MusicBeatState {
 				holdingObject = -1;
 			}
 
-			if (FlxG.mouse.justPressed || controls.ACCEPT) {
+			if (!justpressed && (FlxG.mouse.justPressed || controls.ACCEPT)) {
 				nativeHoldingObject = !controls.ACCEPT;
 				if (nativeHoldingObject)
 					mouse.setPosition(mousePointer.x, mousePointer.y);
@@ -335,7 +337,7 @@ class NoteOffsetState extends MusicBeatState {
 					holdingObjectOffset.y = -ClientPrefs.comboOffset[v + 1] - (nativeHoldingObject ? mousePointer.y : mouse.y);
 				}
 				else if (!nativeHoldingObject || holdingObject == -1)
-					holdingObject = overlappedObj;
+					holdingObject = -1;
 			}
 
 			if (holdingObject != -1) {
