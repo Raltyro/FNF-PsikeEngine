@@ -6,6 +6,7 @@ import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import flixel.ui.FlxBar;
 import flixel.FlxCamera;
 import flixel.FlxSprite;
 import flixel.FlxObject;
@@ -17,6 +18,8 @@ import Conductor.Rating;
 
 class NoteOffsetState extends MusicBeatState {
 	public static var daPixelZoom:Float = PlayState.daPixelZoom;
+	public static var delayMin:Int = -1000;
+	public static var delayMax:Int = 1000;
 	public var onComboMenu:Bool = true;
 	public var isPixelStage:Bool = false;
 
@@ -41,14 +44,19 @@ class NoteOffsetState extends MusicBeatState {
 	var modeConfigText:FlxText;
 	var ratingSpr:RatingSpr;
 
+	var timeBar:FlxBar;
+	var timeBarBG:FlxSprite;
+	var timeTxt:FlxText;
+
 	var mouse:FlxSprite;
 	var holdingObjectOffset:FlxPoint;
+	var mousePointer:FlxPoint;
 	var nativeHoldingObject:Bool = false;
 	var holdingObject:Int = -1;
 
 	override function create() {
 		#if desktop
-		DiscordClient.changePresence('Note Offsets and Combo Pop-up Setting', null);
+		DiscordClient.changePresence('Timing Offsets and Combo Pop-up Setting', null);
 		#end
 
 		FlxG.fixedTimestep = false;
@@ -109,19 +117,48 @@ class NoteOffsetState extends MusicBeatState {
 			combo: FlxG.random.int(50, 500)
 		}, camHUD, false);
 
+		// Timing Offset
+		timeTxt = new FlxText(0, 600, 400, "", 32);
+		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		timeTxt.scrollFactor.set();
+		timeTxt.screenCenter(X);
+		timeTxt.borderSize = 2;
+		timeTxt.antialiasing = ClientPrefs.globalAntialiasing;
+
+		timeBarBG = new FlxSprite(0, timeTxt.y + 8).loadGraphic(Paths.image('timeBar'));
+		timeBarBG.color = FlxColor.BLACK;
+		timeBarBG.scrollFactor.set();
+		timeBarBG.scale.x = 1.2;
+		timeBarBG.screenCenter(X);
+		timeBarBG.antialiasing = ClientPrefs.globalAntialiasing;
+
+		timeBar = new FlxBar(
+			timeBarBG.x + 4, timeBarBG.y + 4, LEFT_TO_RIGHT, Std.int(timeBarBG.width - 8), Std.int(timeBarBG.height - 8),
+			ClientPrefs, 'noteOffset', delayMin, delayMax
+		);
+		timeBar.createFilledBar(0xFF000000, 0xFFFFFFFF);
+		timeBar.scrollFactor.set();
+		timeBar.numDivisions = 800; //How much lag this causes?? Should i tone it down to idk, 400 or 200?
+		timeBar.antialiasing = ClientPrefs.globalAntialiasing;
+
+		timeBarBG.camera = camHUD; add(timeBarBG);
+		timeBar.camera = camHUD; add(timeBar);
+		timeTxt.camera = camHUD; add(timeTxt);
+
 		// UI
 		dumbTexts = new FlxTypedGroup<FlxText>();
 		dumbTexts.cameras = [camHUD];
 		add(dumbTexts);
 		for (i in 0...6) createText(i);
 
-		var blackBox:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, 40, FlxColor.BLACK);
-		blackBox.scrollFactor.set();
-		blackBox.camera = camHUD;
-		blackBox.alpha = 0.6;
-		add(blackBox);
+		var bar:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, 40, FlxColor.BLACK);
+		bar.scrollFactor.set();
+		bar.camera = camHUD;
+		bar.alpha = 0.6;
+		add(bar);
 
 		modeConfigText = new FlxText(0, 4, FlxG.width, "", 32).setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
+		modeConfigText.antialiasing = ClientPrefs.globalAntialiasing;
 		modeConfigText.scrollFactor.set();
 		modeConfigText.camera = camHUD;
 		add(modeConfigText);
@@ -137,6 +174,7 @@ class NoteOffsetState extends MusicBeatState {
 		add(mouse);
 
 		holdingObjectOffset = FlxPoint.get();
+		mousePointer = FlxPoint.get();
 
 		Conductor.usePlayState = false;
 		Conductor.mapBPMChanges(true);
@@ -148,6 +186,7 @@ class NoteOffsetState extends MusicBeatState {
 
 	inline function makeStage():Void {
 		camGame.scroll.set(120, 130);
+		defaultCamZoom = 0.8;
 
 		var bg:BGSprite = new BGSprite('stageback', -600, -200, 0.9, 0.9);
 		add(bg);
@@ -181,16 +220,18 @@ class NoteOffsetState extends MusicBeatState {
 	function updateMode() {
 		ratingSpr.setProperties('alpha', onComboMenu ? 1 : .5);
 
-		if (onComboMenu) modeConfigText.text = '< Combo Offset (Hold Accept to Switch) >';
-		else modeConfigText.text = '< Note/Beat Delay (Hold Accept to Switch) >';
-
+		if (onComboMenu) modeConfigText.text = '< Combo Position (Hold Accept to Switch) >';
+		else modeConfigText.text = '< Timing Offset (Hold Accept to Switch) >';
 		modeConfigText.text = modeConfigText.text.toUpperCase();
 		FlxG.mouse.visible = onComboMenu;
+
+		timeTxt.visible = timeBar.visible = timeBarBG.visible = !onComboMenu;
 	}
 
 	function createText(i:Int) {
 		var text:FlxText = new FlxText(10, 48 + (i * 30), 0, '', 24);
 		text.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		text.antialiasing = ClientPrefs.globalAntialiasing;
 		text.scrollFactor.set();
 		text.borderSize = 2;
 		text.camera = camHUD;
@@ -258,41 +299,49 @@ class NoteOffsetState extends MusicBeatState {
 		var up = controls.UI_UP;
 		var right = controls.UI_RIGHT;
 
-		mouse.x += (left ? -1 : right ? 1 : 0) * 300 * addNum * elapsed;
-		mouse.y += (down ? 1 : up ? -1 : 0)  * 300 * addNum * elapsed;
-		mouse.alpha = (controls.ACCEPT_H ? .8 : .5) / (onComboMenu ? 1 : 2);
+		FlxG.mouse.getScreenPosition(camOther, mousePointer);
 
 		if (onComboMenu) {
-			if (holdingObject != -1 && (nativeHoldingObject ? FlxG.mouse.justReleased : controls.ACCEPT)) {
+			mouse.x += (left ? -1 : right ? 1 : 0) * 300 * addNum * elapsed;
+			mouse.y += (down ? 1 : up ? -1 : 0)  * 300 * addNum * elapsed;
+			mouse.alpha = (controls.ACCEPT_H ? .8 : .5) / (onComboMenu ? 1 : 2);
+			if (left || right || down || up) mouse.visible = true;
+			else if (FlxG.mouse.justPressed) mouse.visible = false;
+
+			if (holdingObject != -1 && (controls.RESET || (nativeHoldingObject ? FlxG.mouse.justReleased : controls.ACCEPT))) {
 				ratingSpr.setProperties('alpha', 1);
 				modeConfigText.alpha = 1;
 
-				var v = holdingObject * 2;
-				mouse.x = ClientPrefs.comboOffset[v] + holdingObjectOffset.x;
-				mouse.y = ClientPrefs.comboOffset[v + 1] + holdingObjectOffset.y;
+				//var v = holdingObject * 2;
+				//mouse.x = ClientPrefs.comboOffset[v] + holdingObjectOffset.x;
+				//mouse.y = ClientPrefs.comboOffset[v + 1] + holdingObjectOffset.y;
 
 				holdingObject = -1;
 			}
 
 			if (FlxG.mouse.justPressed || controls.ACCEPT) {
 				nativeHoldingObject = !controls.ACCEPT;
-				if (nativeHoldingObject) mouse.setPosition(FlxG.mouse.x, FlxG.mouse.y);
+				if (nativeHoldingObject)
+					mouse.setPosition(mousePointer.x, mousePointer.y);
 
-				holdingObject = getOverlappedObject(mouse);
-				if (holdingObject != -1) {
+				var overlappedObj = getOverlappedObject(mouse);
+				if (overlappedObj != -1) {
+					holdingObject = overlappedObj;
 					var v = holdingObject * 2;
 					for (i in 0...3) setObjectAlpha(i, i == holdingObject ? 1 : .5);
 					modeConfigText.alpha = .5;
 
-					holdingObjectOffset.x = ClientPrefs.comboOffset[v] - (nativeHoldingObject ? FlxG.mouse.x : mouse.x);
-					holdingObjectOffset.y = -ClientPrefs.comboOffset[v + 1] - (nativeHoldingObject ? FlxG.mouse.y : mouse.y);
+					holdingObjectOffset.x = ClientPrefs.comboOffset[v] - (nativeHoldingObject ? mousePointer.x : mouse.x);
+					holdingObjectOffset.y = -ClientPrefs.comboOffset[v + 1] - (nativeHoldingObject ? mousePointer.y : mouse.y);
 				}
+				else if (!nativeHoldingObject || holdingObject == -1)
+					holdingObject = overlappedObj;
 			}
 
 			if (holdingObject != -1) {
 				var v = holdingObject * 2;
-				ClientPrefs.comboOffset[v] = Math.floor((nativeHoldingObject ? FlxG.mouse.x : mouse.x) + holdingObjectOffset.x);
-				ClientPrefs.comboOffset[v + 1] = -Math.floor((nativeHoldingObject ? FlxG.mouse.y : mouse.y) + holdingObjectOffset.y);
+				ClientPrefs.comboOffset[v] = Math.floor((nativeHoldingObject ? mousePointer.x : mouse.x) + holdingObjectOffset.x);
+				ClientPrefs.comboOffset[v + 1] = -Math.floor((nativeHoldingObject ? mousePointer.y : mouse.y) + holdingObjectOffset.y);
 			}
 
 			if (controls.RESET) {
@@ -301,7 +350,9 @@ class NoteOffsetState extends MusicBeatState {
 			}
 		}
 		else {
-			
+			mouse.visible = false;
+
+
 		}
 	}
 
@@ -310,7 +361,7 @@ class NoteOffsetState extends MusicBeatState {
 		if (obj != null) obj.alpha = alpha;
 
 		var arr = i == 1 ? ratingSpr.comboNums : (i == 2 ? ratingSpr.diffNums : null);
-		if (arr != null) for (v in arr) obj.alpha = alpha;
+		if (arr != null) for (v in arr) v.alpha = alpha;
 	}
 
 	function getOverlappedObject(pos:FlxObject):Int {
@@ -334,6 +385,13 @@ class NoteOffsetState extends MusicBeatState {
 
 		if (camGame.zoom < 1.35)
 			camGame.zoom += 0.015;
+	}
+
+	override function destroy() {
+		super.destroy();
+
+		holdingObjectOffset.put();
+		mousePointer.put();
 	}
 
 	// stupid ass keys

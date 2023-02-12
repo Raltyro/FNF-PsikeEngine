@@ -41,6 +41,7 @@ jobs:
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
           haxelib run openfl setup --quiet
+          haxelib git flixel https://github.com/Raltyro/flixel
       
       - name: Install Haxelib
         run: |
@@ -101,6 +102,7 @@ jobs:
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
           haxelib run openfl setup --quiet
+          haxelib git flixel https://github.com/Raltyro/flixel
         shell: cmd
       
       - name: Install Haxelib
@@ -161,6 +163,7 @@ jobs:
           haxelib dev openfl openfl
           haxelib install openfl-samples --quiet
           haxelib run openfl setup --quiet
+          haxelib git flixel https://github.com/Raltyro/flixel
       
       - name: Install Haxelib
         run: |

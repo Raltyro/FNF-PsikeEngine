@@ -164,7 +164,7 @@ class NativeAudioSource {
 
 		var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
 		if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
-		if (position >= samples) return;
+		if (position >= samples && loops < 1) return;
 
 		var numBuffers = 0, size = 0, data;
 		for (buffer in buffers) {
@@ -230,7 +230,7 @@ class NativeAudioSource {
 			if (stream && (vorbisFile = parent.buffer.__srcVorbisFile) != null) {
 				var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
 				if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
-				ranOut = position >= samples || (queuedBuffers = AL.getSourcei(handle, AL.BUFFERS_QUEUED)) < 3;
+				ranOut = position >= samples - 2048 || (queuedBuffers = AL.getSourcei(handle, AL.BUFFERS_QUEUED)) < 3;
 			}
 			#end
 
