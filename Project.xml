@@ -139,33 +139,25 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="flixel"/>
 	<haxedev set='webgl'/>
 
-	<!--In case you want to use the addons package-->
+	<haxelib name="hxcpp-debug-server" if="debug"/>
+
+	<haxelib name="flixel"/>
 	<haxelib name="flixel-addons"/>
+	<haxelib name="flixel-ui"/>
+
+	<haxelib name="faxe" if='switch'/>
+	<!--<haxelib name="haxe-concurrent"/>-->
+
+	<haxelib name="linc_luajit-ralt" rename="linc_luajit" if="LUA_ALLOWED"/>
 	<haxelib name="hscript"/>
 	<define name="hscriptPos"/>
 
-	<!--In case you want to use the ui package-->
-	<haxelib name="flixel-ui"/>
-
-	<!--Others-->
-	<haxelib name="flixel-screenshot-plugin"/>
-	<haxelib name="linc_luajit-ralt" rename="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="hxCodec" version="git" if="VIDEOS_ALLOWED"/>
-	<haxelib name="faxe" if='switch'/>
-	<!--<haxelib name="haxe-concurrent"/>-->
 	<haxelib name="discord_rpc" if="desktop"/>
+	<haxelib name="hxCodec" version="git" if="VIDEOS_ALLOWED"/>
 
-	<!-- Enables a terminal log prompt on debug builds -->
-	<haxelib name="hxcpp-debug-server" if="debug"/>
-
-	<!-- <haxelib name="markdown" /> -->
-	<!-- <haxelib name="HtmlParser" /> -->
-
-	<!--In case you want to use nape with flixel-->
-	<!--<haxelib name="nape-haxe4" />-->
+	<!--<haxelib name="flixel-screenshot-plugin"/>-->
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
 

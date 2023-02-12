@@ -85,7 +85,7 @@ import Discord.DiscordClient;
 #end
 
 #if VIDEOS_ALLOWED
-import VideoHandler;
+import hxcodec.VideoHandler;
 #end
 
 import WindowUtil;
@@ -1678,7 +1678,7 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	public function startVideo(name:String, loop:Bool = false, haccelerated:Bool = true, pauseMusic:Bool = false)
+	public function startVideo(name:String, loop:Bool = false, pauseMusic:Bool = false)
 	{
 		#if VIDEOS_ALLOWED
 		inCutscene = true;
@@ -1702,7 +1702,7 @@ class PlayState extends MusicBeatState
 
 		var video:VideoHandler = new VideoHandler();
 		new FlxTimer().start(0.001, function(_) {
-			video.playVideo(filepath, loop, haccelerated, pauseMusic);
+			video.playVideo(filepath, loop, pauseMusic);
 		});
 		video.finishCallback = function()
 		{

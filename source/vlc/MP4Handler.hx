@@ -4,6 +4,6 @@ package vlc;
 #error "Please Use the git Version of hxCodec! read \"README.md\" for installation"
 #end
 
-import VideoHandler;
+import hxcodec.VideoHandler;
 
 typedef MP4Handler = VideoHandler;

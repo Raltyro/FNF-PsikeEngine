@@ -55,6 +55,11 @@ import hscript.Expr;
 import Discord;
 #end
 
+#if VIDEOS_ALLOWED
+import hxcodec.VideoHandler;
+import hxcodec.VideoSprite;
+#end
+
 using StringTools;
 
 class FunkinLua {
@@ -2988,6 +2993,10 @@ class HScript
 		#end
 		variables.set('ShaderFilter', openfl.filters.ShaderFilter);
 		variables.set('StringTools', StringTools);
+		#if VIDEOS_ALLOWED
+		variables.set('VideoHandler', VideoHandler);
+		variables.set('VideoSprite', VideoSprite);
+		#end
 
 		variables.set('setVar', function(name:String, value:Dynamic) {
 			PlayState.instance.variables.set(name, value);

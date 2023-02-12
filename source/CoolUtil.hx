@@ -28,53 +28,33 @@ class CoolUtil {
 
 	public static var difficulties:Array<String> = [];
 	public static var lowerDifficulties(get, null):Array<String>;
-	static function get_lowerDifficulties():Array<String> {
-		var copy:Array<String> = [];
-		for (v in difficulties) copy.push(v.toLowerCase());
-		return copy;
-	}
+	inline static function get_lowerDifficulties():Array<String> return [for (v in difficulties) v.toLowerCase()];
 
-	inline public static function quantize(f:Float, snap:Float){
-		// changed so this actually works lol
+	inline public static function quantize(f:Float, snap:Float) { // changed so this actually works lol
 		var m:Float = Math.fround(f * snap);
-		trace(snap);
 		return (m / snap);
 	}
 	
-	public static function getDifficultyFilePath(num:Null<Int> = null)
-	{
+	public static function getDifficultyFilePath(num:Null<Int> = null) {
 		if(num == null) num = PlayState.storyDifficulty;
 
 		var fileSuffix:String = difficulties[num];
-		if(fileSuffix != defaultDifficulty)
-		{
-			fileSuffix = '-' + fileSuffix;
-		}
-		else
-		{
-			fileSuffix = '';
-		}
+		if (fileSuffix != defaultDifficulty) fileSuffix = '-' + fileSuffix;
+		else fileSuffix = '';
+
 		return Paths.formatToSongPath(fileSuffix);
 	}
 
 	public static function difficultyString():String
-	{
 		return difficulties[PlayState.storyDifficulty].toUpperCase();
-	}
 
-	inline public static function boundTo(value:Float, min:Float, max:Float):Float {
+	inline public static function boundTo(value:Float, min:Float, max:Float):Float
 		return Math.max(min, Math.min(max, value));
-	}
-	
-	public static function truncateFloat(x:Float,precision:Int = 2,round:Bool = false):Float {
-		if (precision == 0) return Math.floor(x);
-		
-		x = x * Math.pow(10, precision);
-		return (round ? Math.round(x) : Math.floor(x)) / Math.pow(10, precision);
-	}
 
-	public static function coolTextFile(path:String):Array<String>
-	{
+	public static function truncateFloat(x:Float, precision:Int = 2, round:Bool = false):Float
+		return (round ? Math.round : Math.floor)(precision > 0 ? (precision = 10 ^ precision) * x : x) / (precision > 0 ? precision : 1);
+
+	public static function coolTextFile(path:String):Array<String> {
 		#if sys
 		if (FileSystem.exists(path)) return listFromString(File.getContent(path));
 		#else
@@ -83,21 +63,20 @@ class CoolUtil {
 		return [];
 	}
 
-	public static function listFromString(string:String):Array<String>
-	{
+	public static function listFromString(string:String):Array<String> {
 		var daList:Array<String> = [];
 		daList = string.trim().split('\n');
 
-		for (i in 0...daList.length)
-		{
+		for (i in 0...daList.length) {
 			daList[i] = daList[i].trim();
 		}
 
 		return daList;
 	}
+
 	public static function dominantColor(sprite:flixel.FlxSprite):Int{
 		var countByColor:Map<Int, Int> = [];
-		for(col in 0...sprite.frameWidth){
+		for (col in 0...sprite.frameWidth){
 			for(row in 0...sprite.frameHeight){
 			  var colorOfThisPixel:Int = sprite.pixels.getPixel32(col, row);
 			  if(colorOfThisPixel != 0){
@@ -121,8 +100,7 @@ class CoolUtil {
 		return maxKey;
 	}
 
-	public static function numberArray(max:Int, ?min = 0):Array<Int>
-	{
+	public static function numberArray(max:Int, ?min = 0):Array<Int> {
 		var dumbArray:Array<Int> = [];
 		for (i in min...max)
 		{
@@ -131,14 +109,13 @@ class CoolUtil {
 		return dumbArray;
 	}
 
-	//uhhhh does this even work at all? i'm starting to doubt
-	public static function precacheSound(sound:String, ?library:String = null):Void {
+	@:deprecated("`CoolUtil.precacheSound` is deprecated, use `Paths.sound` instead")
+	public static function precacheSound(sound:String, ?library:String = null):Void
 		Paths.sound(sound, library);
-	}
 
-	public static function precacheMusic(sound:String, ?library:String = null):Void {
+	@:deprecated("`CoolUtil.precacheMusic` is deprecated, use `Paths.music` instead")
+	public static function precacheMusic(sound:String, ?library:String = null):Void
 		Paths.music(sound, library);
-	}
 	
 	inline public static function flKeyToFlx(keyCode:Int):FlxKey
 		@:privateAccess return FlxKey.toStringMap.get(keyCode);
