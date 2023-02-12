@@ -193,7 +193,7 @@ class Paths {
 
 		// flags everything to be cleared out next unused memory clear
 		localTrackedAssets = [];
-		openfl.Assets.cache.clear("songs");
+		#if !html5 openfl.Assets.cache.clear("songs"); #end
 		compress(3);
 	}
 

@@ -5,6 +5,7 @@ export/
 
 ### VS Code
 .vscode/*
+.haxelib/
 *.code-workspace
 
 # Local history which shouldn't be shared.

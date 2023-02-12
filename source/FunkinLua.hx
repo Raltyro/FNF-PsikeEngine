@@ -63,9 +63,9 @@ import hxcodec.VideoSprite;
 using StringTools;
 
 class FunkinLua {
-	public static var Function_Stop:Dynamic = 1;
-	public static var Function_Continue:Dynamic = 0;
-	public static var Function_StopLua:Dynamic = 2;
+	public static var Function_Stop:Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
+	public static var Function_Continue:Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
+	public static var Function_StopLua:Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
 
 	#if hscript
 	public static var allowedHaxeTypes(default, null):Array<Dynamic> = [Bool, Int, Float, String, Array];
@@ -1918,10 +1918,10 @@ class FunkinLua {
 			Paths.returnGraphic(name);
 		});
 		Lua_helper.set_static_callback("precacheSound", function(_, name:String) {
-			CoolUtil.precacheSound(name);
+			Paths.sound(name);
 		});
 		Lua_helper.set_static_callback("precacheMusic", function(_, name:String) {
-			CoolUtil.precacheMusic(name);
+			Paths.music(name);
 		});
 
 
@@ -2089,8 +2089,7 @@ class FunkinLua {
 				return;
 			}
 			var save:FlxSave = new FlxSave();
-			// folder goes unused for flixel 5 users. @BeastlyGhost
-			save.bind(name #if (flixel < "5.0.0"), folder #end);
+			save.bind(name, CoolUtil.getSavePath(folder));
 			PlayState.instance.modchartSaves.set(name, save);
 		});
 		Lua_helper.set_static_callback("flushSaveData", function(l:FunkinLua, name:String) {

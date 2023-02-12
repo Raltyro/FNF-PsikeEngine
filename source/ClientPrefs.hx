@@ -73,7 +73,7 @@ class ClientPrefs {
 	
 	public static var hardwareCache:Bool = true;
 	public static var isHardCInited:Bool = false;
-	public static var streamMusic:Bool = false;
+	public static var streamMusic:Bool = true;
 	public static var isStreMInited:Bool = false;
 
 	//Every key has two binds, add your key bind down here and then add your control on options/ControlsSubState.hx and Controls.hx
@@ -143,7 +143,7 @@ class ClientPrefs {
 		FlxG.save.flush();
 
 		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2' #if (flixel < "5.0.0"), 'ninjamuffin99' #end); //Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
+		save.bind('controls_v2', CoolUtil.getSavePath()); //Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
 		save.data.customControls = keyBinds;
 		save.flush();
 
@@ -151,7 +151,7 @@ class ClientPrefs {
 	}
 
 	public static function loadPrefs() {
-		FlxG.save.bind('funkin' #if (flixel < "5.0.0"), 'ninjamuffin99' #end);
+		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 
 		var v:Any;
 		for (i in stringsToSave)
@@ -212,7 +212,7 @@ class ClientPrefs {
 		#end
 
 		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2' #if (flixel < "5.0.0"), 'ninjamuffin99' #end);
+		save.bind('controls_v2', CoolUtil.getSavePath());
 		if(save != null && save.data.customControls != null) {
 			var loadedControls:Map<String, Array<FlxKey>> = save.data.customControls;
 			for (control => keys in loadedControls) {

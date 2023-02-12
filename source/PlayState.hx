@@ -696,6 +696,11 @@ class PlayState extends MusicBeatState
 		eventPushedMap.clear();
 		eventPushedMap = null;
 
+		if (eventNotes.length > 1) {
+			for (event in eventNotes) event.strumTime -= eventNoteEarlyTrigger(event);
+			eventNotes.sort(sortByTime);
+		}
+
 		startSpecificSong(songName);
 		#if LUA_ALLOWED // SONG SPECIFIC SCRIPTS
 		executeLuas('data/$songName');
@@ -744,6 +749,7 @@ class PlayState extends MusicBeatState
 		super.create();
 
 		CustomFadeTransition.nextCamera = camOther;
+		if (eventNotes.length < 1) checkEventNote();
 	}
 
 	function startSpecificSong(songName:String) {
@@ -2600,7 +2606,6 @@ class PlayState extends MusicBeatState
 					value1: newEventNote[2],
 					value2: newEventNote[3]
 				};
-				subEvent.strumTime -= eventNoteEarlyTrigger(subEvent);
 				eventNotes.push(subEvent);
 				eventPushed(subEvent);
 			}
@@ -2631,7 +2636,6 @@ class PlayState extends MusicBeatState
 						value1: newEventNote[2],
 						value2: newEventNote[3]
 					};
-					subEvent.strumTime -= eventNoteEarlyTrigger(subEvent);
 					eventNotes.push(subEvent);
 					eventPushed(subEvent);
 				}
@@ -2642,10 +2646,7 @@ class PlayState extends MusicBeatState
 		// trace(unspawnNotes.length);
 		// playerCounter += 1;
 
-		unspawnNotes.sort(sortByShit);
-		if (eventNotes.length > 1) eventNotes.sort(sortByTime);
-
-		checkEventNote();
+		unspawnNotes.sort(sortByTime);
 		generatedMusic = true;
 	}
 
@@ -2729,8 +2730,8 @@ class PlayState extends MusicBeatState
 	}
 
 	function eventNoteEarlyTrigger(event:EventNote):Float {
-		var returnedValue:Float = callOnLuas('eventEarlyTrigger', [event.event]);
-		if(returnedValue != 0) {
+		var returnedValue:Null<Float> = callOnLuas('eventEarlyTrigger', [event.event, event.value1, event.value2, event.strumTime], [], [0]);
+		if(returnedValue != null && returnedValue != 0 && returnedValue != FunkinLua.Function_Continue) {
 			return returnedValue;
 		}
 
@@ -2741,15 +2742,8 @@ class PlayState extends MusicBeatState
 		return 0;
 	}
 
-	function sortByShit(Obj1:Note, Obj2:Note):Int
-	{
+	function sortByTime(Obj1:Dynamic, Obj2:Dynamic):Int
 		return FlxSort.byValues(FlxSort.ASCENDING, Obj1.strumTime, Obj2.strumTime);
-	}
-
-	function sortByTime(Obj1:EventNote, Obj2:EventNote):Int
-	{
-		return FlxSort.byValues(FlxSort.ASCENDING, Obj1.strumTime, Obj2.strumTime);
-	}
 
 	public var skipArrowStartTween:Bool = false; //for lua
 	public function generateStaticArrows(player:Int, arrowStartTween:Bool = false):Void
@@ -3304,7 +3298,7 @@ class PlayState extends MusicBeatState
 		while(eventNotes.length > 0) {
 			var leStrumTime:Float = eventNotes[0].strumTime;
 			if(Conductor.songPosition < leStrumTime) {
-				break;
+				return;
 			}
 
 			var value1:String = '';
@@ -5019,20 +5013,16 @@ class PlayState extends MusicBeatState
 		#end
 	}
 
-	public function callOnLuas(event:String, ?args:Array<Any>, ignoreStops = true, ?exclusions:Array<String>):Dynamic {
-		var returnVal:Dynamic = FunkinLua.Function_Continue;
+	public function callOnLuas(event:String, ?args:Array<Any>, ignoreStops = true, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
+		var returnVal = FunkinLua.Function_Continue;
 		#if LUA_ALLOWED
 		for (script in luaArray) {
 			if (exclusions != null && (exclusions.contains(script.globalScriptName) || exclusions.contains(script.scriptName)))
 				continue;
 
-			var ret:Dynamic = script.call(event, args);
-			if(ret == FunkinLua.Function_StopLua && !ignoreStops)
-				break;
-			
-			// had to do this because there is a bug in haxe where Stop != Continue doesnt work
-			var bool:Bool = ret == FunkinLua.Function_Continue;
-			if(!bool && ret != 0) returnVal = cast ret;
+			var ret = script.call(event, args);
+			if (ret == FunkinLua.Function_StopLua && !ignoreStops) break;
+			if (ret != null && ret != FunkinLua.Function_Continue) returnVal = ret;
 		}
 		#end
 		return returnVal;
