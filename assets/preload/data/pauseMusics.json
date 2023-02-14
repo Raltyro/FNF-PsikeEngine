@@ -1,46 +1,48 @@
 [
 	{
 		"musicName": "Breakfast",
-		"musicLoopPath": "breakfast",
+		"musicPath": "breakfast",
+		"composer": "kawaisprite",
 		"volume": 0.5,
 		"bpm": 160,
-		"fadeTime": 0,
+		"fadeDuration": 0,
 		"delay": 0,
-		"useStartVariations": true,
+		"endTime": 0,
+		"loopTime": 0,
 		"startTimeRange": [],
-		"startVariations": [
+		"introVariations": [
 			{
-				"musicStartPath": "breakfastStart",
-				"hasStart": true,
-				"fadeTime": 0,
-				"startTime": 0,
-				"delay": 0.75
-			},
-			{
-				"musicStartPath": "breakfastStart",
-				"hasStart": false,
-				"fadeTime": 0,
-				"startTime": 12.4,
-				"delay": 1.15
-			},
-			{
-				"musicStartPath": "breakfastStart",
-				"hasStart": true,
-				"fadeTime": 0,
-				"startTime": 36.75,
-				"delay": 0.75
+				"introPath": "breakfastStart",
+				"fadeDuration": 0,
+				"delay": 0.75,
+				"startTimes": [0, 12.4, 36.75],
 			}
 		]
 	},
 	{
+		"musicName": "[unnamed pause menu bgm]",
+		"musicPath": "dontgetabighead",
+		"composer": "requiem",
+		"volume": 0.6,
+		"bpm": 130,
+		"fadeDuration": 4,
+		"delay": 0,
+		"endTime": 0,
+		"loopTime": 0,
+		"startTimeRange": [0, 30],
+		"introVariations": [],
+	},
+	{
 		"musicName": "Tea Time",
-		"musicLoopPath": "tea-time",
+		"musicPath": "tea-time",
+		"composer": "flicky",
 		"volume": 0.5,
 		"bpm": 105,
-		"fadeTime": 6,
+		"fadeDuration": 6,
 		"delay": 0,
-		"useStartVariations": false,
-		"startTimeRandomRange": [0, 120],
-		"startVariations": []
+		"endTime": 0,
+		"loopTime": 0,
+		"startTimeRange": [0, 120],
+		"introVariations": []
 	}
 ]

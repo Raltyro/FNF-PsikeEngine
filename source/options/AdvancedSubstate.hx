@@ -32,7 +32,9 @@ class AdvancedSubstate extends BaseOptionsMenu
 		timer = new FlxTimer();
 		
 		var option:Option = new Option('Hardware Caching',
-			'If checked, the game will uploads images to GPU, useful for lowering MEM usage.\nRestart your game in order for this to work.\n[UNCHECK THIS IF IMAGES NOT SHOWING]',
+			'If checked, the game will use GPU to store images for to maintain MEM usage. ' +
+			'Restart the game for to apply changes.' +
+			'\n[UNCHECK THIS IF IMAGES ARE NOT SHOWING]',
 			'hardwareCache',
 			'bool',
 			false);
@@ -40,10 +42,12 @@ class AdvancedSubstate extends BaseOptionsMenu
 
 		#if desktop
 		var option:Option = new Option('Streaming Music',
-			'If checked, the game will simultaneously load music data on playbacks, useful for lowering MEM usage.\nRestart your game in order for this to work.\n[UNCHECK THIS IF GAME IS CRASHING]',
+			'If checked, the game will simultaneously load music data while its playing, this also make looped musics seamlessly loop. ' +
+			'Restart the game for to apply changes.' +
+			'\n[UNCHECK THIS IF GAME IS CRASHING]',
 			'streamMusic',
 			'bool',
-			false);
+			true);
 		addOption(option);
 		#end
 
