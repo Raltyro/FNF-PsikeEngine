@@ -32,7 +32,7 @@ class OptionsState extends MusicBeatState
 	var options:Array<String> = [
 		'Note Colors',
 		'Controls',
-		'Adjust Delay and Combo',
+		'Adjust Delay and Rating Pop-up',
 		'Graphics',
 		'Visuals and UI',
 		'Gameplay',
@@ -56,8 +56,8 @@ class OptionsState extends MusicBeatState
 				openSubState(new options.GameplaySettingsSubState());
 			case 'Advanced':
 				openSubState(new options.AdvancedSubstate());
-			case 'Adjust Delay and Combo':
-				LoadingState.loadAndSwitchState(new options.NoteOffsetState());
+			case 'Adjust Delay and Rating Pop-up':
+				LoadingState.loadAndSwitchState(new options.NoteOffsetState(), true);
 		}
 	}
 
@@ -83,14 +83,17 @@ class OptionsState extends MusicBeatState
 		for (i in 0...options.length)
 		{
 			var optionText:Alphabet = new Alphabet(0, 0, options[i], true);
+			optionText.scaleX = optionText.scaleY = 0.8;
 			optionText.screenCenter();
-			optionText.y += (100 * (i - (options.length / 2))) + 50;
+			optionText.y += (80 * (i - (options.length / 2))) + 40;
 			grpOptions.add(optionText);
 		}
 
 		selectorLeft = new Alphabet(0, 0, '>', true);
+		selectorLeft.scaleX = selectorLeft.scaleY = 0.8;
 		add(selectorLeft);
 		selectorRight = new Alphabet(0, 0, '<', true);
+		selectorRight.scaleX = selectorRight.scaleY = 0.8;
 		add(selectorRight);
 
 		changeSelection();

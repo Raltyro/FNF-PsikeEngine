@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
+	<!-- You can change where the game saves into in CoolUtil.hx getSavePath -->
+
 	<!-- ________________________ RALT'S PSYCH FORK FLAG ________________________ -->
 
 	<!-- Remove Default FNF Assets so no 100mb additional in assets folder -->
@@ -7,7 +9,7 @@
 
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Friday Night Funkin': Psych Engine" file="PsychEngine" packageName="com.shadowmario.psychengine" package="com.shadowmario.psychengine" main="Main" version="0.2.8" company="ShadowMario" />
+	<app title="Friday Night Funkin': Psike Engine" file="PsikeEngine" packageName="com.raltyro.psikeengine" package="com.raltyro.psikeengine" main="Main" version="0.2.8" company="Raltyro" />
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
 

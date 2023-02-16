@@ -1,3 +1,5 @@
+// if anybody wants to make a pr for to change this to FlxGroup, i would highly appreciate it 💕
+
 package;
 
 import flixel.tweens.misc.VarTween;
@@ -26,6 +28,7 @@ typedef RatingData = {
 class RatingSpr {
 	public static var pixelZoom:Float = PlayState.daPixelZoom;
 
+	public var data:RatingData;
 	public var parent:FlxGroup;
 	public var camera:FlxCamera;
 	public var layer:Int;
@@ -37,9 +40,46 @@ class RatingSpr {
 
 	public function new(parent:FlxGroup, data:RatingData, ?camera:FlxCamera, ?layer:Int = -1, popUp:Bool = true) {
 		this.parent = parent;
+		this.data = data;
 		this.camera = camera;
 		this.layer = layer;
 
+		reload(data);
+		if (popUp) pop();
+	}
+
+	public function pop() {
+		var speedRate:Float = data.speedRate != null ? data.speedRate : 1;
+
+		rating.velocity.set(FlxG.random.int(-5, 5) * speedRate, -FlxG.random.int(140, 175) * speedRate);
+		rating.acceleration.y = 550 * speedRate * speedRate;
+
+		combo.velocity.set(FlxG.random.int(-5, 5) * speedRate, -FlxG.random.int(140, 160) * speedRate);
+		combo.acceleration.y = FlxG.random.int(200, 300) * speedRate * speedRate;
+
+		for (numScore in comboNums) {
+			numScore.velocity.set(FlxG.random.float(-5, 5) * speedRate, -FlxG.random.int(140, 160) * speedRate);
+			numScore.acceleration.y = FlxG.random.int(200, 300) * speedRate * speedRate;
+
+			FlxTween.tween(numScore, {alpha: 0}, 0.2 / speedRate, {
+				startDelay: Conductor.crochet * 0.002 / speedRate
+			});
+		}
+
+		FlxTween.tween(rating, {alpha: 0}, 0.2 / speedRate, {
+			startDelay: Conductor.crochet * 0.001 / speedRate
+		});
+
+		FlxTween.tween(combo, {alpha: 0}, 0.2 / speedRate, {
+			startDelay: Conductor.crochet * 0.002 / speedRate,
+			onComplete: destroy
+		});
+	}
+
+	public function reload(?data:RatingData) {
+		destroy();
+
+		if (data == null) data = this.data;
 		comboNums = [];
 		diffNums = [];
 
@@ -105,32 +145,6 @@ class RatingSpr {
 
 			addToParent(numScore);
 			comboNums.push(numScore);
-
-			if (popUp) {
-				numScore.velocity.set(FlxG.random.float(-5, 5) * speedRate, -FlxG.random.int(140, 160) * speedRate);
-				numScore.acceleration.y = FlxG.random.int(200, 300) * speedRate * speedRate;
-
-				FlxTween.tween(numScore, {alpha: 0}, 0.2 / speedRate, {
-					startDelay: Conductor.crochet * 0.002 / speedRate
-				});
-			}
-		}
-
-		if (popUp) {
-			rating.velocity.set(-FlxG.random.int(0, 10) * speedRate, -FlxG.random.int(140, 175) * speedRate);
-			rating.acceleration.y = 550 * speedRate * speedRate;
-
-			combo.velocity.set(FlxG.random.int(1, 10) * speedRate, -FlxG.random.int(140, 160) * speedRate);
-			combo.acceleration.y = FlxG.random.int(200, 300) * speedRate * speedRate;
-
-			FlxTween.tween(rating, {alpha: 0}, 0.2 / speedRate, {
-				startDelay: Conductor.crochet * 0.001 / speedRate
-			});
-
-			FlxTween.tween(combo, {alpha: 0}, 0.2 / speedRate, {
-				startDelay: Conductor.crochet * 0.002 / speedRate,
-				onComplete: destroy
-			});
 		}
 
 		reposition();

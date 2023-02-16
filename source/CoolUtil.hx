@@ -164,7 +164,7 @@ class CoolUtil {
 			return;
 		}
 
-		var http = new haxe.Http("https://raw.githubusercontent.com/ShadowMario/FNF-PsychEngine/main/gitVersion.txt");
+		var http = new haxe.Http("https://raw.githubusercontent.com/Raltyro/FNF-PsikeEngine/main/psikeVersion.txt");
 
 		http.onData = function(data:String) {
 			realUpstreamVersion = data.split('\n')[0].trim();
@@ -188,14 +188,14 @@ class CoolUtil {
 		return realGitCommitHash.substr(0, 7);
 
 	public static function checkForUpdates(?onComplete:Bool->Void):Void {
-		if (!mustUpdate && realUpdateVersion != null) mustUpdate = updateVersion != MainMenuState.psychEngineVersion.trim();
+		if (!mustUpdate && realUpdateVersion != null) mustUpdate = updateVersion != MainMenuState.psikeEngineVersion.trim();
 		if (mustUpdate) {
 			if (onComplete != null) onComplete(true);
 			return;
 		}
 		
 		getUpdateVersion(function(updateVersion:String) {
-			if (updateVersion != null) mustUpdate = updateVersion != MainMenuState.psychEngineVersion.trim();
+			if (updateVersion != null) mustUpdate = updateVersion != MainMenuState.psikeEngineVersion.trim();
 			getUpstreamVersion(function(upstreamVersion:String) {
 				if (updateVersion != upstreamVersion) mustUpdate = true;
 				onComplete(mustUpdate);
@@ -204,18 +204,10 @@ class CoolUtil {
 	}
 	
 	public static function tryUpdate() {
-		CoolUtil.browserLoad("https://github.com/Raltyro/FNF-PsychEngine");
+		CoolUtil.browserLoad("https://github.com/Raltyro/FNF-PsikeEngine");
 	}
 
-	/** Quick Function to Fix Save Files for Flixel 5
-		if you are making a mod, you are gonna wanna change "ShadowMario" to something else
-		so Base Psych saves won't conflict with yours
-		@BeastlyGabi
-	**/
-	public static function getSavePath(folder:String = 'ShadowMario'):String {
-		@:privateAccess
-		return #if (flixel < "5.0.0") folder #else FlxG.stage.application.meta.get('company')
-			+ '/'
-			+ FlxSave.validate(FlxG.stage.application.meta.get('file')) #end;
-	}
+
+	inline public static function getSavePath(folder:String = ''):String
+		@:privateAccess return "ShadowMario/PsychEngine/" + folder;
 }

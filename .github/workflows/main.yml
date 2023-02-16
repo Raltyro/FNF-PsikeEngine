@@ -67,7 +67,7 @@ jobs:
         run: echo "${{github.run_id}}" > VERSION
       
       - name: Compile
-        run: haxelib run openfl build Project.xml linux -64 --app-version="4.0.0-${{ github.run_id}}"
+        run: haxelib run openfl build Project.xml linux -officialBuild -64 --app-version="4.0.0-${{ github.run_id}}"
       
       - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
@@ -128,7 +128,7 @@ jobs:
         run: echo "${{github.run_id}}" > VERSION
       
       - name: Compile
-        run: haxelib run openfl build windows -64 --app-version="4.0.0-${{ github.run_id}}"
+        run: haxelib run openfl build windows -officialBuild -64 --app-version="4.0.0-${{ github.run_id}}"
       
       - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4
@@ -187,7 +187,7 @@ jobs:
         run: echo "${{github.run_id}}" > VERSION
       
       - name: Compile
-        run: haxelib run lime build mac -64 --app-version="4.0.0-${{ github.run_id}}"
+        run: haxelib run lime build mac -officialBuild -64 --app-version="4.0.0-${{ github.run_id}}"
       
       - name: Publish Artifact 64-bit
         uses: actions/upload-artifact@v2.2.4

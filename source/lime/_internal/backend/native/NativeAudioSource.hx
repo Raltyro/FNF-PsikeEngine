@@ -270,6 +270,7 @@ class NativeAudioSource {
 			if (stream) time = Std.int((bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000);
 			else time = Std.int(samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000);
 			time -= parent.offset;
+			time %= inline getLength();
 
 			if (time > 0) return time;
 		}

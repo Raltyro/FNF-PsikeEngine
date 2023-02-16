@@ -108,6 +108,7 @@ class MusicBeatState extends FlxUIState {
 	private function rollbackSection():Void {
 		if (curStep <= 0) {
 			stepsToDo = 0;
+			if (curBeat < 1) sectionHit();
 			return updateSection();
 		}
 

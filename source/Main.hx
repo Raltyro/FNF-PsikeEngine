@@ -96,6 +96,7 @@ class Main extends Sprite {
 		FlxG.signals.focusLost.add(onFocusLost);
 
 		ClientPrefs.loadDefaultKeys();
+		ClientPrefs.bind();
 		addChild(new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 
 		//ScreenShotPlugin.screenshotKeys = screenshotKeys;
