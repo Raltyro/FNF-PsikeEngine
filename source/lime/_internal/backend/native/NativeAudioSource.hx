@@ -216,8 +216,15 @@ class NativeAudioSource {
 
 		var processed = AL.getSourcei(handle, AL.BUFFERS_PROCESSED);
 		if (processed > 0) {
-			if ((canFill = !canFill) && queuedBuffers < STREAM_NUM_BUFFERS) fillBuffers([buffers[++queuedBuffers - 1]]);
 			fillBuffers(AL.sourceUnqueueBuffers(handle, processed));
+			if ((canFill = !canFill) && queuedBuffers < STREAM_NUM_BUFFERS) {
+				if ((queuedBuffers = AL.getSourcei(handle, AL.BUFFERS_QUEUED)) >= STREAM_NUM_BUFFERS) {
+					var queued = AL.sourceUnqueueBuffers(handle, AL.BUFFERS_QUEUED), buffers = [];
+					for (buffer in queued) if (!buffers.contains(buffer)) buffers.push(buffer);
+					AL.sourceQueueBuffers(handle, buffers.length, buffers);
+				}
+				fillBuffers([buffers[++queuedBuffers - 1]]);
+			}
 		}
 		#end
 	}
