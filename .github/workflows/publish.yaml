@@ -55,14 +55,20 @@ jobs:
         if: ${{ matrix.build == 'debug' }}
         run: haxelib install hxcpp-debug-server --quiet
 
+      - name: Install Linux Distributes
+        if: ${{ matrix.compile == 'linux' }}
+        run: |
+          sudo apt-get install libvlc-dev
+          sudo apt-get install libvlccore-dev
+
       - name: Install Haxelibs
         run: haxe -cp update -D analyzer-optimize -main Update --interp
 
-      - name: Compile
+      - name: Compile (32-bit)
         if: ${{ matrix.build == '32bit' }}
         run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -32 -D HXCPP_M32
 
-      - name: Compile
+      - name: Compile (64-bit)
         if: ${{ matrix.build != '32bit' }}
         run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -64
 
@@ -71,15 +77,16 @@ jobs:
         with:
           name: ${{ matrix.compile }}-${{ matrix.build }}
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin
+          if-no-files-found: error
 
-      - name: Uploading artifact (executable)
+      - name: Uploading artifact (executable windows)
         if: ${{ matrix.compile == 'windows' }}
         uses: actions/upload-artifact@v2
         with:
           name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/CodenameEngine.exe
 
-      - name: Uploading artifact (executable)
+      - name: Uploading artifact (executable unix)
         if: ${{ matrix.compile != 'windows' }}
         uses: actions/upload-artifact@v2
         with:

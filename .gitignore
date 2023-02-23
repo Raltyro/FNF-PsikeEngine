@@ -1,11 +1,11 @@
 export/
+.haxelib/
 
 ### fucking macOS bloats
 *.DS_Store
 
 ### VS Code
 .vscode/*
-.haxelib/
 *.code-workspace
 
 # Local history which shouldn't be shared.
