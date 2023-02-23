@@ -1,6 +1,7 @@
 // https://github.com/YoshiCrafter29/CodenameEngine/blob/main/update/Update.hx
 
 import haxe.Json;
+import sys.io.File;
 import sys.FileSystem;
 
 typedef Library = {
