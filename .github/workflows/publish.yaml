@@ -84,14 +84,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
-          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/CodenameEngine.exe
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/PsikeEngine.exe
 
       - name: Uploading artifact (executable unix)
         if: ${{ matrix.compile != 'windows' }}
         uses: actions/upload-artifact@v2
         with:
           name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
-          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/CodenameEngine
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/PsikeEngine
 
       - name: Clearing already existing cache
         uses: actions/github-script@v6

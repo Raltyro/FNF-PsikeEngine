@@ -49,7 +49,7 @@ class Update {
 						else {
 							Sys.setCwd('${mainCwd}/${lib.dir}');
 							Sys.command('git clone --recurse-submodules ${lib.url} git');
-							if (!isHMM) Sys.command('haxelib set ${lib.name} git');
+							if (!isHMM) File.saveContent('.current', 'git');
 						}
 						Sys.setCwd(mainCwd);
 					default:
