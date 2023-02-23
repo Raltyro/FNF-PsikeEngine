@@ -1,0 +1,32 @@
+{
+	"dependencies": [
+		{"name": "lime", "type": "git", "dir": "lime",
+			"ref": "modified",
+			"url": "https://github.com/Raltyro/lime"
+		},
+		{"name": "openfl", "type": "git", "dir": "openfl",
+			"ref": "modified",
+			"url": "https://github.com/Raltyro/openfl"
+		},
+		{"name": "flixel", "type": "git", "dir": "flixel",
+			"ref": "dev",
+			"url": "https://github.com/Raltyro/flixel"
+		},
+		{"name": "flixel-tools", "type": "haxelib"},
+		{"name": "flixel-ui", "type": "haxelib"},
+		{"name": "flixel-addons", "type": "haxelib"},
+		{"name": "discord_rpc", "type": "git", "dir": "discord_rpc",
+			"ref": "master",
+			"url": "https://github.com/Aidan63/linc_discord-rpc"
+		},
+		{"name": "hxCodec", "type": "git", "dir": "hxCodec",
+			"ref": "main",
+			"url": "https://github.com/Raltyro/hxCodec"
+		},
+		{"name": "hscript", "type": "haxelib"},
+		{"name": "linc_luajit-ralt", "type": "git", "dir": "linc_luajit-ralt",
+			"ref": "ralf",
+			"url": "https://github.com/Raltyro/linc_luajit"
+		}
+	]
+}

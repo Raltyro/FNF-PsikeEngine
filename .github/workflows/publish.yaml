@@ -1,0 +1,142 @@
+name: Build
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        build: [release, debug]
+        include:
+          - os: ubuntu-latest
+            folder: linux
+            compile: linux
+
+          - os: macOS-latest
+            folder: macos
+            compile: mac
+
+          - os: windows-latest
+            folder: windows
+            compile: windows
+            build: 32bit
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: 4.2.5
+
+      - name: Restore action cache
+        uses: actions/cache@v3
+        with:
+          key: cache-${{ matrix.compile }}-${{ matrix.build }}
+          path: |
+            export/${{ matrix.build }}/${{ matrix.folder }}/haxe/
+            export/${{ matrix.build }}/${{ matrix.folder }}/obj/
+            .haxelib/
+
+      - name: Setup Haxelib
+        run: |
+          haxelib setup .haxelib/
+          haxelib install hxcpp --quiet
+          haxelib install format --quiet
+          haxelib install hxp --quiet
+
+      - name: Install hxcpp-debug-server
+        if: ${{ matrix.build == 'debug' }}
+        run: haxelib install hxcpp-debug-server --quiet
+
+      - name: Install Haxelibs
+        run: haxe -cp update -D analyzer-optimize -main Update --interp
+
+      - name: Compile
+        if: ${{ matrix.build == '32bit' }}
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -32 -D HXCPP_M32
+
+      - name: Compile
+        if: ${{ matrix.build != '32bit' }}
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -64
+
+      - name: Uploading artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.compile }}-${{ matrix.build }}
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin
+
+      - name: Uploading artifact (executable)
+        if: ${{ matrix.compile == 'windows' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/CodenameEngine.exe
+
+      - name: Uploading artifact (executable)
+        if: ${{ matrix.compile != 'windows' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/CodenameEngine
+
+      - name: Clearing already existing cache
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            })
+            for (const cache of caches.data.actions_caches) {
+              if (cache.key == "cache-${{ matrix.compile }}-${{ matrix.build }}") {
+                await github.rest.actions.deleteActionsCacheById({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  cache_id: cache.id,
+                })
+              }
+            }
+
+      - name: Uploading new cache
+        uses: actions/cache@v3
+        with:
+          key: cache-${{ matrix.compile }}-${{ matrix.build }}
+          path: |
+            export/${{ matrix.build }}/${{ matrix.folder }}/haxe/
+            export/${{ matrix.build }}/${{ matrix.folder }}/obj/
+            .haxelib/
+
+  upload:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+
+    - name: Delete tag and release
+      uses: dev-drprasad/delete-tag-and-release@v0.2.0
+      with:
+        delete_release: true
+        tag_name: nightly
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: nightly
+        name: nightly
+        prerelease: false
+        files: artifact/*
+        body: |
+          This is an automatic nightly build of Psike Engine
+          if you encounter any bugs in this build, please make an issue in the repo, it will be much appreciated, thank you!
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
