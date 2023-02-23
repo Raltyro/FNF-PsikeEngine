@@ -9,21 +9,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        compile: [linux, mac, windows]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        build: [release, debug]
+        build: [release, debug, 32bit]
         include:
-          - os: ubuntu-latest
+          - compile: linux
+            os: ubuntu-latest
             folder: linux
-            compile: linux
 
-          - os: macOS-latest
+          - compile: mac
+            os: macOS-latest
             folder: macos
-            compile: mac
 
-          - os: windows-latest
+          - compile: windows
+            os: windows-latest
             folder: windows
-            compile: windows
-            build: 32bit
 
     runs-on: ${{ matrix.os }}
 
