@@ -15,8 +15,9 @@ typedef Library = {
 class Update {
 	public static function main() {
 		if (!FileSystem.exists('.haxelib')) FileSystem.createDirectory('.haxelib');
+
+		var json:Array<Library> = Json.parse(File.getContent('./hmm.json')).dependencies;
 		Sys.println("Preparing installation...");
-		
 		for (lib in json) {
 			switch(lib.type) {
 				case "haxelib":
