@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Haxe
         uses: krdlab/setup-haxe@master
@@ -72,7 +72,7 @@ jobs:
         run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -64
 
       - name: Uploading artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.compile }}-${{ matrix.build }}
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin
@@ -80,14 +80,14 @@ jobs:
 
       - name: Uploading artifact (executable windows)
         if: ${{ matrix.compile == 'windows' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/PsikeEngine.exe
 
       - name: Uploading artifact (executable unix)
         if: ${{ matrix.compile != 'windows' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/PsikeEngine
