@@ -15,6 +15,11 @@ jobs:
           - compile: linux
             build: 32bit
 
+            #it seems that hxCodec does not let windows 32bit compile for some reason...
+            #ill try to fix it later
+          - compile: windows
+            build: 32bit
+
         include:
           - compile: linux
             os: ubuntu-latest
