@@ -11,6 +11,10 @@ jobs:
       matrix:
         compile: [linux, mac, windows]
         build: [release, debug, 32bit]
+        exclude:
+          - compile: linux
+            build: 32bit
+
         include:
           - compile: linux
             os: ubuntu-latest
@@ -86,7 +90,7 @@ jobs:
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/PsikeEngine.exe
 
       - name: Uploading artifact (executable unix)
-        if: ${{ matrix.compile != 'windows' }}
+        if: ${{ matrix.compile == 'linux' }}
         uses: actions/upload-artifact@v3
         with:
           name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
