@@ -127,31 +127,3 @@ jobs:
             export/${{ matrix.build }}/${{ matrix.folder }}/haxe/
             export/${{ matrix.build }}/${{ matrix.folder }}/obj/
             .haxelib/
-
-  upload:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v2
-
-    - name: Delete tag and release
-      uses: dev-drprasad/delete-tag-and-release@v0.2.0
-      with:
-        delete_release: true
-        tag_name: nightly
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: nightly
-        name: nightly
-        prerelease: false
-        files: artifact/*
-        body: |
-          This is an automatic nightly build of Psike Engine
-          if you encounter any bugs in this build, please make an issue in the repo, it will be much appreciated, thank you!
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
