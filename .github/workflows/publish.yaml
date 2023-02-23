@@ -10,7 +10,6 @@ jobs:
       fail-fast: false
       matrix:
         compile: [linux, mac, windows]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
         build: [release, debug, 32bit]
         include:
           - compile: linux
