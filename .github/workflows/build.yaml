@@ -33,10 +33,12 @@ jobs:
             os: windows-latest
             folder: windows
 
+    name: Build ${{ matrix.compile }}-${{ matrix.build }}
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Setup Haxe
         uses: krdlab/setup-haxe@master
@@ -63,13 +65,13 @@ jobs:
         if: ${{ matrix.build == 'debug' }}
         run: haxelib install hxcpp-debug-server --quiet
 
-      - name: Install Linux Distributes
+      - name: Install linux distributes
         if: ${{ matrix.compile == 'linux' }}
         run: |
           sudo apt-get install libvlc-dev
           sudo apt-get install libvlccore-dev
 
-      - name: Install Haxelibs
+      - name: Install haxelibs
         run: haxe -cp update -D analyzer-optimize -main Update --interp
 
       - name: Compile (32-bit)
@@ -127,3 +129,4 @@ jobs:
             export/${{ matrix.build }}/${{ matrix.folder }}/haxe/
             export/${{ matrix.build }}/${{ matrix.folder }}/obj/
             .haxelib/
+    

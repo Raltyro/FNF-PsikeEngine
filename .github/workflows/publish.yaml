@@ -1,0 +1,41 @@
+name: Publish Nightly Builds
+on:
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
+
+jobs:
+  publish:
+  	if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifacts
+      uses: dawidd6/download-workflow-artifact@v2.26.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        run_id: ${{ github.event.workflow_run.id }}
+        skip_unpack: true
+        path: ./artifacts
+
+    - name: Delete tag and release
+      uses: dev-drprasad/delete-tag-and-release@v0.2.0
+      with:
+        delete_release: true
+        tag_name: nightly
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: nightly
+        name: Nightly Build
+        prerelease: false
+        files: ./artifacts
+        body: |
+          This is an automatic nightly build of Psike Engine
+          if you encounter any bugs in this build, please make an issue in the repo, it will be much appreciated, thank you!
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
