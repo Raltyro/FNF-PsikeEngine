@@ -1,5 +1,6 @@
 name: Publish Nightly Builds
 on:
+  workflow_dispatch:
   workflow_run:
     workflows:
       - Build
@@ -33,7 +34,8 @@ jobs:
         tag_name: nightly
         name: Nightly Build
         prerelease: false
-        files: ./artifacts
+        draft: false
+        files: ./artifacts/*
         body: |
           This is an automatic nightly build of Psike Engine
           if you encounter any bugs in this build, please make an issue in the repo, it will be much appreciated, thank you!
