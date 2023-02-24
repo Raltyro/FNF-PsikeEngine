@@ -33,7 +33,7 @@ jobs:
             os: windows-latest
             folder: windows
 
-    name: Build ${{ matrix.compile }}-${{ matrix.build }}
+    name: ${{ matrix.compile }}-${{ matrix.build }} Job
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -70,6 +70,9 @@ jobs:
         run: |
           sudo apt-get install libvlc-dev
           sudo apt-get install libvlccore-dev
+          sudo apt-get install glibc-source
+          sudo apt-get install libidn12
+          sudo apt-get install libidn-dev
 
       - name: Install haxelibs
         run: haxe -cp update -D analyzer-optimize -main Update --interp
