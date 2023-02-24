@@ -1,4 +1,4 @@
-name: Build
+name: Nightly Builds
 on:
   workflow_dispatch:
   push:
@@ -13,6 +13,11 @@ jobs:
         build: [release, 32bit]
         exclude:
           - compile: linux
+            build: 32bit
+
+            #it seems that hxCodec does not let windows 32bit compile for some reason...
+            #ill try to fix it later
+          - compile: windows
             build: 32bit
 
         include:

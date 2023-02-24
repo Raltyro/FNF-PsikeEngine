@@ -1,9 +1,8 @@
 name: Publish Nightly Builds
 on:
-  workflow_dispatch:
   workflow_run:
     workflows:
-      - Build
+      - Nightly Builds
     types:
       - completed
 
@@ -32,7 +31,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: nightly
-        name: Nightly Build
+        name: Nightly Builds
         prerelease: false
         draft: false
         files: ./artifacts/*
