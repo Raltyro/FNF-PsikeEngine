@@ -35,12 +35,12 @@ class Update {
 				switch(lib.type) {
 					case "haxelib":
 						Sys.println('Installing "${lib.name}"...');   
-						var vers = lib.version != null ? " " + lib.version : "";          
+						var vers = lib.version != null ? lib.version : "";          
 						if (isHMM)
 							Sys.command('hmm haxelib ${lib.name} ${vers}');
 						else {
 							Sys.command('haxelib install ${lib.name} ${vers} --quiet');
-							File.saveContent('${lib.name}/.current', vers);
+							if (lib.version != null) File.saveContent('${lib.name}/.current', vers);
 						}
 					case "git":
 						if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
