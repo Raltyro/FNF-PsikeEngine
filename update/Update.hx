@@ -34,8 +34,14 @@ class Update {
 			for (lib in json) {
 				switch(lib.type) {
 					case "haxelib":
-						Sys.println('Installing "${lib.name}"...');             
-						Sys.command('haxelib install ${lib.name} ${lib.version != null ? " " + lib.version : " "} --quiet');
+						Sys.println('Installing "${lib.name}"...');   
+						var vers = lib.version != null ? " " + lib.version : "";          
+						if (isHMM)
+							Sys.command('hmm haxelib ${lib.name} ${vers}');
+						else {
+							Sys.command('haxelib install ${lib.name} ${vers} --quiet');
+							File.saveContent('${lib.name}/.current', vers);
+						}
 					case "git":
 						if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
 						else if (!isHMM && FileSystem.exists('${lib.dir}/dev')) continue;

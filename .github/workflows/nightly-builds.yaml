@@ -15,11 +15,6 @@ jobs:
           - compile: linux
             build: 32bit
 
-            #it seems that hxCodec does not let windows 32bit compile for some reason...
-            #ill try to fix it later
-          - compile: windows
-            build: 32bit
-
         include:
           - compile: linux
             os: ubuntu-latest
@@ -33,7 +28,7 @@ jobs:
             os: windows-latest
             folder: windows
 
-    name: ${{ matrix.compile }}-${{ matrix.build }} Job
+    name: ${{ matrix.compile }}-${{ matrix.build }}
     runs-on: ${{ matrix.os }}
 
     steps:
