@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         compile: [linux, mac, windows]
-        build: [release, 32bit]
+        build: [release, debug]
         exclude:
           - compile: linux
             build: 32bit
@@ -74,11 +74,11 @@ jobs:
 
       - name: Compile (32-bit)
         if: ${{ matrix.build == '32bit' }}
-        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -32 -D HXCPP_M32
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild
 
       - name: Compile (64-bit)
         if: ${{ matrix.build != '32bit' }}
-        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild -64
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -officialBuild
 
       - name: Uploading artifact
         uses: actions/upload-artifact@v3

@@ -2,9 +2,10 @@
 <project>
 	<!-- You can change what directory the game saves into in CoolUtil.hx > getSavePath -->
 
-	<haxedef name="HXCPP_M32" if="32bit || 32"/>
-	<haxedef name="32bit" if="HXCPP_M32"/>
-	<haxedef name="32bits" if="32bit"/>
+	<define name="HXCPP_M32" if="32bit || 32"/>
+	<define name="32bit" if="HXCPP_M32"/>
+	<define name="32bits" if="32bit"/>
+	<define name="64" unless="32bit"/>
 
 	<haxeflag name="--dce" value="no"/>
 
