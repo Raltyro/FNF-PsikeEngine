@@ -15,7 +15,7 @@
 	<define name="ACHIEVEMENTS_ALLOWED"/>
 
 	<!-- Enable Videos -->
-	<define name="VIDEOS_ALLOWED" if="desktop || mobile"/>
+	<define name="VIDEOS_ALLOWED" if="desktop || mobile" unless="32bit"/>
 
 	<!-- Enable Psych Title Screen Easter Egg -->
 	<define name="TITLE_SCREEN_EASTER_EGG"/>
@@ -30,8 +30,10 @@
 	<define name="LUA_ALLOWED" if="desktop"/>
 
 	<!-- DONT TOUCH -->
-	<define name="CRASH_HANDLER" if="desktop"/>
-	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
+	<section if="desktop">
+		<define name="CRASH_HANDLER"/>
+		<define name="CHECK_FOR_UPDATES" if="officialBuild"/>
+	</section>
 
 	<!-- __________________________ Psike Engine Flags __________________________ -->
 

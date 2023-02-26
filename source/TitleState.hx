@@ -310,7 +310,8 @@ class TitleState extends MusicBeatState {
 					}
 					#end
 
-					MusicBeatState.switchState(new MainMenuState());
+					if (ClientPrefs.checkForUpdates && CoolUtil.mustUpdate) MusicBeatState.switchState(new OutdatedState());
+					else MusicBeatState.switchState(new MainMenuState());
 					closedState = true;
 				});
 			}
@@ -418,15 +419,15 @@ class TitleState extends MusicBeatState {
 			switch(sickBeats++) {
 				case 0:
 					#if PSYCH_WATERMARKS
-					createCoolText(['Psych Engine by'], 15);
+					createCoolText(['Psych Engine by'], -15);
 					#else
 					createCoolText(['ninjamuffin99', 'phantomArcade', 'kawaisprite', 'evilsk8er']);
 					#end
 				case 3:
 					#if PSYCH_WATERMARKS
-					addMoreText('Shadow Mario', 15);
-					addMoreText('RiverOaken', 15);
-					addMoreText('shubs', 15);
+					addMoreText('Shadow Mario', -15);
+					addMoreText('RiverOaken', -15);
+					addMoreText('shubs', -15);
 					#else
 					addMoreText('present');
 					#end

@@ -17,32 +17,17 @@ class OutdatedState extends MusicBeatState
 {
 	public static var leftState:Bool = false;
 	
-	private static var outdatedForkText:String =
+	private static var outdatedText:String =
 	"Sup bro, looks like you're running an\n" +
-	"Outdated version of Raltyro's Psych Engine Fork (%curVer)\n" +
+	"Outdated version of Psike Engine (%curVer)\n" +
 	"Please Update to %updateVer\n\n" +
 	"Press ENTER to update\nPress ESCAPE to proceed anyway\n\n" +
 	"Thank you for using the Engine Fork!"
 	;
-	
-	private static var outdatedUpstreamText:String =
-	"Sup bro, looks like you're running an\n" +
-	"Outdated version of Psych Engine (%curVer)\n" +
-	"Please Update to %updateVer\n\n" +
-	"Press ENTER to update\nPress ESCAPE to proceed anyway\n\n" +
-	"Thank you for using the Engine!"
-	;
 
-	static function getOutdatedText(upstream:Bool):String {
-		if (upstream)
-			return outdatedUpstreamText.replace(
-				"%curVer", MainMenuState.psychEngineVersion.trim() + "-" + CoolUtil.gitCommitHash
-			).replace(
-				"%updateVer", CoolUtil.upstreamVersion
-			);
-		
-		return outdatedForkText.replace(
-			"%curVer", MainMenuState.psychEngineVersion.trim() + "-" + CoolUtil.gitCommitHash
+	static function getOutdatedText():String {
+		return outdatedText.replace(
+			"%curVer", MainMenuState.psikeEngineVersion.trim() + "-" + CoolUtil.gitCommitHash
 		).replace(
 			"%updateVer", CoolUtil.updateVersion
 		);
@@ -52,15 +37,13 @@ class OutdatedState extends MusicBeatState
 	override function create()
 	{
 		super.create();
-		
+
 		leftState = false;
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		add(bg);
-		
-		var upstream:Bool = CoolUtil.updateVersion != CoolUtil.upstreamVersion;
-		
-		warnText = new FlxText(0, 0, FlxG.width, getOutdatedText(upstream), 32);
+
+		warnText = new FlxText(0, 0, FlxG.width, getOutdatedText(), 32);
 		warnText.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER);
 		warnText.screenCenter(Y);
 		add(warnText);

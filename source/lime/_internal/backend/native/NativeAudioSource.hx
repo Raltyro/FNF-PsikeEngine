@@ -131,7 +131,7 @@ class NativeAudioSource {
 
 	private function readVorbisFileBuffer(vorbisFile:VorbisFile, length:Int):UInt8Array {
 		#if lime_vorbis
-		var buffer = bufferDatas[0], read = STREAM_NUM_BUFFERS - 1, total = 0, readMax;
+		var buffer = bufferDatas[STREAM_NUM_BUFFERS - queuedBuffers], read = STREAM_NUM_BUFFERS - 1, total = 0, readMax;
 		for (i in (STREAM_NUM_BUFFERS - queuedBuffers)...read) {
 			bufferTimeBlocks[i] = bufferTimeBlocks[i + 1];
 			bufferDatas[i] = bufferDatas[i + 1];

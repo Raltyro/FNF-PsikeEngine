@@ -17,15 +17,14 @@ class AdvancedSubstate extends BaseOptionsMenu
 	public function new()
 	{
 		title = 'Advanced';
-		rpcTitle = 'Advanced Settings Menu'; //for Discord Rich Presence
-		
+		rpcTitle = 'Advanced Settings Menu'; // for Discord Rich Presence
+
 		blackBG = new FlxSprite().makeGraphic(1, 1, 0xFF000000);
 		blackBG.setGraphicSize(FlxG.width, FlxG.height);
 		blackBG.updateHitbox();
 		blackBG.alpha = 0;
 		
-		coolText = new Alphabet(FlxG.width / 2, FlxG.height / 2, "", true);
-		coolText.startPosition.y += 20;
+		coolText = new Alphabet(FlxG.width / 2, (FlxG.height / 2) - 35, "", true);
 		coolText.alignment = CENTERED;
 		coolText.alpha = 0;
 		

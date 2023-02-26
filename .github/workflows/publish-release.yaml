@@ -1,0 +1,29 @@
+name: Publish Release Builds
+on:
+  workflow_run:
+    workflows:
+      - Release Builds
+    types:
+      - completed
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+    - name: Download artifacts
+      uses: dawidd6/action-download-artifact@v2.26.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        run_id: ${{ github.event.workflow_run.id }}
+        skip_unpack: true
+        path: ./artifacts
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: 0.6.3-p0.2.1
+        draft: true
+        files: ./artifacts/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

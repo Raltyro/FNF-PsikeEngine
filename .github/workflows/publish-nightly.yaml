@@ -36,7 +36,7 @@ jobs:
         draft: false
         files: ./artifacts/*
         body: |
-          This is an automatic nightly build of Psike Engine
-          if you encounter any bugs in this build, please make an issue in the repo, it will be much appreciated, thank you!
+          This is an automatic nightly release of Psike Engine
+          if you encounter any bugs in this release, please make an issue in the repo, it will be much appreciated, thank you!
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

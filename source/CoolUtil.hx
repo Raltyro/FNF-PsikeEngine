@@ -135,40 +135,14 @@ class CoolUtil {
 	public static var realUpdateVersion:String = null;
 	public static var updateVersion(get, null):String;
 	static function get_updateVersion():String
-		return realUpdateVersion != null ? realUpdateVersion : MainMenuState.psychEngineVersion.trim();
+		return realUpdateVersion != null ? realUpdateVersion : MainMenuState.psikeEngineVersion.trim();
 
 	public static function getUpdateVersion(?onComplete:String->Void) {
-		var http = new haxe.Http("https://raw.githubusercontent.com/Raltyro/FNF-PsychEngine/main/gitVersion.txt");
+		var http = new haxe.Http("https://raw.githubusercontent.com/Raltyro/FNF-PsikeEngine/main/psikeVersion.txt");
 
 		http.onData = function(data:String) {
 			realUpdateVersion = data.split('\n')[0].trim();
 			if (onComplete != null) onComplete(realUpdateVersion);
-		}
-
-		http.onError = function(error) {
-			trace('error: $error');
-			if (onComplete != null) onComplete(null);
-		}
-
-		http.request();
-	}
-
-	public static var realUpstreamVersion:String = null;
-	public static var upstreamVersion(get, null):String;
-	@:noCompletion inline static function get_upstreamVersion():String
-		return realUpstreamVersion != null ? realUpstreamVersion : MainMenuState.psychEngineVersion.trim();
-
-	public static function getUpstreamVersion(?onComplete:String->Void) {
-		if (realUpstreamVersion != null) {
-			onComplete(realUpstreamVersion);
-			return;
-		}
-
-		var http = new haxe.Http("https://raw.githubusercontent.com/Raltyro/FNF-PsikeEngine/main/psikeVersion.txt");
-
-		http.onData = function(data:String) {
-			realUpstreamVersion = data.split('\n')[0].trim();
-			if (onComplete != null) onComplete(realUpstreamVersion);
 		}
 
 		http.onError = function(error) {
@@ -193,20 +167,16 @@ class CoolUtil {
 			if (onComplete != null) onComplete(true);
 			return;
 		}
-		
+
 		getUpdateVersion(function(updateVersion:String) {
 			if (updateVersion != null) mustUpdate = updateVersion != MainMenuState.psikeEngineVersion.trim();
-			getUpstreamVersion(function(upstreamVersion:String) {
-				if (updateVersion != upstreamVersion) mustUpdate = true;
-				onComplete(mustUpdate);
-			});
+			onComplete(mustUpdate);
 		});
 	}
 	
 	public static function tryUpdate() {
 		CoolUtil.browserLoad("https://github.com/Raltyro/FNF-PsikeEngine");
 	}
-
 
 	inline public static function getSavePath(folder:String = ''):String
 		@:privateAccess return "ShadowMario/PsychEngine/" + folder;

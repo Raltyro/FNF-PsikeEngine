@@ -8,6 +8,9 @@ import lime.media.AudioSource;
 #if lime_cffi
 import lime._internal.backend.native.NativeAudioSource;
 #end
+#if lime_vorbis
+import lime.media.openal.AL;
+#end
 #end
 
 /**
@@ -176,25 +179,26 @@ import lime._internal.backend.native.NativeAudioSource;
 		var currentTime:Float = position;
 		if (!__checkUpdatePeaks(currentTime)) return;
 
-		var buffer = __source.buffer;
+		var buffer = __source.buffer, handle = __source.__backend.handle;
+		var bufferSize = NativeAudioSource.STREAM_BUFFER_SIZE, bufferNums = NativeAudioSource.STREAM_NUM_BUFFERS;
+		var bufferDatas = __source.__backend.bufferDatas, queuedBuffers = __source.__backend.queuedBuffers;
+		var bufferTimeBlocks = __source.__backend.bufferTimeBlocks;
 
 		// MS, NOT SECOND
-		var bufferTimeBlocks = __source.__backend.bufferTimeBlocks;
-		var khz:Float = (buffer.sampleRate / 1000), index:Int = Math.floor((currentTime - Math.floor(bufferTimeBlocks[0] * 1000)) * khz), samples:Int = 480;
+		var khz:Float = buffer.sampleRate / 1000, samples:Int = 480;
+		var index:Int = Math.floor(AL.getSourcef(handle, AL.SEC_OFFSET) * 1000 * khz);
 		if (index < 0) {
 			if ((samples -= index) < 1) return;
 			index = 0;
 		}
-
-		var bufferSize = NativeAudioSource.STREAM_BUFFER_SIZE;
-		var bufferDatas = __source.__backend.bufferDatas, bufferi:Int = Math.floor(index / bufferSize);
 
 		var channels:Int = buffer.channels, stereo:Bool = channels > 1;
 		var lfilled:Bool = false, rfilled:Bool = !stereo;
 		var lpeak:Float = 0, rpeak:Float = 0;
 		var sample:Float, rows:Int = 0;
 
-		var bytes = bufferDatas[bufferi].buffer;
+		var bufferi = bufferNums - queuedBuffers, bytes = bufferDatas[bufferi].buffer;
+
 		while(rows < samples) {
 			if (index >= bufferSize) {
 				if ((bytes = bufferDatas[++bufferi].buffer) == null) break;

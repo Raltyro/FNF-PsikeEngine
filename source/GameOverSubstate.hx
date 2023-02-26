@@ -184,8 +184,6 @@ class GameOverSubstate extends MusicBeatSubstate {
 		camFollow = new FlxPoint(bfMidPoint.x, bfMidPoint.y);
 
 		Conductor.changeBPM(100);
-		// camGame.followLerp = 1;
-		// camGame.focusOn(FlxPoint.get(FlxG.width / 2, FlxG.height / 2));
 		camGame.scroll.set();
 		camGame.target = null;
 
@@ -284,7 +282,6 @@ class GameOverSubstate extends MusicBeatSubstate {
 
 			if (boyfriend.animation.curAnim.finished && !playingDeathSound) {
 				if (PlayState.SONG.stage == 'tank') {
-					playingDeathSound = true;
 					coolStartDeath(0.2);
 					
 					var exclude:Array<Int> = [];
@@ -297,7 +294,7 @@ class GameOverSubstate extends MusicBeatSubstate {
 				else {
 					coolStartDeath();
 				}
-				boyfriend.startedDeath = true;
+				playingDeathSound = boyfriend.startedDeath = true;
 			}
 		}
 
