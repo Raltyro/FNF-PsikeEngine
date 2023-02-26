@@ -1,4 +1,4 @@
-name: Nightly Builds
+name: Build Nightly
 on:
   workflow_dispatch:
   push:

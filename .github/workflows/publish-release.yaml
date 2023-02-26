@@ -2,7 +2,7 @@ name: Publish Release Builds
 on:
   workflow_run:
     workflows:
-      - Release Builds
+      - Build Release
     types:
       - completed
 
