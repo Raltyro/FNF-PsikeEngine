@@ -13,7 +13,7 @@ class AdvancedSubstate extends BaseOptionsMenu
 	var blackBG:FlxSprite;
 	var coolText:Alphabet;
 	var timer:FlxTimer;
-	
+
 	public function new()
 	{
 		title = 'Advanced';
@@ -23,13 +23,13 @@ class AdvancedSubstate extends BaseOptionsMenu
 		blackBG.setGraphicSize(FlxG.width, FlxG.height);
 		blackBG.updateHitbox();
 		blackBG.alpha = 0;
-		
-		coolText = new Alphabet(FlxG.width / 2, (FlxG.height / 2) - 35, "", true);
+
+		coolText = new Alphabet(FlxG.width / 2, (FlxG.height / 2) - 25, "", true);
 		coolText.alignment = CENTERED;
 		coolText.alpha = 0;
-		
+
 		timer = new FlxTimer();
-		
+
 		var option:Option = new Option('Hardware Caching',
 			'If checked, the game will use GPU to store images for to maintain MEM usage. ' +
 			'Restart the game for to apply changes.' +

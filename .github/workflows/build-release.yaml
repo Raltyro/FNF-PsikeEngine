@@ -1,8 +1,6 @@
-name: Nightly Builds
+name: Release Builds
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
   build:
@@ -10,7 +8,11 @@ jobs:
       fail-fast: false
       matrix:
         compile: [linux, mac, windows]
-        build: [release, debug]
+        build: [release, 32bit]
+        exclude:
+          - compile: linux
+            build: 32bit
+
         include:
           - compile: linux
             os: ubuntu-latest
@@ -70,11 +72,11 @@ jobs:
 
       - name: Compile (32-bit)
         if: ${{ matrix.build == '32bit' }}
-        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -D 32
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -D officialBuild -D HXCPP_M32 -32
 
       - name: Compile (64-bit)
         if: ${{ matrix.build != '32bit' }}
-        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -D 64
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -D officialBuild -64
 
       - name: Uploading artifact
         uses: actions/upload-artifact@v3
