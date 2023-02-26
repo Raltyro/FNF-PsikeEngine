@@ -111,16 +111,6 @@ class Paths {
 		while(repeat-- > 0) _compress();
 	}
 
-
-	@:noCompletion public inline static function blocking(b:Bool) {
-		#if cpp
-		if (b) Gc.enterGCFreeZone();
-		else Gc.exitGCFreeZone();
-		#elseif hl
-		Gc.blocking(b);
-		#end
-	}
-
 	public static function decacheGraphic(key:String) {
 		var obj = currentTrackedAssets.get(key);
 		currentTrackedAssets.remove(key);
@@ -136,10 +126,8 @@ class Paths {
 				if (obj.bitmap != null) {
 					obj.bitmap.lock();
 					if (obj.bitmap.__texture != null) obj.bitmap.__texture.dispose();
-					blocking(true);
 					if (obj.bitmap.image != null) obj.bitmap.image.data = null;
 					obj.bitmap.disposeImage();
-					blocking(false);
 				}
 
 				obj.destroy();
@@ -159,10 +147,8 @@ class Paths {
 		if (obj != null) {
 			@:privateAccess{
 				if (obj.__buffer != null) {
-					blocking(true);
 					obj.__buffer.dispose();
 					obj.__buffer = null;
-					blocking(false);
 				}
 				obj = null;
 			}
