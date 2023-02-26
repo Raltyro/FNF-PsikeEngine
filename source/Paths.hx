@@ -27,8 +27,6 @@ import flash.media.Sound;
 import cpp.vm.Gc;
 #elseif hl
 import hl.Gc;
-#elseif java
-import java.vm.Gc;
 #elseif neko
 import neko.vm.Gc;
 #end
@@ -96,14 +94,12 @@ class Paths {
 		'music/tea-time.$SOUND_EXT',
 	];
 
-	private inline static function _compress():Void {
+	@:noCompletion private inline static function _compress():Void {
 		#if cpp
 		Gc.compact();
-		Gc.run(true);
-		//Gc.setMinimumWorkingMemory(totalMemory);
 		#elseif hl
 		Gc.major();
-		#elseif (java || neko)
+		#elseif neko
 		Gc.run(true);
 		#end
 	}
@@ -158,25 +154,20 @@ class Paths {
 		}
 	}
 
-	/// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory() {
-		// clear non local assets in the tracked assets list
 		for (key in currentTrackedAssets.keys()) {
-			// if it is not currently contained within the used local assets
-			if (!localTrackedAssets.contains(key)
-				&& !assetExcluded(key)) {
-				// get rid of it
+			if (!localTrackedAssets.contains(key) && !assetExcluded(key))
 				decacheGraphic(key);
-			}
 		}
 
-		// run the garbage collector for good measure lmfao
 		compress(3);
 	}
 
 	// define the locally tracked assets
 	public static var localTrackedAssets:Array<String> = [];
 	public static function clearStoredMemory(cleanUnused:Bool = false) {
+		#if cpp Gc.safePoint(); #end
+
 		// clear anything not in the tracked assets list
 		@:privateAccess
 		for (key in FlxG.bitmap._cache.keys()) {
