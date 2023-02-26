@@ -168,7 +168,6 @@ class Assets
 				bitmap.width, bitmap.height, Context3DTextureFormat.BGRA, true
 			);
 			texture.uploadFromBitmapData(bitmap);
-			#if cpp cpp.vm.Gc.safePoint(); #end
 			bitmap.image.data = null;
 			bitmap.dispose();
 			bitmap.disposeImage();

@@ -96,6 +96,7 @@ class Paths {
 
 	@:noCompletion private inline static function _compress():Void {
 		#if cpp
+		Gc.run(true);
 		Gc.compact();
 		#elseif hl
 		Gc.major();
@@ -108,6 +109,16 @@ class Paths {
 		if (repeat <= 1) return _compress();
 		if (repeat > 32) repeat = 32;
 		while(repeat-- > 0) _compress();
+	}
+
+
+	@:noCompletion public inline static function blocking(b:Bool) {
+		#if cpp
+		if (b) Gc.enterGCFreeZone();
+		else Gc.exitGCFreeZone();
+		#elseif hl
+		Gc.blocking(b);
+		#end
 	}
 
 	public static function decacheGraphic(key:String) {
@@ -125,8 +136,10 @@ class Paths {
 				if (obj.bitmap != null) {
 					obj.bitmap.lock();
 					if (obj.bitmap.__texture != null) obj.bitmap.__texture.dispose();
+					blocking(true);
 					if (obj.bitmap.image != null) obj.bitmap.image.data = null;
 					obj.bitmap.disposeImage();
+					blocking(false);
 				}
 
 				obj.destroy();
@@ -146,8 +159,10 @@ class Paths {
 		if (obj != null) {
 			@:privateAccess{
 				if (obj.__buffer != null) {
+					blocking(true);
 					obj.__buffer.dispose();
 					obj.__buffer = null;
+					blocking(false);
 				}
 				obj = null;
 			}
@@ -166,8 +181,6 @@ class Paths {
 	// define the locally tracked assets
 	public static var localTrackedAssets:Array<String> = [];
 	public static function clearStoredMemory(cleanUnused:Bool = false) {
-		#if cpp Gc.safePoint(); #end
-
 		// clear anything not in the tracked assets list
 		@:privateAccess
 		for (key in FlxG.bitmap._cache.keys()) {
