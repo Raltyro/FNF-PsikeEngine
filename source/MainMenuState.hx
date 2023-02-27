@@ -26,7 +26,7 @@ using StringTools;
 class MainMenuState extends MusicBeatState
 {
 	public static var psychEngineVersion:String = '0.6.3';
-	public static var psikeEngineVersion:String = '0.2.1';
+	public static var psikeEngineVersion:String = '0.2.2';
 	public static var curSelected:Int = 0;
 
 	var menuItems:FlxTypedGroup<FlxSprite>;

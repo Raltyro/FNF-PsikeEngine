@@ -2937,14 +2937,14 @@ class PlayState extends MusicBeatState {
 		updateStage(elapsed);
 
 		if (startedCountdown) {
-			var dt = elapsed * 1000;
+			var dt = elapsed * 1000 * playbackRate;
 			if (!startingSong && FlxG.sound.music.playing) {
 				var ticks = FlxG.sound.music.time - lastSongTime;
 				lastSongTime = FlxG.sound.music.time;
 				if (ticks < dt && ticks > 0) dt = ticks;
 			}
 
-			Conductor.songPosition += dt * playbackRate;
+			Conductor.songPosition += dt;
 		}
 
 		if (!inCutscene) {
