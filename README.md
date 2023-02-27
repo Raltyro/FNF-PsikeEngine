@@ -1,6 +1,6 @@
 ### ill rework readme later
 
-# Friday Night Funkin' Raltyro Fork
+# Friday Night Funkin' - Psike Engine
 Psych Engine Fork that included bugfixes, minor QOL features, and performance to make the game runs better.
 
 ## Fork Installation:
