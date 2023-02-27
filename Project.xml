@@ -15,7 +15,7 @@
 	<define name="ACHIEVEMENTS_ALLOWED"/>
 
 	<!-- Enable Videos -->
-	<define name="VIDEOS_ALLOWED" if="desktop || mobile" unless="32bit"/>
+	<!-- <define name="VIDEOS_ALLOWED" if="desktop || mobile" unless="32bit"/> -->
 
 	<!-- Enable Psych Title Screen Easter Egg -->
 	<define name="TITLE_SCREEN_EASTER_EGG"/>
