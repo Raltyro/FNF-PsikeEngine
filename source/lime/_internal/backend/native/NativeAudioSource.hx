@@ -277,8 +277,10 @@ class NativeAudioSource {
 			var time;
 			if (stream) time = (bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000;
 			else time = samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000;
+			time -= parent.offset;
+			time %= inline getLength() + 1;
 
-			if ((time -= parent.offset) > 0) return time;
+			if (time > 0) return time;
 		}
 		return 0;
 	}
