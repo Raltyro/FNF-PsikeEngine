@@ -178,6 +178,6 @@ class CoolUtil {
 		CoolUtil.browserLoad("https://github.com/Raltyro/FNF-PsikeEngine");
 	}
 
-	inline public static function getSavePath(folder:String = ''):String
-		@:privateAccess return "ShadowMario/PsychEngine/" + folder;
+	inline public static function getSavePath(folder:String = '', prefix:String = 'ShadowMario/PsychEngine'):String
+		return prefix + '/' + folder;
 }

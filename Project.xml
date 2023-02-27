@@ -40,6 +40,9 @@
 	<!-- Remove Default FNF Assets so no 100mb additional in assets folder -->
 	<!-- <define name="NO_ASSETSFNF"/> -->
 
+	<!-- Merge user savedata with the current psych savedata if no game/mod savedata found -->
+	<define name="MERGE_PSYCH_DATA"/>
+
 	<!-- _________________________ Application Settings _________________________ -->
 
 	<app title="Friday Night Funkin': Psike Engine" file="PsikeEngine" version="0.2.8" company="Raltyro"/>

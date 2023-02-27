@@ -4786,6 +4786,8 @@ class PlayState extends MusicBeatState {
 		FunkinLua.hscript = null;
 		#end
 
+		for (name => save in modchartSaves) save.close();
+
 		@:privateAccess
 		if (Std.isOfType(FlxG.game._requestedState, PlayState)) {
 			if (FlxG.sound.music != null) FlxG.sound.music.destroy();

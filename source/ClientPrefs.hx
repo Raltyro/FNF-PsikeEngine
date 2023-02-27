@@ -133,46 +133,57 @@ class ClientPrefs {
 		"gameplaySettings",
 	];
 
-	public static function saveSettings() {
-		for (i in stringsToSave)
-			Reflect.setField(FlxG.save.data, i, Reflect.field(ClientPrefs, i));
+	public static var saveControls:FlxSave = new FlxSave();
 
+	public static function saveSettings() {
+		for (i in stringsToSave) Reflect.setField(FlxG.save.data, i, Reflect.field(ClientPrefs, i));
 		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
 		FlxG.save.data.henchmenDeath = Achievements.henchmenDeath;
 
-		FlxG.save.flush();
+		saveControls.data.customControls = keyBinds;
 
-		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2', CoolUtil.getSavePath("ninjamuffin99")); //Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
-		save.data.customControls = keyBinds;
-		save.flush();
+		FlxG.save.flush();
+		saveControls.flush();
 
 		FlxG.log.add("Settings saved!");
 	}
 
-	inline public static function bind()
-		FlxG.save.bind('funkin', CoolUtil.getSavePath("ninjamuffin99"));
+	inline public static function bind() {
+		final savePath = CoolUtil.getSavePath("ninjamuffin99");
+		final psychPath = CoolUtil.getSavePath("ninjamuffin99", 'ShadowMario/PsychEngine');
+
+		FlxG.save.bind('funkin', savePath);
+		saveControls.bind('controls_v2', savePath);
+
+		#if MERGE_PSYCH_DATA
+		if (FlxG.save.isEmpty() && savePath != psychPath) {
+			final oldSave = new FlxSave();
+
+			if (oldSave.bind('funkin', psychPath)) FlxG.save.mergeData(oldSave.data);
+			if (oldSave.bind('controls_v2', psychPath)) saveControls.mergeData(oldSave.data);
+
+			oldSave.destroy();
+		}
+		#end
+	}
 
 	public static function loadPrefs() {
 		bind();
 
 		var v:Any;
-		for (i in stringsToSave)
-		{
-			v = Reflect.field(FlxG.save.data, i);
-			if (v != null)
-			{
-				if (!stringsNotToLoad.contains(i))
-					Reflect.setField(ClientPrefs, i, v);
+		for (i in stringsToSave) {
+			if ((v = Reflect.field(FlxG.save.data, i)) != null) {
+				if (!stringsNotToLoad.contains(i)) Reflect.setField(ClientPrefs, i, v);
 
-				switch (i)
-				{
-					#if !html5
-					case "autoPause":
+				switch(i) {
+					#if (!html5)
+					case "autoPause": {
 						FlxG.autoPause = FlxG.save.data.autoPause;
+					}
 					#end
-					case "framerate":
-						if(framerate > FlxG.drawFramerate) {
+
+					case "framerate": {
+						if (framerate > FlxG.drawFramerate) {
 							FlxG.updateFramerate = framerate;
 							FlxG.drawFramerate = framerate;
 						}
@@ -180,47 +191,40 @@ class ClientPrefs {
 							FlxG.drawFramerate = framerate;
 							FlxG.updateFramerate = framerate;
 						}
-					case "gameplaySettings":
+					}
+
+					case "gameplaySettings": {
 						var savedMap:Map<String, Dynamic> = FlxG.save.data.gameplaySettings;
 						try for (name => value in savedMap) {
 							gameplaySettings.set(name, value);
 						}
-						catch (exception)trace("Gameplay Settings are null!");
-					case "hardwareCache":
-						if (!isHardCInited) {
-							Paths.hardwareCache = hardwareCache;
-							isHardCInited = true;
-						}
-					case "streamMusic":
-						if (!isStreMInited) {
-							Paths.streamMusic = streamMusic;
-							isStreMInited = true;
-						}
+						catch(exception)
+							trace("Gameplay Settings are null!");
+					}
+
+					case "hardwareCache": if (!isHardCInited) {
+						Paths.hardwareCache = hardwareCache;
+						isHardCInited = true;
+					}
+
+					case "streamMusic": if (!isStreMInited) {
+						Paths.streamMusic = streamMusic;
+						isStreMInited = true;
+					}
 				}
 			}
 		}
 
-		#if !html5
-		if(FlxG.save.data.framerate == null) {
-			var refreshRate:Int = Application.current.window.displayMode.refreshRate;
-			if(framerate != refreshRate) {
-				framerate = refreshRate;
-				if(framerate < 60) {
-					framerate = 60;
-				} else if(framerate > 240) {
-					framerate = 240;
-				}
-			}
+		#if (!html5)
+		if (FlxG.save.data.framerate == null) {
+			var refreshRate = Application.current.window.displayMode.refreshRate;
+			if (framerate != refreshRate) framerate = Math.floor(CoolUtil.boundTo(refreshRate, 60, 240));
 		}
 		#end
 
-		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2', CoolUtil.getSavePath("ninjamuffin99"));
-		if(save != null && save.data.customControls != null) {
-			var loadedControls:Map<String, Array<FlxKey>> = save.data.customControls;
-			for (control => keys in loadedControls) {
-				keyBinds.set(control, keys);
-			}
+		if (saveControls.data.customControls != null) {
+			var loadedControls:Map<String, Array<FlxKey>> = saveControls.data.customControls;
+			for (control => keys in loadedControls) keyBinds.set(control, keys);
 			reloadControls();
 		}
 	}
