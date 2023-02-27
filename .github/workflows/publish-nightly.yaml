@@ -33,7 +33,6 @@ jobs:
         tag_name: nightly
         name: Nightly Builds
         prerelease: false
-        draft: false
         files: ./artifacts/*
         body: |
           This is an automatic nightly release of Psike Engine

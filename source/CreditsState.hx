@@ -68,7 +68,7 @@ class CreditsState extends MusicBeatState
 		['Stilic',				'stilic',			'Sustains Length Fix',											'https://twitter.com/stilic_dev',			'E7A13F'],
 		[''],
 		['Special Thanks'],
-		['TheWorldMachinima',	'twmniko',			'Softcoded ClientPrefs',										'https://github.com/TheWorldMachinima',		'F3F3F3'],
+		['TheWorldMachinima',	'twm',				'Softcoded ClientPrefs',										'https://github.com/TheWorldMachinima',		'F3F3F3'],
 		['UnholyWanderer',		'unholy',			'Game Over Quotes',												'https://gamebanana.com/members/1908754',	'566ECE'],
 		['happyforever/cutzye',	'cutzye',			'Game Over Quotes',												'https://twitter.com/happyisntfunny',		'F3F3F3'],
 		['Betopia',				'betpowo',			'Game Over Quotes',												'https://twitter.com/betpowo',				'F3F3F3'],
