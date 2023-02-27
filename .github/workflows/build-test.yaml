@@ -1,0 +1,59 @@
+name: Build Test
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        compile: [windows]
+        build: [release, 32bit]
+        include:
+          - compile: windows
+            os: windows-latest
+            folder: windows
+
+    name: ${{ matrix.compile }}-${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: 4.2.5
+
+      - name: Setup Haxelib
+        run: |
+          haxelib setup .haxelib/
+          haxelib install hxcpp --quiet
+          haxelib install format --quiet
+          haxelib install hxp --quiet
+
+      - name: Install haxelibs
+        run: haxe -cp update -D analyzer-optimize -main Update --interp
+
+      - name: Compile (32-bit)
+        if: ${{ matrix.build == '32bit' }}
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -D officialBuild -D HXCPP_M32 -32
+
+      - name: Compile (64-bit)
+        if: ${{ matrix.build != '32bit' }}
+        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -D officialBuild -64
+
+      - name: Uploading artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.compile }}-${{ matrix.build }}
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin
+          if-no-files-found: error
+
+      - name: Uploading artifact (executable windows)
+        uses: actions/upload-artifact@v3
+        with:
+          name: executableOnly-${{ matrix.compile }}-${{ matrix.build }}
+          path: export/${{ matrix.build }}/${{ matrix.folder }}/bin/PsikeEngine.exe
+    
