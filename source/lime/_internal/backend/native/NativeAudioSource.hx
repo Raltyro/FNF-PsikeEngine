@@ -33,8 +33,8 @@ class NativeAudioSource {
 	private var queuedBuffers:Int;
 	private var canFill:Bool;
 
-	private var length:Null<Int>;
-	private var loopTime:Null<Int>;
+	private var length:Null<Float>;
+	private var loopTime:Null<Float>;
 	private var playing:Bool;
 	private var loops:Int;
 	private var position:Vector4;
@@ -49,6 +49,7 @@ class NativeAudioSource {
 	private var parent:AudioSource;
 	private var timer:Timer;
 	private var streamTimer:Timer;
+	private var disposed:Bool;
 
 	public function new(parent:AudioSource) {
 		this.parent = parent;
@@ -56,6 +57,8 @@ class NativeAudioSource {
 	}
 
 	public function dispose():Void {
+		disposed = true;
+
 		if (handle != null) {
 			AL.sourcei(handle, AL.BUFFER, null);
 			AL.deleteSource(handle);
@@ -71,7 +74,7 @@ class NativeAudioSource {
 	public function init():Void {
 		parent.buffer.initBuffer();
 
-		handle = AL.createSource();
+		disposed = (handle = AL.createSource()) == null;
 		format = parent.buffer.__format;
 		bufferLoops = 0;
 
@@ -90,21 +93,21 @@ class NativeAudioSource {
 		}
 		else {
 			dataLength = parent.buffer.data.length;
-			if (handle != null) AL.sourcei(handle, AL.BUFFER, parent.buffer.__srcBuffer);
+			if (!disposed) AL.sourcei(handle, AL.BUFFER, parent.buffer.__srcBuffer);
 		}
 
 		samples = Std.int((dataLength * 8) / (parent.buffer.channels * parent.buffer.bitsPerSample));
 	}
 
 	public function play():Void {
-		if (playing || handle == null) return;
+		if (playing || disposed) return;
 
 		playing = true;
 		setCurrentTime(completed ? 0 : getCurrentTime());
 	}
 
 	public function pause():Void {
-		if (handle != null) AL.sourcePause(handle);
+		if (!(disposed = (handle == null))) AL.sourcePause(handle);
 
 		playing = false;
 		stopStreamTimer();
@@ -112,7 +115,7 @@ class NativeAudioSource {
 	}
 
 	public function stop():Void {
-		if (playing && handle != null && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
+		if (playing && !(disposed = (handle == null)) && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
 			AL.sourceStop(handle);
 
 		bufferLoops = 0;
@@ -212,7 +215,7 @@ class NativeAudioSource {
 	private function streamTimer_onRun():Void {
 		#if lime_vorbis
 		var vorbisFile;
-		if (handle == null || (vorbisFile = parent.buffer.__srcVorbisFile) == null) return;
+		if (disposed = (handle == null) || (vorbisFile = parent.buffer.__srcVorbisFile) == null) return;
 
 		var processed = AL.getSourcei(handle, AL.BUFFERS_PROCESSED);
 		if (processed > 0) {
@@ -263,29 +266,25 @@ class NativeAudioSource {
 		}
 
 		loops--;
-		setCurrentTime(loopTime != null ? Std.int(Math.max(0, loopTime)) : 0);
+		setCurrentTime(loopTime != null ? Math.max(0, loopTime) : 0);
 		parent.onLoop.dispatch();
 	}
 
 	// Get & Set Methods
-	public function getCurrentTime():Int {
+	public function getCurrentTime():Float {
 		if (completed) return getLength();
-		else if (handle != null) {
+		else if (!disposed) {
 			var time;
+			if (stream) time = (bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000;
+			else time = samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000;
 
-			queuedBuffers = AL.getSourcei(handle, AL.BUFFERS_QUEUED);
-			if (stream) time = Std.int((bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000);
-			else time = Std.int(samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000);
-			time -= parent.offset;
-			time %= inline getLength();
-
-			if (time > 0) return time;
+			if ((time -= parent.offset) > 0) return time;
 		}
 		return 0;
 	}
 
-	public function setCurrentTime(value:Int):Int {
-		if (handle == null) return value;
+	public function setCurrentTime(value:Float):Float {
+		if (disposed = (handle == null)) return value;
 
 		var total = samples / parent.buffer.sampleRate * 1000;
 		var time = Math.max(0, Math.min(total, value + parent.offset)), ratio = time / total;
@@ -298,11 +297,10 @@ class NativeAudioSource {
 
 			#if lime_vorbis
 			var vorbisFile = parent.buffer.__srcVorbisFile;
-			if (vorbisFile != null) {
+			if (canFill = (vorbisFile != null)) {
 				//var chunk = Std.int(Math.floor(samples * ratio / STREAM_BUFFER_SIZE) * STREAM_BUFFER_SIZE);
 				vorbisFile.pcmSeek(Std.int(samples * ratio));
 
-				canFill = true;
 				fillBuffers(buffers.slice(0, queuedBuffers = 3));
 				//AL.sourcei(handle, AL.SAMPLE_OFFSET, Std.int((samples * ratio) - chunk));
 				if (playing) resetStreamTimer();
@@ -322,14 +320,15 @@ class NativeAudioSource {
 				resetTimer(timeRemaining);
 			}
 		}
+
 		return value;
 	}
 
-	public function getLength():Int {
+	public function getLength():Float {
 		if (length != null) return length - parent.offset;
-		return Std.int(samples / parent.buffer.sampleRate * 1000) - parent.offset;
+		return (samples / parent.buffer.sampleRate * 1000) - parent.offset;
 	}
-	public function setLength(value:Int):Int {
+	public function setLength(value:Float):Float {
 		if (value == length) return value;
 		if (playing) {
 			var timeRemaining = Std.int(((value - parent.offset) - getCurrentTime()) / getPitch());
@@ -339,12 +338,12 @@ class NativeAudioSource {
 	}
 
 	public function getPitch():Float {
-		if (handle != null) return AL.getSourcef(handle, AL.PITCH);
+		if (!disposed) return AL.getSourcef(handle, AL.PITCH);
 		return 1;
 	}
 
 	public function setPitch(value:Float):Float {
-		if (handle == null || value == getPitch()) return value;
+		if (disposed || value == getPitch()) return value;
 		AL.sourcef(handle, AL.PITCH, value);
 
 		if (playing) {
@@ -355,12 +354,12 @@ class NativeAudioSource {
 	}
 
 	public function getGain():Float {
-		if (handle == null) return 1;
+		if (disposed) return 1;
 		return AL.getSourcef(handle, AL.GAIN);
 	}
 
 	public function setGain(value:Float):Float {
-		if (handle != null) AL.sourcef(handle, AL.GAIN, value);
+		if (!disposed) AL.sourcef(handle, AL.GAIN, value);
 		return value;
 	}
 
@@ -368,15 +367,15 @@ class NativeAudioSource {
 
 	inline public function setLoops(value:Int):Int return loops = value;
 
-	inline public function getLoopTime():Int return loopTime;
+	inline public function getLoopTime():Float return loopTime;
 
-	inline public function setLoopTime(value:Int):Int return loopTime = value;
+	inline public function setLoopTime(value:Float):Float return loopTime = value;
 
 	#if emscripten
 	inline public function getPosition():Vector4 return position;
 	#else
 	public function getPosition():Vector4 {
-		if (handle != null) {
+		if (!disposed) {
 			var value = AL.getSource3f(handle, AL.POSITION);
 			position.x = value[0];
 			position.y = value[1];
@@ -392,7 +391,7 @@ class NativeAudioSource {
 		position.z = value.z;
 		position.w = value.w;
 
-		if (handle != null) {
+		if (!disposed) {
 			AL.distanceModel(AL.NONE);
 			AL.source3f(handle, AL.POSITION, position.x, position.y, position.z);
 		}

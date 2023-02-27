@@ -1015,7 +1015,7 @@ class FlxSound extends FlxBasic
 	inline function set_loopTime(v:Float):Float
 	{
 		#if !flash
-		if (playing) _channel.loopTime = Std.int(v);
+		if (playing) _channel.loopTime = v;
 		#end
 		return loopTime = v;
 	}
@@ -1024,7 +1024,7 @@ class FlxSound extends FlxBasic
 	{
 		#if !flash
 		if (playing) {
-			if (v != null && v > 0) _channel.endTime = Std.int(v);
+			if (v != null && v > 0) _channel.endTime = v;
 			else _channel.endTime = null;
 		}
 		#end

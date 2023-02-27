@@ -72,8 +72,8 @@ import lime.media.openal.AL;
 	/**
 		self explanatory
 	*/
-	public var loopTime(get, set):Int;
-	public var endTime(get, set):Null<Int>;
+	public var loopTime(get, set):Float;
+	public var endTime(get, set):Null<Float>;
 	public var pitch(get, set):Float;
 	public var loops(get, set):Int;
 
@@ -365,7 +365,7 @@ import lime.media.openal.AL;
 		#end
 	}
 
-	@:noCompletion private function get_loopTime():Int
+	@:noCompletion private function get_loopTime():Float
 	{
 		if (!__isValid) return -1;
 
@@ -376,7 +376,7 @@ import lime.media.openal.AL;
 		#end
 	}
 
-	@:noCompletion private function set_loopTime(value:Int):Int
+	@:noCompletion private function set_loopTime(value:Float):Float
 	{
 		if (!__isValid) return -1;
 
@@ -387,7 +387,7 @@ import lime.media.openal.AL;
 		#end
 	}
 
-	@:noCompletion private function get_endTime():Null<Int>
+	@:noCompletion private function get_endTime():Null<Float>
 	{
 		if (!__isValid) return null;
 
@@ -398,7 +398,7 @@ import lime.media.openal.AL;
 		#end
 	}
 
-	@:noCompletion private function set_endTime(value:Null<Int>):Null<Int>
+	@:noCompletion private function set_endTime(value:Null<Float>):Null<Float>
 	{
 		if (!__isValid) return null;
 

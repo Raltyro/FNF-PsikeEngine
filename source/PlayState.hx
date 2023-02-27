@@ -2861,16 +2861,14 @@ class PlayState extends MusicBeatState {
 		super.closeSubState();
 	}
 
-	override public function onFocus():Void
-	{
+	override public function onFocus():Void {
 		if (health > 0 && !paused)
 			changeDiscordPresence(false, true);
 
 		super.onFocus();
 	}
 
-	override public function onFocusLost():Void
-	{
+	override public function onFocusLost():Void {
 		if (health > 0 && !paused) {
 			cleanupLuas();
 			if (!ClientPrefs.autoPausePlayState || !tryPause())
@@ -2880,9 +2878,9 @@ class PlayState extends MusicBeatState {
 		super.onFocusLost();
 	}
 
-	function resyncVocals(resync:Bool = true):Void
-	{
+	function resyncVocals(resync:Bool = true):Void {
 		if (finishTimer != null || (transitioning && endingSong)) return;
+		var dt = (FlxG.game.ticks - previousFrameTime) * getActualPlaybackRate(), prev = Conductor.songPosition;
 		FlxG.sound.music.pitch = playbackRate;
 
 		if (Conductor.songPosition <= vocals.length) {
@@ -2894,16 +2892,18 @@ class PlayState extends MusicBeatState {
 					FlxG.sound.music.pause();
 					vocals.pause();
 				}
-				vocals.time = Conductor.songPosition = FlxG.sound.music.time;
+				Conductor.songPosition = vocals.time = FlxG.sound.music.time;
 			}
 			else
-				Conductor.songPosition = FlxG.sound.music.time;
+				Conductor.songPosition = FlxG.sound.music.time + Conductor.offset;
 
 			vocals.play();
 		}
 		else
-			Conductor.songPosition = FlxG.sound.music.time;
+			Conductor.songPosition = FlxG.sound.music.time + Conductor.offset;
 
+		var diff = prev - Conductor.songPosition;
+		if (diff < dt / 2 && diff >= 0) Conductor.songPosition = prev;
 		FlxG.sound.music.play();
 	}
 
@@ -2912,6 +2912,7 @@ class PlayState extends MusicBeatState {
 	var startedCountdown:Bool = false;
 	var canPause:Bool = true;
 	var limoSpeed:Float = 0;
+	var lastSongTime:Float = 0;
 
 	override function update(elapsed:Float) {
 		/*if (FlxG.keys.justPressed.NINE) {
@@ -2935,7 +2936,16 @@ class PlayState extends MusicBeatState {
 
 		updateStage(elapsed);
 
-		if (startedCountdown) Conductor.songPosition += elapsed * 1000 * playbackRate;
+		if (startedCountdown) {
+			var dt = elapsed * 1000;
+			if (!startingSong && FlxG.sound.music.playing) {
+				var ticks = FlxG.sound.music.time - lastSongTime;
+				lastSongTime = FlxG.sound.music.time;
+				if (ticks < dt && ticks > 0) dt = ticks;
+			}
+
+			Conductor.songPosition += dt * playbackRate;
+		}
 
 		if (!inCutscene) {
 			var lerpVal:Float = CoolUtil.boundTo(elapsed * 2.4 * cameraSpeed * playbackRate, 0, 1);
