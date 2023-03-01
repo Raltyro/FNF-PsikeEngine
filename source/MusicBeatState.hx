@@ -45,6 +45,20 @@ class MusicBeatState extends FlxUIState {
 		super();
 	}
 
+	var updatedMusicBeat:Bool = false;
+	public function updateMusicBeat() {
+		prevDecStep = curDecStep;
+		prevStep = curStep;
+
+		prevDecBeat = curDecBeat;
+		prevBeat = curBeat;
+
+		updateCurStep();
+		updateBeat();
+
+		updatedMusicBeat = true;
+	}
+
 	override function create() {
 		if (curBPMChange != null && curBPMChange.bpm != Conductor.bpm) curBPMChange = Conductor.getDummyBPMChange();
 		var skip = FlxTransitionableState.skipNextTransOut;
@@ -65,16 +79,8 @@ class MusicBeatState extends FlxUIState {
 		super.destroy();
 	}
 
-	override function update(elapsed:Float):Void {
-		prevDecStep = curDecStep;
-		prevStep = curStep;
-
-		prevDecBeat = curDecBeat;
-		prevBeat = curBeat;
-
-		updateCurStep();
-		updateBeat();
-
+	override function update(elapsed:Float) {
+		if (!updatedMusicBeat) updateMusicBeat();
 		if (prevStep != curStep) {
 			if (curStep > 0 || !isPlayState) stepHit();
 			if (passedSections == null) passedSections = [];
@@ -83,6 +89,7 @@ class MusicBeatState extends FlxUIState {
 			else
 				rollbackSection();
 		}
+		updatedMusicBeat = false;
 
 		if (FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
 		super.update(elapsed);

@@ -217,6 +217,12 @@ class NativeAudioSource {
 		var vorbisFile;
 		if (disposed = (handle == null) || (vorbisFile = parent.buffer.__srcVorbisFile) == null) return;
 
+		if (bufferLoops <= 0) {
+			var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
+			if (length != null) samples = Std.int((length + parent.offset) / 1000 * sampleRate);
+			if (position >= samples - 2048 || queuedBuffers <= 1) Std.int((getLength() - getCurrentTime()) / getPitch());
+		}
+
 		var processed = AL.getSourcei(handle, AL.BUFFERS_PROCESSED);
 		if (processed > 0) {
 			fillBuffers(AL.sourceUnqueueBuffers(handle, processed));
@@ -233,7 +239,7 @@ class NativeAudioSource {
 	}
 
 	private function timer_onRun():Void {
-		if (playing && bufferLoops <= 0) {
+		if (bufferLoops <= 0) {
 			var ranOut = false;
 			#if lime_vorbis
 			var vorbisFile;
@@ -278,7 +284,6 @@ class NativeAudioSource {
 			if (stream) time = (bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000;
 			else time = samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000;
 			time -= parent.offset;
-			time %= inline getLength() + 1;
 
 			if (time > 0) return time;
 		}

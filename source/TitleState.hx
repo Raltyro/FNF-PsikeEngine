@@ -77,6 +77,18 @@ class TitleState extends MusicBeatState {
 		// Load the gf json shit for titlescreen
 		titleJSON = Json.parse(Paths.getTextFromFile('images/gfDanceTitle.json'));
 
+		var customTitleColors = [], rawTitleColors;
+		if (titleJSON.titleColors != null && (rawTitleColors = titleJSON.titleColors.split(',')).length > 1) {
+			for (v in rawTitleColors) customTitleColors.push(Std.parseInt(v.startsWith('0x') ? v : '0xff${v}'));
+			titleTextColors = customTitleColors;
+		}
+
+		var customTitleAlphas = [], rawTitleAlphas;
+		if (titleJSON.titleAlphas != null && (rawTitleAlphas = titleJSON.titleAlphas.split(',')).length > 1) {
+			for (v in rawTitleAlphas) customTitleAlphas.push(Std.parseFloat(v));
+			titleTextAlphas = customTitleAlphas;
+		}
+
 		// IGNORE THIS!!
 		#if TITLE_SCREEN_EASTER_EGG
 		if (FlxG.save.data.psychDevsEasterEgg == null) FlxG.save.data.psychDevsEasterEgg = '';

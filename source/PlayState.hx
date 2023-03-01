@@ -2880,7 +2880,6 @@ class PlayState extends MusicBeatState {
 
 	function resyncVocals(resync:Bool = true):Void {
 		if (finishTimer != null || (transitioning && endingSong)) return;
-		var prev = Conductor.songPosition;
 		FlxG.sound.music.pitch = playbackRate;
 
 		if (Conductor.songPosition <= vocals.length) {
@@ -2892,7 +2891,7 @@ class PlayState extends MusicBeatState {
 					FlxG.sound.music.pause();
 					vocals.pause();
 				}
-				Conductor.songPosition = (lastSongTime = vocals.time = FlxG.sound.music.time) + Conductor.offset;
+				Conductor.songPosition = (vocals.time = FlxG.sound.music.time) + Conductor.offset;
 			}
 			else
 				Conductor.songPosition = lastSongTime + Conductor.offset;
@@ -2902,8 +2901,13 @@ class PlayState extends MusicBeatState {
 		else
 			Conductor.songPosition = lastSongTime + Conductor.offset;
 
-		var diff = prev - Conductor.songPosition;
-		if (diff < songElapsed && diff >= 0) Conductor.songPosition = prev;
+		var diff = lastSongTime - Conductor.songPosition;
+		if (diff < songElapsed && diff >= 0) {
+			var v = Conductor.songPosition;
+			Conductor.songPosition = lastSongTime;
+			lastSongTime = v;
+		}
+		else lastSongTime = Conductor.songPosition;
 		FlxG.sound.music.play();
 	}
 
@@ -2919,8 +2923,34 @@ class PlayState extends MusicBeatState {
 		/*if (FlxG.keys.justPressed.NINE) {
 			iconP1.swapOldIcon();
 		}*/
-		
+
+		if (FlxG.sound.music.playing) {
+			var time = FlxG.sound.music.time + (elapsed * FlxG.sound.music.getActualPitch());
+			songElapsed = time - lastSongTime;
+			lastSongTime = time;
+		}
+
 		callOnLuas('onUpdate', [elapsed]);
+
+		updateMusicBeat();
+		setOnLuas('curDecStep', curDecStep);
+		setOnLuas('curDecBeat', curDecBeat);
+		setOnLuas('curStep', curStep);
+		setOnLuas('curBeat', curBeat);
+		setOnLuas('curSection', curSection);
+
+		if (startedCountdown) {
+			var delta = elapsed * 1000 * playbackRate;
+			if (!startingSong && FlxG.sound.music.playing && songElapsed > 0)
+				Conductor.songPosition = lastSongTime;
+			else
+				Conductor.songPosition += delta;
+		}
+		if (lastStepHit != curStep && !paused && !startingSong) {
+			var resync:Bool = vocals.loaded && Math.abs(vocals.time - FlxG.sound.music.time) > (vocals.vorbis == null ? 6 : 12);
+			if (Math.abs(lastSongTime - Conductor.songPosition) > 16 || resync)
+				resyncVocals(resync);
+		}
 
 		if (controls.PAUSE)
 			tryPause();
@@ -2936,18 +2966,6 @@ class PlayState extends MusicBeatState {
 		}
 
 		updateStage(elapsed);
-
-		if (startedCountdown) {
-			var dt = elapsed * 1000 * playbackRate;
-			Conductor.songPosition += dt;
-
-			if (FlxG.sound.music.playing) {
-				var time = FlxG.sound.music.time;
-				songElapsed = time - lastSongTime;
-				lastSongTime = time;
-				if (!startingSong && songElapsed > 0) Conductor.songPosition = time;
-			}
-		}
 
 		if (!inCutscene) {
 			var lerpVal:Float = CoolUtil.boundTo(elapsed * 2.4 * cameraSpeed * playbackRate, 0, 1);
@@ -2969,14 +2987,9 @@ class PlayState extends MusicBeatState {
 
 		super.update(elapsed);
 
-		//FlxG.watch.addQuick("VOLLeft", vocals.amplitudeLeft);
-		//FlxG.watch.addQuick("VOLRight", vocals.amplitudeRight);
 		FlxG.watch.addQuick("secShit", curSection);
 		FlxG.watch.addQuick("beatShit", curBeat);
 		FlxG.watch.addQuick("stepShit", curStep);
-
-		setOnLuas('curDecStep', curDecStep);
-		setOnLuas('curDecBeat', curDecBeat);
 
 		if (startingSong) {
 			if (startedCountdown && Conductor.songPosition >= 0)
@@ -3015,8 +3028,8 @@ class PlayState extends MusicBeatState {
 		}
 
 		if (camZooming) {
-			FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, CoolUtil.boundTo(1 - (elapsed * 3.125 * camZoomingDecay * playbackRate), 0, 1));
-			camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, CoolUtil.boundTo(1 - (elapsed * 3.125 * camZoomingDecay * playbackRate), 0, 1));
+			camGame.zoom = FlxMath.lerp(camGame.zoom, defaultCamZoom, CoolUtil.boundTo(elapsed * 3.125 * camZoomingDecay * playbackRate, 0, 1));
+			camHUD.zoom = FlxMath.lerp(camHUD.zoom, 1, CoolUtil.boundTo(elapsed * 3.125 * camZoomingDecay * playbackRate, 0, 1));
 		}
 
 		if (botplayTxt.visible) {
@@ -3024,8 +3037,7 @@ class PlayState extends MusicBeatState {
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (health > 2)
-			health = 2;
+		if (health > 2)health = 2;
 
 		// RESET = Quick Game Over Screen
 		if (!ClientPrefs.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong) {
@@ -4826,22 +4838,11 @@ class PlayState extends MusicBeatState {
 
 	var lastStepHit:Int = -1;
 	override function stepHit() {
-		setOnLuas('curDecStep', curDecStep);
-		setOnLuas('curDecBeat', curDecBeat);
-		setOnLuas('curStep', curStep);
-		setOnLuas('curBeat', curBeat);
-		setOnLuas('curSection', curSection);
 		super.stepHit();
 
-		if (!paused && !startingSong) {
-			var resync:Bool = vocals.loaded && Math.abs(vocals.time - FlxG.sound.music.time) > (vocals.vorbis == null ? 6 : 12);
-			if ((songElapsed <= 0 && Math.abs(lastSongTime - (Conductor.songPosition - Conductor.offset)) > 16) || resync)
-				resyncVocals(resync);
-		}
-
 		if (curStep == lastStepHit) return;
-
 		lastStepHit = curStep;
+
 		callOnLuas('onStepHit');
 	}
 
