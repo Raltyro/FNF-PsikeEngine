@@ -902,92 +902,68 @@ class FlxSound extends FlxBasic
 	}
 
 	inline function get_playing():Bool
-	{
 		@:privateAccess return _channel != null #if !flash && _channel.__isValid && _channel.__source.playing #end;
-	}
 
 	inline function get_volume():Float
-	{
 		return _volume;
-	}
 
-	function set_volume(Volume:Float):Float
-	{
+	function set_volume(Volume:Float):Float {
 		_volume = FlxMath.bound(Volume, 0, 1);
 		updateTransform();
 		return _volume;
 	}
 
 	inline function get_loaded():Bool
-	{
 		return #if lime buffer != null #else _sound != null #end;
-	}
 
 	#if lime
 	inline function get_buffer():AudioBuffer
-	{
 		@:privateAccess return (_sound != null) ? _sound.__buffer : null;
-	}
 
 	#if lime_vorbis
 	inline function get_vorbis():VorbisFile
-	{
 		@:privateAccess return (buffer != null) ? buffer.__srcVorbisFile : null;
+	#end
+
+	#if !flash
+	function update_amplitude():Void @:privateAccess {
+		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return;
+		_channel.__updatePeaks();
+
+		_amplitudeUpdate = false;
+		_amplitudeLeft = _channel.__leftPeak;
+		_amplitudeRight = _channel.__rightPeak;
+		_amplitudeTime = _time;
+	}
+
+	inline function get_amplitudeLeft():Float {
+		update_amplitude();
+		return _amplitudeLeft;
+	}
+
+	inline function get_amplitudeRight():Float {
+		update_amplitude();
+		return _amplitudeRight;
+	}
+
+	inline function get_amplitude():Float {
+		update_amplitude();
+		return if (stereo) (_amplitudeLeft + _amplitudeRight) * 0.5; else _amplitudeLeft;
 	}
 	#end
 
 	inline function get_channels():Int
-	{
 		@:privateAccess return (buffer != null) ? buffer.channels : 0;
-	}
 
 	inline function get_stereo():Bool
-	{
 		return channels > 1;
-	}
-
-	#if !flash
-	function update_amplitude():Bool
-	{
-		if (_channel == null || _time == _amplitudeTime || !_amplitudeUpdate) return true;
-		@:privateAccess{
-			_channel.__updatePeaks();
-
-			_amplitudeLeft = _channel.__leftPeak;
-			_amplitudeRight = _channel.__rightPeak;
-		}
-
-		_amplitudeTime = _time;
-		_amplitudeUpdate = false;
-		return true;
-	}
-
-	inline function get_amplitudeLeft():Float
-	{
-		return update_amplitude() ? _amplitudeLeft : 0.0;
-	}
-
-	inline function get_amplitudeRight():Float
-	{
-		return update_amplitude() ? _amplitudeRight : 0.0;
-	}
-
-	inline function get_amplitude():Float
-	{
-		return (update_amplitude() && stereo) ? (_amplitudeLeft + _amplitudeRight) * 0.5 : _amplitudeLeft;
-	}
-	#end
-
 	#end
 
 	#if FLX_PITCH
 	inline function get_pitch():Float
-	{
 		return _pitch;
-	}
 
-	function set_pitch(v:Float):Float
-	{
+	function set_pitch(v:Float):Float {
 		var adjusted:Float = FlxMath.bound(v * _timeScaleAdjust, 0);
 		if (_channel != null && _realPitch != adjusted) {
 			if ((_channel.pitch = adjusted) > 0 && _realPitch <= 0) {
@@ -1001,8 +977,7 @@ class FlxSound extends FlxBasic
 	}
 	#end
 
-	inline function set_looped(v:Bool):Bool
-	{
+	inline function set_looped(v:Bool):Bool {
 		#if !flash
 		if (playing) {
 			if (v) _channel.loops = 999;
@@ -1012,16 +987,14 @@ class FlxSound extends FlxBasic
 		return looped = v;
 	}
 
-	inline function set_loopTime(v:Float):Float
-	{
+	inline function set_loopTime(v:Float):Float {
 		#if !flash
 		if (playing) _channel.loopTime = v;
 		#end
 		return loopTime = v;
 	}
 
-	inline function set_endTime(v:Null<Float>):Null<Float>
-	{
+	inline function set_endTime(v:Null<Float>):Null<Float> {
 		#if !flash
 		if (playing) {
 			if (v != null && v > 0) _channel.endTime = v;
@@ -1032,38 +1005,28 @@ class FlxSound extends FlxBasic
 	}
 
 	inline function get_pan():Float
-	{
 		return _transform.pan;
-	}
 
 	inline function set_pan(pan:Float):Float
-	{
 		return _transform.pan = pan;
-	}
 
 	inline function get_time():Float
-	{
 		return (playing && _realPitch > 0) ? _time = _channel.position : _time;
-	}
 
-	function set_time(time:Float):Float
-	{
+	function set_time(time:Float):Float @:privateAccess {
 		time = FlxMath.bound(time, 0, length - 1);
-		if (_channel != null && _realPitch > 0)
-		{
+		if (_channel != null && _realPitch > 0) {
 			#if flash
 			cleanup(false, true);
 			startSound(time);
 			#else
-			@:privateAccess{
-				if (!_channel.__isValid) {
-					cleanup(false, true);
-					startSound(time);
-				}
-				else if (playing) {
-					_channel.__source.offset = 0;
-					_channel.__source.currentTime = Std.int(time);
-				}
+			if (!_channel.__isValid) {
+				cleanup(false, true);
+				startSound(time);
+			}
+			else if (playing) {
+				_channel.__source.offset = 0;
+				_channel.__source.currentTime = Std.int(time);
 			}
 			#end
 		}
@@ -1071,12 +1034,9 @@ class FlxSound extends FlxBasic
 	}
 
 	inline function get_length():Float
-	{
 		return _length;
-	}
 
-	override public function toString():String
-	{
+	override public function toString():String {
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("playing", playing),
 			LabelValuePair.weak("time", _time),
