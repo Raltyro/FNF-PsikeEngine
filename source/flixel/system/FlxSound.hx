@@ -532,8 +532,9 @@ class FlxSound extends FlxBasic
 		pitch = 1;
 		#end
 		if (_sound != null) {
+			#if flash
 			_length = _sound.length;
-			#if !flash
+			#else
 			makeChannel();
 			#end
 		}
@@ -546,10 +547,11 @@ class FlxSound extends FlxBasic
 
 	#if !flash
 	function makeChannel()
-	@:privateAccess{
+	@:privateAccess {
 		var source = new lime.media.AudioSource(_sound.__buffer);
 		source.gain = 0;
 
+		_length = source.length;
 		_channel = new SoundChannel(null, _transform);
 		_channel.__source = source;
 		_channel.__source.onComplete.add(_channel.source_onComplete);
