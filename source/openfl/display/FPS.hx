@@ -1,6 +1,7 @@
 package openfl.display;
 
 import haxe.Timer;
+import haxe.Int64;
 import openfl.display.BlendMode;
 import openfl.events.Event;
 import openfl.text.TextField;
@@ -67,12 +68,29 @@ class FPS extends TextField {
 	public var showGLStats:Bool = false;
 	public var inEditor:Bool = false;
 
+	public var borderSize:Int = 1;
+
+	// Border Original Codes by @sayofthelor, i just did some clean-up and patches thats all :P
+	@:noCompletion private final borders:Array<TextField> = new Array<TextField>();
+
 	@:noCompletion private var cacheCount:Int;
 	@:noCompletion private var currentTime:Float;
 	@:noCompletion private var times:Array<Float>;
 
-	public function new(x:Float = 3, y:Float = 3, color:Int = 0x000000, showFPS:Bool = true, showMem:Bool = false) {
+	public function new(x:Float = 3, y:Float = 3, color:Int = 0, showFPS:Bool = true, showMem:Bool = false) {
 		super();
+
+		var border:TextField;
+		for (i in 0...8) {
+			borders.push(border = new TextField());
+			border.selectable = false;
+			border.mouseEnabled = false;
+			border.autoSize = LEFT;
+			border.multiline = true;
+			border.width = 800;
+			border.height = 70;
+		}
+
 		this.x = x;
 		this.y = y;
 
@@ -80,11 +98,9 @@ class FPS extends TextField {
 		mouseEnabled = false;
 
 		defaultTextFormat = new TextFormat('assets/fonts/vcr.ttf', 14, color);
-		//blendMode = BlendMode.INVERT;
 		autoSize = LEFT;
 		multiline = true;
-		//alpha = .8;
-		width = 400;
+		width = 800;
 		height = 70;
 
 		currentFPS = 0;
@@ -100,6 +116,40 @@ class FPS extends TextField {
 			__enterFrame(Lib.getTimer());
 		});
 		#end
+		addEventListener(Event.REMOVED, function(_) {
+			for (border in borders) this.parent.removeChild(border);
+		});
+		addEventListener(Event.ADDED, function(_) {
+			for (border in borders) this.parent.addChildAt(border, this.parent.getChildIndex(this));
+		});
+	}
+
+	@:noCompletion override function set_visible(value:Bool):Bool {
+		for (border in borders) border.visible = value;
+		return super.set_visible(value);
+	}
+
+	@:noCompletion override function set_defaultTextFormat(value:TextFormat):TextFormat {
+		for (border in borders) {
+			border.defaultTextFormat = value;
+			border.textColor = 0xFF000000;
+		}
+		return super.set_defaultTextFormat(value);
+	}
+
+	@:noCompletion override function set_x(x:Float):Float {
+		for (i in 0...8) borders[i].x = x + ([0, 3, 5].contains(i) ? borderSize : [2, 4, 7].contains(i) ? -borderSize : 0);
+		return super.set_x(x);
+	}
+
+	@:noCompletion override function set_y(y:Float):Float {
+		for (i in 0...8) borders[i].y = y + ([0, 1, 2].contains(i) ? borderSize : [5, 6, 7].contains(i) ? -borderSize : 0);
+		return super.set_y(y);
+	}
+
+	@:noCompletion override function set_text(text:String):String {
+		for (border in borders) border.text = text;
+		return super.set_text(text);
 	}
 
 	@:noCompletion
@@ -129,11 +179,11 @@ class FPS extends TextField {
 			return;
 		}
 
-		currentGcMem = Math.abs((get_gcMemory() / 1024) / 1000);
+		currentGcMem = cast(Int64.make(0, get_gcMemory()), Float) / 0x400 / 0x400;
 		if (currentGcMem > currentGcMemPeak) currentGcMemPeak = currentGcMem;
 		#if (windows || linux || mac)
-		currentMem = Math.abs((get_totalMemory() / 1024) / 1000);
-		var memPeak:Float = Math.abs((get_memPeak() / 1024) / 1000);
+		currentMem = cast(Int64.make(0, get_totalMemory()), Float) / 0x400 / 0x400;
+		var memPeak:Float = cast(Int64.make(0, get_memPeak()), Float) / 0x400 / 0x400;
 		if (memPeak > currentMemPeak) currentMemPeak = memPeak;
 		if (currentMem > currentMemPeak) currentMemPeak = currentMem;
 		#else
@@ -141,9 +191,10 @@ class FPS extends TextField {
 		currentMemPeak = currentGcMemPeak;
 		#end
 
-		if (currentMem > 3000 || fps <= ClientPrefs.framerate / 2) textColor = 0xFFFF0000;
+		if (currentMem > 2000 || fps <= ClientPrefs.framerate / 2) textColor = 0xFFFF0000;
 		else textColor = 0xFFFFFFFF;
 
+		// This looks shit... T᎔T
 		text = (
 			(showFPS ? ('FPS: ${currentFPS}' + #if !flash ' | ' + Math.round(1000 / deltaTime) + #end ' (${CoolUtil.truncateFloat((1 / currentCount) * 1000)}ms)\n') : "") +
 			(
@@ -176,7 +227,6 @@ class FPS extends TextField {
 				: ""
 			)
 		);
-		text += "\n";
 
 		if (inEditor) {
 			y = (Lib.current.stage.stageHeight - 3) - (
@@ -191,7 +241,7 @@ class FPS extends TextField {
 		else
 			y = 3;
 	}
-	
+
 	public static function get_gcMemory():Int {
 		return
 			#if cpp
@@ -261,7 +311,7 @@ class FPS extends TextField {
 	#end
 	public static function get_memPeak():Int return 0;
 	#else
-	public static function get_memPeak():Int return 0;
+	inline public static function get_memPeak():Int return currentMemPeak;
 	
 	inline public static function get_totalMemory():Int return get_gcMemory();
 	#end

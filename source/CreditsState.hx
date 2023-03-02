@@ -68,12 +68,13 @@ class CreditsState extends MusicBeatState
 		['Stilic',				'stilic',			'Sustains Length Fix',											'https://twitter.com/stilic_dev',			'E7A13F'],
 		[''],
 		['Special Thanks'],
-		['TheWorldMachinima',	'twm',				'Softcoded ClientPrefs',										'https://github.com/TheWorldMachinima',		'F3F3F3'],
+		['TheWorldMachinima',	'twm',				'Softcoded ClientPrefs',										'https://github.com/TheWorldMachinima',		'7B6D92'],
+		['Kirbitus',			'kirbitus',			'Cool Friend :)',												'https://gamebanana.com/members/1853621',	'F3F3F3'],
+		['sayofthelor',			'sayof',			'Border FPS Counter',											'https://github.com/sayofthelor',			'F3F3F3'],
 		['UnholyWanderer',		'unholy',			'Game Over Quotes',												'https://gamebanana.com/members/1908754',	'566ECE'],
 		['happyforever/cutzye',	'cutzye',			'Game Over Quotes',												'https://twitter.com/happyisntfunny',		'F3F3F3'],
 		['Betopia',				'betpowo',			'Game Over Quotes',												'https://twitter.com/betpowo',				'F3F3F3'],
-		['shrimpsketti#7483',	'unknown',			'Game Over Quotes',												'',											'F3F3F3'],
-		['Kirbitus',			'kirbitus',			'Cool Artist Friend',											'https://gamebanana.com/members/1853621',	'FFFFFF'],
+		['shrimpsketti#7483',	'parappa',			'Game Over Quotes',												'',											'F3F3F3'],
 	];
 
 	private static var funkin(default, never):Array<Array<String>> = [
