@@ -86,7 +86,6 @@ class Paths {
 		return false;
 	}
 
-	public static var disableCount:Int = 0;
 	public static var dumpExclusions:Array<Dynamic> = [];
 	public static var keyExclusions:Array<String> = [
 		'music/freakyMenu.$SOUND_EXT',
