@@ -733,7 +733,7 @@ class PlayState extends MusicBeatState {
 		}
 
 		Paths.clearUnusedMemory();
-		Paths.compress(6);
+		Paths.compress();
 
 		changeDiscordPresence("Starting");
 		startSpecificSongPost(songName);

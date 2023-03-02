@@ -171,6 +171,7 @@ class Assets
 			bitmap.image.data = null;
 			bitmap.dispose();
 			bitmap.disposeImage();
+			Paths.gc(false);
 
 			bitmap = BitmapData.fromTexture(texture);
 		}

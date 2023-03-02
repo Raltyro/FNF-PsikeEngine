@@ -74,7 +74,7 @@ class MusicBeatState extends FlxUIState {
 		previousStateClass = cast stateClass;
 		persistentUpdate = false;
 		passedSections = null;
-		Paths.compress(2);
+		Paths.compress();
 
 		super.destroy();
 	}

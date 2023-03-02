@@ -222,7 +222,7 @@ class TitleState extends MusicBeatState {
 
 		blackScreen = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 
-		Paths.compress(8);
+		Paths.compress();
 	}
 
 	function startIntro(?_) {
