@@ -2925,7 +2925,7 @@ class PlayState extends MusicBeatState {
 		}*/
 
 		if (FlxG.sound.music.playing) {
-			var time = FlxG.sound.music.time + (elapsed * FlxG.sound.music.getActualPitch());
+			var time = FlxG.sound.music.time;
 			songElapsed = time - lastSongTime;
 			lastSongTime = time;
 		}

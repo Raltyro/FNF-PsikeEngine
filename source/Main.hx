@@ -97,7 +97,10 @@ class Main extends Sprite {
 
 		ClientPrefs.loadDefaultKeys();
 		ClientPrefs.bind();
+
+		fpsVar = new FPS(3, 3, 0xFFFFFF);
 		addChild(new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		addChild(fpsVar);
 
 		//ScreenShotPlugin.screenshotKeys = screenshotKeys;
 		//FlxG.plugins.add(new ScreenShotPlugin());
@@ -137,9 +140,6 @@ class Main extends Sprite {
 			if (FlxG.save.data.fullscreen != null) FlxG.fullscreen = FlxG.save.data.fullscreen;
 			if (FlxG.save.data.weekCompleted != null) StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 		}
-
-		fpsVar = new FPS(3, 3, 0xFFFFFF);
-		addChild(fpsVar);
 
 		fpsVar.showFPS = ClientPrefs.showFPS;
 		fpsVar.showMem = ClientPrefs.showMem;
