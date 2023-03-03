@@ -2918,6 +2918,7 @@ class PlayState extends MusicBeatState {
 	var limoSpeed:Float = 0;
 	var lastSongTime:Float = 0;
 	var songElapsed:Float = 0;
+	var syncDebounce:Float = 0;
 
 	override function update(elapsed:Float) {
 		/*if (FlxG.keys.justPressed.NINE) {
@@ -2932,25 +2933,27 @@ class PlayState extends MusicBeatState {
 
 		callOnLuas('onUpdate', [elapsed]);
 
-		updateMusicBeat();
-		setOnLuas('curDecStep', curDecStep);
-		setOnLuas('curDecBeat', curDecBeat);
-		setOnLuas('curStep', curStep);
-		setOnLuas('curBeat', curBeat);
-		setOnLuas('curSection', curSection);
-
 		if (startedCountdown) {
 			var delta = elapsed * 1000 * playbackRate;
 			if (!startingSong && FlxG.sound.music.playing && songElapsed > 0)
 				Conductor.songPosition = lastSongTime;
 			else
 				Conductor.songPosition += delta;
+
+			if (!paused && !startingSong && (syncDebounce += elapsed) > 1) {
+				syncDebounce = 0;
+				var resync = vocals.loaded && Math.abs(vocals.time - FlxG.sound.music.time) > (vocals.vorbis == null ? 6 : 12);
+				if (Math.abs(lastSongTime - Conductor.songPosition) > 16 || resync)
+					resyncVocals(resync);
+			}
 		}
-		if (lastStepHit != curStep && !paused && !startingSong) {
-			var resync:Bool = vocals.loaded && Math.abs(vocals.time - FlxG.sound.music.time) > (vocals.vorbis == null ? 6 : 12);
-			if (Math.abs(lastSongTime - Conductor.songPosition) > 16 || resync)
-				resyncVocals(resync);
-		}
+
+		updateMusicBeat();
+		setOnLuas('curDecStep', curDecStep);
+		setOnLuas('curDecBeat', curDecBeat);
+		setOnLuas('curStep', curStep);
+		setOnLuas('curBeat', curBeat);
+		setOnLuas('curSection', curSection);
 
 		if (controls.PAUSE)
 			tryPause();
