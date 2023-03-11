@@ -18,12 +18,12 @@ class AudioSource {
 	public var loops(get, set):Int;
 	public var loopTime(get, set):Float;
 	public var pitch(get, set):Float;
-	public var offset:Int;
+	public var offset:Float;
 	public var position(get, set):Vector4;
 
 	@:noCompletion private var __backend:AudioSourceBackend;
 
-	public function new(buffer:AudioBuffer = null, offset:Int = 0, length:Null<Int> = null, loops:Int = 0) {
+	public function new(buffer:AudioBuffer = null, offset:Float = 0, length:Null<Float> = null, loops:Int = 0) {
 		this.buffer = buffer;
 		this.offset = offset;
 
@@ -85,10 +85,10 @@ class AudioSource {
 		return #if flash 0 #else __backend.setLoopTime(value) #end;
 
 	@:noCompletion inline private function get_pitch():Float
-		return #if flash 0 #else __backend.getPitch() #end;
+		return #if flash 1 #else __backend.getPitch() #end;
 
 	@:noCompletion inline private function set_pitch(value:Float):Float
-		return #if flash 0 #else __backend.setPitch(Math.max(0, value)) #end;
+		return #if flash value #else __backend.setPitch(Math.max(0, value)) #end;
 
 	@:noCompletion inline private function get_position():Vector4
 		return __backend.getPosition();

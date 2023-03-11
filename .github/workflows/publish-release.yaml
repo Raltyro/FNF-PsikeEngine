@@ -22,7 +22,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: 0.6.3-p0.2.3
+        tag_name: 0.6.3-p0.2.4
         draft: true
         files: ./artifacts/*
       env:

@@ -1,16 +1,16 @@
 package openfl.media;
 
 #if !flash
+import haxe.Int64;
+
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
+
 #if lime
 import lime.media.AudioSource;
-#if lime_cffi
-import lime._internal.backend.native.NativeAudioSource;
-#end
-#if lime_vorbis
-import lime.media.openal.AL;
-#end
+
+#if lime_cffi import lime._internal.backend.native.NativeAudioSource; #end
+#if lime_vorbis import lime.media.openal.AL; #end
 #end
 
 /**
@@ -30,7 +30,6 @@ import lime.media.openal.AL;
 #if (lime && lime_cffi)
 @:access(lime._internal.backend.native.NativeAudioSource)
 @:access(lime.media.AudioSource)
-@:access(lime.media.AudioBuffer)
 #end
 @:access(openfl.media.SoundMixer)
 @:final @:keep class SoundChannel extends EventDispatcher
@@ -165,6 +164,8 @@ import lime.media.openal.AL;
 
 	// hi i made these - raltyro
 	// took me 8 months to figure this out
+	@:noCompletion inline private static var scanSamples = 480;
+
 	#if (lime_cffi && !macro)
 	@:noCompletion private function __checkUpdatePeaks(time:Float):Bool
 	{
@@ -176,54 +177,33 @@ import lime.media.openal.AL;
 	#if lime_vorbis
 	@:noCompletion private function __updateVorbisPeaks():Void
 	{
-		var currentTime:Float = position;
-		if (!__checkUpdatePeaks(currentTime)) return;
+		if (__source.buffer == null || !__checkUpdatePeaks(position)) return;
 
-		var buffer = __source.buffer, handle = __source.__backend.handle;
-		var bufferSize = NativeAudioSource.STREAM_BUFFER_SIZE, bufferNums = NativeAudioSource.STREAM_NUM_BUFFERS;
-		var bufferDatas = __source.__backend.bufferDatas, queuedBuffers = __source.__backend.queuedBuffers;
-		var bufferTimeBlocks = __source.__backend.bufferTimeBlocks;
+		var index = AL.getSourcei(__source.__backend.handle, AL.SAMPLE_OFFSET), bufferDatas = __source.__backend.bufferDatas;
+		var bufferi = NativeAudioSource.STREAM_NUM_BUFFERS - __source.__backend.queuedBuffers, bytes = bufferDatas[bufferi].buffer;
 
-		// MS, NOT SECOND
-		var khz:Float = buffer.sampleRate / 1000, samples:Int = 480;
-		var index:Int = Math.floor(AL.getSourcef(handle, AL.SEC_OFFSET) * 1000 * khz);
-		if (index < 0) {
-			if ((samples -= index) < 1) return;
-			index = 0;
-		}
+		var channels = __source.buffer.channels, todo = scanSamples, sample;
+		var lfilled = false, rfilled = channels < 2;
 
-		var channels:Int = buffer.channels, stereo:Bool = channels > 1;
-		var lfilled:Bool = false, rfilled:Bool = !stereo;
-		var lpeak:Float = 0, rpeak:Float = 0;
-		var sample:Float, rows:Int = 0;
-
-		var bufferi = bufferNums - queuedBuffers, bytes = bufferDatas[bufferi].buffer;
-
-		while(rows < samples) {
-			if (index >= bufferSize) {
+		while(todo > 0 && (!lfilled || !rfilled)) {
+			if (index >= NativeAudioSource.STREAM_BUFFER_SIZE) {
 				if ((bytes = bufferDatas[++bufferi].buffer) == null) break;
 				index = 0;
 			}
 
 			if (!lfilled) {
-				sample = bytes.getUInt16(index * channels * 2) / 65535;
-				if (sample > .5) sample = -(sample - 1);
-				if (sample > lpeak) lfilled = (lpeak = sample) >= 1;
+				if ((sample = bytes.getUInt16(index * channels * 2) / 65535) > .5) sample = -(sample - 1);
+				if (sample > __leftPeak) lfilled = (__leftPeak = sample) >= 1;
 			}
 
 			if (!rfilled) {
-				sample = bytes.getUInt16(index * channels * 2 + 2) / 65535;
-				if (sample > .5) sample = -(sample - 1);
-				if (sample > rpeak) rfilled = (rpeak = sample) >= 1;
+				if ((sample = bytes.getUInt16(index * channels * 2 + 2) / 65535) > .5) sample = -(sample - 1);
+				if (sample > __rightPeak) rfilled = (__rightPeak = sample) >= 1;
 			}
 
-			if (lfilled && rfilled) break;
 			index++;
-			rows++;
+			todo--;
 		}
-
-		__leftPeak = lpeak;
-		__rightPeak = rpeak;
 	}
 	#end
 	#end
@@ -231,56 +211,38 @@ import lime.media.openal.AL;
 	@:noCompletion private function __updatePeaks():Void
 	{
 		__leftPeak = __rightPeak = 0;
-		if (!__isValid) return;
-
-		var buffer = __source.buffer;
-		if (buffer == null) return __dispose();
 
 		#if (lime_cffi && !macro)
-		#if lime_vorbis
-		if (__source.__backend != null && __source.__backend.stream) return __updateVorbisPeaks();
-		#end
+		if (!__isValid) return;
 
-		var currentTime:Float = position;
-		if (!__checkUpdatePeaks(currentTime) || buffer.data == null) return;
+		#if lime_vorbis if (__source.__backend.stream) return __updateVorbisPeaks(); #end
 
-		// MS, NOT SECOND
-		var khz:Float = (buffer.sampleRate / 1000), index:Int = Math.floor(currentTime * khz), samples:Int = 480;
-		if (index < 0) {
-			if ((samples -= index) < 1) return;
-			index = 0;
-		}
+		var buffer = __source.buffer;
+		if (buffer == null || buffer.data == null || !__checkUpdatePeaks(position)) return;
 
-		var bytes = buffer.data.buffer, length:Int = bytes.length - 1;
-		if (index > length) return;
+		var index:Int64 = Int64.make(0, AL.getSourcei(__source.__backend.handle, AL.SAMPLE_OFFSET));
+		var bytes = buffer.data.buffer, length:Int64 = Int64.make(0, __source.__backend.samples);
+		if (index >= length) return;
 
-		var channels:Int = buffer.channels, stereo:Bool = channels > 1;
-		var lfilled:Bool = false, rfilled:Bool = !stereo;
-		var lpeak:Float = 0, rpeak:Float = 0;
-		var sample:Float, rows:Int = 0;
+		var temp = index + scanSamples;
+		if (temp < length) length = temp;
 
-		while(index < length && rows < samples) {
+		var channels = buffer.channels, sample;
+		var lfilled = false, rfilled = channels < 2;
+
+		while(index < length && (!lfilled || !rfilled)) {
 			if (!lfilled) {
-				sample = bytes.getUInt16(index * channels * 2) / 65535;
-				if (sample > .5) sample = -(sample - 1);
-				if (sample > lpeak) lfilled = (lpeak = sample) >= 1;
+				if ((sample = bytes.getUInt16(Int64.toInt(index * (channels * 2))) / 65535) > .5) sample = -(sample - 1);
+				if (sample > __leftPeak) lfilled = (__leftPeak = sample) >= 1;
 			}
 
 			if (!rfilled) {
-				sample = bytes.getUInt16(index * channels * 2 + 2) / 65535;
-				if (sample > .5) sample = -(sample - 1);
-				if (sample > rpeak) rfilled = (rpeak = sample) >= 1;
+				if ((sample = bytes.getUInt16(Int64.toInt(index * (channels * 2) + 2)) / 65535) > .5) sample = -(sample - 1);
+				if (sample > __rightPeak) rfilled = (__rightPeak = sample) >= 1;
 			}
 
-			if (lfilled && rfilled) break;
 			index++;
-			rows++;
 		}
-
-		__leftPeak = lpeak;
-		__rightPeak = rpeak;
-		#else
-		__leftPeak = __rightPeak = 0;
 		#end
 	}
 
@@ -301,7 +263,7 @@ import lime.media.openal.AL;
 		if (!__isValid) return 0;
 
 		#if lime
-		__source.currentTime = Std.int(value) - __source.offset;
+		__source.currentTime = value - __source.offset;
 		#end
 		return value;
 	}

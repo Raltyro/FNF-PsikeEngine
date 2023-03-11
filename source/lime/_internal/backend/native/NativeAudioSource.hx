@@ -81,9 +81,10 @@ class NativeAudioSource {
 
 		var vorbisFile = parent.buffer.__srcVorbisFile;
 		if (stream = vorbisFile != null) {
-			var pcmTotal = vorbisFile.pcmTotal(), info = vorbisFile.info();
-			var value = pcmTotal * Int64.ofInt(parent.buffer.channels) * (Int64.ofInt(parent.buffer.bitsPerSample) / Int64.ofInt(8));
-			dataLength = Int64.toInt(value);
+			var pcmTotal = vorbisFile.pcmTotal();
+
+			dataLength = Int64.toInt(pcmTotal * parent.buffer.channels * (Int64.ofInt(parent.buffer.bitsPerSample) / 8));
+			samples = Int64.toInt(pcmTotal);
 
 			buffers = new Array();
 			bufferDatas = new Array();
@@ -93,14 +94,12 @@ class NativeAudioSource {
 				bufferDatas.push(new UInt8Array(STREAM_BUFFER_SIZE));
 				bufferTimeBlocks.push(0);
 			}
-
-			samples = Int64.toInt(pcmTotal);
 		}
 		else {
-			dataLength = parent.buffer.data.length;
 			if (!disposed) AL.sourcei(handle, AL.BUFFER, parent.buffer.__srcBuffer);
 
-			samples = Int64.toInt((Int64.make(0, dataLength) * Int64.ofInt(8)) / (parent.buffer.channels * parent.buffer.bitsPerSample));
+			dataLength = parent.buffer.data.length;
+			samples = Int64.toInt((Int64.make(0, dataLength) * 8) / (parent.buffer.channels * parent.buffer.bitsPerSample));
 		}
 	}
 
@@ -112,7 +111,7 @@ class NativeAudioSource {
 	}
 
 	public function pause():Void {
-		if (!(disposed = (handle == null))) AL.sourcePause(handle);
+		if (!(disposed = handle == null)) AL.sourcePause(handle);
 
 		playing = false;
 		stopStreamTimer();
@@ -120,7 +119,7 @@ class NativeAudioSource {
 	}
 
 	public function stop():Void {
-		if (playing && !(disposed = (handle == null)) && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
+		if (playing && !(disposed = handle == null) && AL.getSourcei(handle, AL.SOURCE_STATE) == AL.PLAYING)
 			AL.sourceStop(handle);
 
 		bufferLoops = 0;
@@ -172,15 +171,15 @@ class NativeAudioSource {
 		var vorbisFile = parent.buffer.__srcVorbisFile;
 		if (vorbisFile == null) return dispose();
 
-		var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
-		if (length != null) samples = Int64.toInt((Int64.fromFloat(length) + Int64.make(0, parent.offset)) / 1000 * sampleRate);
-		if (position >= samples && loops <= 0) return;
+		var position = vorbisFile.pcmTell(), samples = samples;
+		if (length != null) samples = Int64.toInt(Int64.fromFloat((length + parent.offset) / 1000 * parent.buffer.sampleRate));
+		if (position >= samples && loops < 1) return;
 
 		var numBuffers = 0, size = 0, data;
 		for (buffer in buffers) {
 			if (loops < 1 && position >= samples) break;
 			position += (size = (data = readVorbisFileBuffer(vorbisFile, STREAM_BUFFER_SIZE)).length);
-			AL.bufferData(buffer, format, data, size, sampleRate);
+			AL.bufferData(buffer, format, data, size, parent.buffer.sampleRate);
 			numBuffers++;
 		}
 
@@ -238,11 +237,12 @@ class NativeAudioSource {
 		if (!safeEnd && bufferLoops <= 0) {
 			var ranOut = false;
 			#if lime_vorbis
-			var vorbisFile;
-			if (stream && (vorbisFile = parent.buffer.__srcVorbisFile) != null) {
-				var position = Int64.toInt(vorbisFile.pcmTell()), samples = samples, sampleRate = parent.buffer.sampleRate;
-				if (length != null) samples = Int64.toInt((Int64.fromFloat(length) + Int64.make(0, parent.offset)) / 1000 * sampleRate);
-				ranOut = position >= samples - 2048 || queuedBuffers < 3;
+			var vorbisFile = parent.buffer.__srcVorbisFile;
+			if (stream) {
+				if (vorbisFile == null) return dispose();
+				var samples = samples;
+				if (length != null) samples = Int64.toInt(Int64.fromFloat((length + parent.offset) / 1000 * parent.buffer.sampleRate));
+				ranOut = vorbisFile.pcmTell() >= samples || queuedBuffers < 3;
 			}
 			#end
 
@@ -278,11 +278,11 @@ class NativeAudioSource {
 		if (completed) return getLength();
 		else if (!disposed) {
 			var time;
-			if (stream) time = (bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET)) * 1000;
-			else time = samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength) * 1000;
+			if (stream) time = (bufferTimeBlocks[STREAM_NUM_BUFFERS - queuedBuffers] + AL.getSourcef(handle, AL.SEC_OFFSET));
+			else time = samples / parent.buffer.sampleRate * (AL.getSourcei(handle, AL.BYTE_OFFSET) / dataLength);
 			time -= parent.offset;
 
-			if (time > 0) return time;
+			if (time > 0) return time * 1000;
 		}
 		return 0;
 	}
@@ -296,14 +296,14 @@ class NativeAudioSource {
 		if (stream) {
 			AL.sourceStop(handle);
 
-			// uses the al queuedbuffers instead if there is any unexpected repeated buffers
+			// uses the al queuedbuffers instead just incase if there is any unexpected repeated buffers
 			AL.sourceUnqueueBuffers(handle, AL.getSourcei(handle, AL.BUFFERS_QUEUED));
 
 			#if lime_vorbis
 			var vorbisFile = parent.buffer.__srcVorbisFile;
 			if (canFill = (vorbisFile != null)) {
 				//var chunk = Std.int(Math.floor(samples * ratio / STREAM_BUFFER_SIZE) * STREAM_BUFFER_SIZE);
-				vorbisFile.pcmSeek(Std.int(samples * ratio));
+				vorbisFile.pcmSeek(Int64.fromFloat(samples * ratio));
 
 				fillBuffers(buffers.slice(0, queuedBuffers = 3));
 				//AL.sourcei(handle, AL.SAMPLE_OFFSET, Std.int((samples * ratio) - chunk));
@@ -317,7 +317,7 @@ class NativeAudioSource {
 		}
 
 		if (playing) {
-			var timeRemaining = (getLength() - value) / getPitch();
+			var timeRemaining = (getLength() - time) / getPitch();
 			if (completed = timeRemaining < 1) complete();
 			else {
 				AL.sourcePlay(handle);
@@ -332,6 +332,7 @@ class NativeAudioSource {
 		if (length != null) return length - parent.offset;
 		return (samples / parent.buffer.sampleRate * 1000) - parent.offset;
 	}
+
 	public function setLength(value:Float):Float {
 		if (value == length) return value;
 		if (playing) {
@@ -342,12 +343,12 @@ class NativeAudioSource {
 	}
 
 	public function getPitch():Float {
-		if (!disposed) return AL.getSourcef(handle, AL.PITCH);
-		return 1;
+		if (disposed) return 1;
+		return AL.getSourcef(handle, AL.PITCH);
 	}
 
 	public function setPitch(value:Float):Float {
-		if (disposed || value == getPitch()) return value;
+		if (disposed || value == AL.getSourcef(handle, AL.PITCH)) return value;
 		AL.sourcef(handle, AL.PITCH, value);
 
 		if (playing) {
