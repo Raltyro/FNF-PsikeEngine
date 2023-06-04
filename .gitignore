@@ -1,0 +1,23 @@
+### VS Code
+.vscode/*
+*.code-workspace
+
+# ! means a file should be added regardless of it it gets ignored prior.
+# Including to allow others to use already set-up configuration tweaked for the project.
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+
+# Local history which shouldn't be shared.
+.history
+.ionide
+
+*.DS_Store
+*.sublime-workspace
+*.sublime-project
+
+local/
+export/
+.haxelib/

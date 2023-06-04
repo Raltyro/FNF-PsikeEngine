@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	<define name="HXCPP_M32" if="32bit || 32"/>
+	<define name="32bit" if="HXCPP_M32"/>
+	<define name="32bits" if="32bit"/>
+	<define name="64" unless="32bit"/>
+
+	<!-- __ Psike Engine Flags ____________________________________ -->
+
+	<define name="TITLE_SCREEN_EASTER_EGG"/>
+
+	<define name="ACHIEVEMENTS_ALLOWED"/>
+
+	<define name="MODS_ALLOWED" if="desktop"/>
+
+	<define name="VIDEOS_ALLOWED" if="desktop || mobile"/>
+
+	<define name="LUA_ALLOWED" if="cpp"/>
+
+	<define name="HSCRIPT_ALLOWED" if="LUA_ALLOWED"/>
+
+	<define name="DISCORD_ALLOWED" if="desktop"/>
+
+	<!-- <define name="NO_ASSETSFNF"/> -->
+
+	<!-- <define name="FLIXEL_STUDIO"/> Not sure if anybody uses this but i provided it in the codes -->
+
+	<section if="desktop">
+		<define name="CRASH_HANDLER"/>
+		<define name="CHECK_FOR_UPDATES" if="officialBuild"/>
+	</section>
+
+	<haxeflag name="-dce full" unless="MODS_ALLOWED"/>
+	<haxeflag name="-dce no" if="MODS_ALLOWED"/>
+
+	<!-- __ Application Settings __________________________________ -->
+
+	<app title="Friday Night Funkin': Psike Engine" file="PsikeEngine" version="0.0.1" company="Raltyro"/>
+	<app packageName="com.raltyro.psikeengine" package="com.raltyro.psikeengine"/>
+	<app main="Main" preloader="flixel.system.FlxPreloader"/>
+
+	<!--Switch Export with Unique ApplicationID and Icon-->
+	<set name="APP_ID" value="0x0100f6c013bbc000"/>
+
+	<!--Minimum without FLX_NO_GAMEPAD: 11.8, without FLX_NO_NATIVE_CURSOR: 11.2-->
+	<set name="SWF_VERSION" value="11.8"/>
+
+	<!-- __ Window Settings _______________________________________ -->
+
+	<window hardware="true" fps="" background=""/>
+
+	<window unless="html5" orientation="landscape"/>
+	<window unless="desktop" width="0" height="0"/>
+
+	<window if="desktop" width="1280" height="720" fullscreen="false" resizable="true" vsync="false" allowHighDPI="true"/>
+	<window if="mobile" fullscreen="true" resizable="false"/>
+	<window if="switch" fullscreen="true" resizable="true"/>
+	<window if="html5" resizable="true"/>
+
+	<!-- __ Path Settings _________________________________________ -->
+
+	<section if="32bit">
+		<set name="BUILD_DIR" value="export/32bit" unless="debug"/>
+		<set name="BUILD_DIR" value="export/32bit-debug" if="debug"/>
+	</section>
+	<section unless="32bit">
+		<set name="BUILD_DIR" value="export/release" unless="debug"/>
+		<set name="BUILD_DIR" value="export/debug" if="debug"/>
+	</section>
+
+	<classpath name="source"/>
+
+	<!-- __ Assets ________________________________________________ -->
+
+	<library name="videos"	preload="true"/>
+	<library name="songs"	preload="true"/>
+
+	<define name="PRELOAD_ALL" unless="web"/>
+	<define name="NO_PRELOAD_ALL" unless="PRELOAD_ALL"/>
+
+	<section if="PRELOAD_ALL">
+		<library name="shared"			preload="true"/>
+		<section unless="NO_ASSETSFNF">
+			<library name="week2"		preload="true"/>
+			<library name="week3"		preload="true"/>
+			<library name="week4"		preload="true"/>
+			<library name="week5"		preload="true"/>
+			<library name="week6"		preload="true"/>
+			<library name="week7"		preload="true"/>
+		</section>
+	</section>
+
+	<section if="NO_PRELOAD_ALL">
+		<library name="shared"			preload="false"/>
+		<section unless="NO_ASSETSFNF">
+			<library name="week2"		preload="false"/>
+			<library name="week3"		preload="false"/>
+			<library name="week4"		preload="false"/>
+			<library name="week5"		preload="false"/>
+			<library name="week6"		preload="false"/>
+			<library name="week7"		preload="false"/>
+		</section>
+	</section>
+
+	
+
+	<!-- __ Libraries _____________________________________________ -->
+
+	<haxedev set='webgl'/>
+
+	<haxelib name="flixel"/>
+	<haxelib name="flixel-addons"/>
+	<haxelib name="flixel-ui"/>
+
+	<haxelib name="discord_rpc" if="DISCORD_ALLOWED"/>
+	<haxelib name="hxlua" if="LUA_ALLOWED"/>
+	<haxelib name="TeaScript" if="HSCRIPT_ALLOWED"/>
+	<haxelib name="hxCodec" version="git" if="VIDEOS_ALLOWED"/>
+
+	<haxelib name="flixel-studio" if="FLIXEL_STUDIO"/>
+	<haxelib name="hxcpp-debug-server" if="debug"/>
+
+	<!-- __ Haxedefines __________________________________________ -->
+
+	<!--Disable the native cursor API on Flash-->
+	<!--<haxedef name="FLX_NO_NATIVE_CURSOR"/>-->
+
+	<!--Optimise inputs, be careful you will get null errors if you don't use conditionals in your game-->
+	<haxedef name="FLX_NO_MOUSE" if="mobile"/>
+	<haxedef name="FLX_NO_KEYBOARD" if="mobile"/>
+	<!--<haxedef name="FLX_NO_TOUCH" if="desktop"/>-->
+	<!--<haxedef name="FLX_NO_GAMEPAD"/>-->
+
+	<!--Disable the Flixel core sound tray-->
+	<!--<haxedef name="FLX_NO_SOUND_TRAY" />-->
+
+	<!--Disable the Flixel core focus lost screen-->
+	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/>
+
+	<!-- Show debug traces for hxCodec -->
+	<!--<haxedef name="HXC_DEBUG_TRACE" if="debug"/>-->
+
+	<!--Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode!-->
+	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
+
+	<!--Enable this for Nape release builds for a serious peformance improvement-->
+	<haxedef name="NAPE_RELEASE_BUILD" unless="debug"/>
+
+	<!--Used for Izzy Engine's crash handler-->
+	<haxedef name="HXCPP_CHECK_POINTER" if="CRASH_HANDLER"/>
+	<haxedef name="HXCPP_STACK_LINE" if="CRASH_HANDLER"/>
+
+	<!--Allow working memory greater than 1 gig-->
+	<haxedef name="HXCPP_GC_BIG_BLOCKS" if="desktop"/>
+
+	<haxedef name="queue_experimental_optimization"/>
+	<haxedef name="gl_stats"/>
+
+	<!-- __ Custom _______________________________________________ -->
+
+	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
+
+	<section if="PSYCH_WATERMARKS">
+		<icon path="art/icons-psy/icon16.png" size="16"/>
+		<icon path="art/icons-psy/icon24.png" size="24"/>
+		<icon path="art/icons-psy/icon32.png" size="32"/>
+		<icon path="art/icons-psy/icon40.png" size="40"/>
+		<icon path="art/icons-psy/icon48.png" size="48"/>
+		<icon path="art/icons-psy/icon64.png" size="64"/>
+		<icon path="art/icons-psy/icon96.png" size="96"/>
+		<icon path="art/icons-psy/icon128.png" size="128"/>
+		<icon path="art/icons-psy/icon256.png" size="256"/>
+		<icon path="art/icons-psy/icon512.png" size="512"/>
+		<icon path="art/icons-psy/icon768.png" size="768"/>
+		<icon path="art/icons-psy/iconOG.png"/>
+	</section>
+	<section unless="PSYCH_WATERMARKS">
+		<icon path="art/icons/icon16.png" size="16"/>
+		<icon path="art/icons/icon24.png" size="24"/>
+		<icon path="art/icons/icon32.png" size="32"/>
+		<icon path="art/icons/icon40.png" size="40"/>
+		<icon path="art/icons/icon48.png" size="48"/>
+		<icon path="art/icons/icon64.png" size="64"/>
+		<icon path="art/icons/icon96.png" size="96"/>
+		<icon path="art/icons/icon128.png" size="128"/>
+		<icon path="art/icons/icon256.png" size="256"/>
+		<icon path="art/icons/icon512.png" size="512"/>
+		<icon path="art/icons/icon768.png" size="768"/>
+		<icon path="art/icons/iconOG.png"/>
+	</section>
+</project>

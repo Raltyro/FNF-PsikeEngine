@@ -1,0 +1,48 @@
+[
+	{
+		"musicName": "Breakfast",
+		"musicPath": "breakfast",
+		"composer": "kawaisprite",
+		"volume": 0.5,
+		"bpm": 160,
+		"fadeDuration": 0,
+		"delay": 0,
+		"endTime": 0,
+		"loopTime": 0,
+		"startTimeRange": [],
+		"introVariations": [
+			{
+				"introPath": "breakfastStart",
+				"fadeDuration": 0,
+				"delay": 0.75,
+				"startTimes": [0, 12.4, 36.75],
+			}
+		]
+	},
+	{
+		"musicName": "[unnamed pause menu bgm]",
+		"musicPath": "dontgetabighead",
+		"composer": "requiem",
+		"volume": 0.6,
+		"bpm": 130,
+		"fadeDuration": 4,
+		"delay": 0,
+		"endTime": 0,
+		"loopTime": 0,
+		"startTimeRange": [0, 30],
+		"introVariations": [],
+	},
+	{
+		"musicName": "Tea Time",
+		"musicPath": "tea-time",
+		"composer": "flicky",
+		"volume": 0.5,
+		"bpm": 105,
+		"fadeDuration": 6,
+		"delay": 0,
+		"endTime": 0,
+		"loopTime": 0,
+		"startTimeRange": [0, 120],
+		"introVariations": []
+	}
+]
