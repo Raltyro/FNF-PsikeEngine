@@ -85,7 +85,8 @@ import Discord.DiscordClient;
 #end
 
 #if VIDEOS_ALLOWED
-import hxcodec.VideoHandler;
+#if (hxCodec >= "2.6.1") import hxcodec.VideoHandler as MP4Handler;
+#else import vlc.MP4Handler; #end
 #end
 
 import WindowUtil;
